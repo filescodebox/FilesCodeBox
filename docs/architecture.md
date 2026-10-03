@@ -10,12 +10,12 @@
 ```mermaid
 graph TB
     subgraph ORG["filescodebox 组织"]
-        UMB["📁 FileCodeBox<br/>(装配仓·本仓库)<br/>make setup 拉齐工作区"]
-        CT["📦 contracts<br/>契约层 v0.1.0<br/>errcode + Thrift 类型"]
-        CORE["🧩 core<br/>业务核心库 v0.2.0<br/>10 域服务 + bootstrap"]
-        SRV["🚀 server<br/>部署应用 v0.1.1<br/>main 薄壳 + Dockerfile"]
+        UMB["📁 filescodebox<br/>(装配仓·本仓库)<br/>make setup 拉齐工作区"]
+        CT["📦 contracts<br/>契约层 v0.2.1<br/>errcode + Thrift 类型"]
+        CORE["🧩 core<br/>业务核心库 v0.6.4<br/>10 域服务 + bootstrap"]
+        SRV["🚀 server<br/>部署应用 v0.6.4<br/>main 薄壳 + Dockerfile"]
         FE["🖥️ frontend<br/>Vue3 + TS"]
-        FNOS["🐂 filecodebox-fnos<br/>飞牛 fnOS 应用 v0.1.2<br/>SSO/共享目录/通知/穿透"]
+        FNOS["🐂 filescodebox-fnos<br/>飞牛 fnOS 应用 v0.2.2<br/>SSO/共享目录/通知/穿透"]
     end
 
     USER["👤 自托管用户"] -->|"docker run / compose"| SRV
@@ -35,10 +35,10 @@ graph TB
 
 ```mermaid
 graph LR
-    FE["frontend<br/>(Vue3)"] -->|"openapi.json 契约快照<br/>→ api.gen.ts 类型"| CTX["contracts"]
-    SRV["server"] -->|"require v0.2.0"| CORE["core"]
-    FNOS["filecodebox-fnos"] -->|"require v0.2.0<br/>库式调用 bootstrap"| CORE
-    CORE -->|"require v0.1.0"| CTX
+    FE["frontend<br/>(Vue3)"] -->|"/openapi.json 运行时规范<br/>(swagger 页直连后端)"| SRV["server"]
+    SRV -->|"require v0.6.x"| CORE["core"]
+    FNOS["filescodebox-fnos"] -->|"require v0.6.x<br/>库式调用 bootstrap"| CORE
+    CORE -->|"require v0.2.x"| CTX["contracts"]
 
     classDef plain fill:#eef,stroke:#88a
     class CTX,CORE,SRV,FE,FNOS plain
@@ -51,16 +51,16 @@ graph LR
 | contracts 零项目内依赖(纯类型,仅 thrift runtime + 标准库) | contracts CI:`go list -deps` 检查 |
 | core 不许 import server / frontend / fnos | core CI 同上 |
 | server / fnos 只经 go.mod 正式版本引用 core,**零 replace** | 各仓 go.mod 无 replace(本地联编由本仓 go.work 承担) |
-| frontend 类型由 openapi.json 生成,不手抄 | frontend CI:`npm run gen:api` 后 `git diff --exit-code` |
+| frontend 走后端运行时 OpenAPI 规范(`/openapi.json`),不再维护快照/生成类型 | swagger 页与 vite 代理均直连后端同源(2026-10-04 移除漂移快照) |
 
 ### 2.3 版本矩阵
 
 | 仓库 | 当前版本 | 说明 |
 |------|---------|------|
 | contracts | v0.2.1 | thrift v0.13 生成代码,版本约束以 require 传递(下游零 replace) |
-| core | v0.5.0 | P0 管控旁路修复/大文件流式/lockout 接线;main 已含 accesslog 可信 IP(未发版,下次 v0.6.0) |
-| server | v0.5.0 | 镜像 `ghcr.io/filescodebox/server` |
-| filescodebox-fnos | v0.2.2 | 镜像 `ghcr.io/filescodebox/filescodebox-fnos`(2026-10-03 随仓库改名,旧镜像 `filecodebox-fnos` 冻结在 v0.2.1) |
+| core | v0.6.4 | 分片完成 hotfix/多文件+zip/E2E/ClamAV/SMTP/寄件码/OIDC/openapi 运行时生成/本地文件管理 |
+| server | v0.6.4 | 镜像 `ghcr.io/filescodebox/server`(≥v0.6.1 才含分片完成修复) |
+| filescodebox-fnos | v0.2.2(master 已升 core v0.6.4,待发 v0.2.3) | 镜像 `ghcr.io/filescodebox/filescodebox-fnos`(2026-10-03 随仓库改名,旧镜像 `filecodebox-fnos` 冻结在 v0.2.1) |
 
 ---
 

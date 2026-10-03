@@ -39,6 +39,9 @@ smoke: build      ## 本地起 server 并跑冒烟(健康检查/登录/文本分
 	    -d '{"username":"admin","password":"admin123"}' | head -c 80 && echo "" && \
 	  echo "✓ smoke OK"; kill $$(cat /tmp/fcb.pid) 2>/dev/null; true)
 
+smoke-full:       ## 全能力真机冒烟(39 项断言;独立端口/临时数据目录/临时 Redis,跑完即清理)
+	bash scripts/smoke-full.sh
+
 docker:           ## 构建完整 server 镜像(前端现场 npm ci;上下文=本目录)
 	docker build -f server/Dockerfile -t $(SERVER_IMAGE) .
 

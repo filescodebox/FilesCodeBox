@@ -15,23 +15,25 @@
 
 | 仓库 | 角色 | 版本 |
 |------|------|------|
-| [contracts](https://github.com/filescodebox/contracts) | 契约层:错误码 + Thrift 生成类型(纯类型,零业务依赖) | v0.1.0 |
-| [core](https://github.com/filescodebox/core) | 业务核心库:10 个域服务 + repo/storage + `bootstrap.Bootstrap()` 库入口 | v0.2.0 |
-| [server](https://github.com/filescodebox/server) | 独立部署应用:main 薄壳 + 前端静态资源 + Dockerfile | 跟随 core |
-| [frontend](https://github.com/filescodebox/frontend) | Vue3 + TS + Vite + Element Plus(类型由 openapi.json 生成) | - |
-| [filecodebox-fnos](https://github.com/filescodebox/filecodebox-fnos) | 飞牛 fnOS 应用适配(可选,`SETUP_FNOS=1 make setup` 启用) | v0.1.1 |
+| [contracts](https://github.com/filescodebox/contracts) | 契约层:错误码 + Thrift 生成类型(纯类型,零业务依赖) | v0.2.1 |
+| [core](https://github.com/filescodebox/core) | 业务核心库:10 个域服务 + repo/storage + `bootstrap.Bootstrap()` 库入口 | v0.6.4 |
+| [server](https://github.com/filescodebox/server) | 独立部署应用:main 薄壳 + 前端静态资源 + Dockerfile | v0.6.4(跟随 core) |
+| [frontend](https://github.com/filescodebox/frontend) | Vue3 + TS + Vite + Element Plus(API 规范由后端运行时生成 `/openapi.json`) | - |
+| [filescodebox-fnos](https://github.com/filescodebox/filescodebox-fnos) | 飞牛 fnOS 应用适配(可选,`make setup` 默认拉取) | v0.2.2 |
 
 依赖方向(单向,CI 守护):`server / fnos / frontend ──► core ──► contracts`
 
 ## 快速开始
 
 ```bash
-git clone https://github.com/filescodebox/FileCodeBox.git && cd FileCodeBox
+git clone https://github.com/filescodebox/filescodebox.git && cd filescodebox
 
-make setup     # 拉齐四个模块仓库(幂等,重复执行=更新)
+make setup     # 拉齐五个模块仓库(幂等,重复执行=更新)
 make test      # 全仓测试(Go 三模块 + 前端 typecheck)
+make lint      # golangci-lint 三 Go 模块(CI 同款门禁)
 make build     # workspace 联编
 make smoke     # 起 server 跑冒烟(健康检查/admin登录/文本分享)
+# bash scripts/smoke-full.sh   # 全能力真机冒烟(39 项断言,含临时 Redis)
 ```
 
 纯 Docker 部署(详见 [docs/DEPLOY-COMPOSE.md](docs/DEPLOY-COMPOSE.md)):
