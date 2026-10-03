@@ -50,6 +50,10 @@ services:
       - FCB_REDIS_HOST=${FCB_REDIS_HOST:-redis}
       - FCB_REDIS_PORT=${FCB_REDIS_PORT:-6379}
       - FCB_REDIS_PASSWORD=${FCB_REDIS_PASSWORD:-}
+      # NAS 本地文件免上传导入/管理(挂载宿主目录后配白名单,如
+      # volumes 加 ./import:/data/import 且 FCB_LOCAL_IMPORT_ROOTS=/data/import)
+      - FCB_LOCAL_IMPORT_ENABLED=${FCB_LOCAL_IMPORT_ENABLED:-}
+      - FCB_LOCAL_IMPORT_ROOTS=${FCB_LOCAL_IMPORT_ROOTS:-}
     depends_on:
       redis:
         condition: service_healthy

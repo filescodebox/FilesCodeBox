@@ -1,8 +1,21 @@
 #!/bin/bash
-# FilesCodeBox 全能力真机冒烟（39 项断言）：健康面/openapi 运行时生成/api config/admin 登录/
+# FilesCodeBox 全能力真机冒烟（39+ 项断言）：健康面/openapi 运行时生成/api config/admin 登录/
 # 文本+密码分享/元数据不泄露/select 不扣次数/文件分享+Range/多文件+zip/chunk 完成+秒传/
 # 本地文件管理(穿越防护)/寄件码全链路/MCP/二维码/匿名码(需 Redis)/robots。
-# 用法: bash scripts/smoke-full.sh（自动编译 server、起临时实例、跑完即清理）
+#
+# 用法一(默认):bash scripts/smoke-full.sh
+#   自动编译 server、起临时实例(含临时 Redis,端口 18777)、跑完即清理。
+# 用法二(外置实例):SMOKE_BASE=http://host:port bash scripts/smoke-full.sh
+#   不编译不起服务,直接对已有实例跑全部断言——用于 Docker/compose/K8s 部署验证。
+#   注意:外置实例需启用 local_import(roots 需包含本机 /tmp/fcb-smoke/import
+#   的容器内挂载路径)且 Redis 可用,否则 S12/S16 两域会失败。
+set -u
+SMOKE=${SMOKE:-/tmp/fcb-smoke}
+BASE=${SMOKE_BASE:-http://127.0.0.1:18777}
+PORT=18777
+PASS=0; FAIL=0
+ok()  { PASS=$((PASS+1)); echo "PASS: $1"; }
+bad() { FAIL=$((FAIL+1)); echo "FAIL: $1  [$2]"; }
 J() { python3 -c "
 import sys, json
 try:
@@ -19,6 +32,8 @@ head -c 300000 /dev/zero | tr '\0' 'A' > "$SMOKE/src/big-a.txt"
 echo "multi-file-one" > "$SMOKE/src/m1.txt"
 echo "multi-file-two" > "$SMOKE/src/m2.txt"
 
+if [ -z "${SMOKE_BASE:-}" ]; then
+  # ===== 内置模式:起临时实例 =====
 cat > "$SMOKE/config.yaml" <<EOF
 server:
   host: "127.0.0.1"
@@ -57,19 +72,20 @@ observability:
     enabled: false
 EOF
 
-# 编译 + 起服务
-cd /Users/zhangyi/my_project/filecodebox-project/FilesCodeBox/server || exit 1
-go build -o "$SMOKE/server-bin" ./cmd/server || { echo "BUILD FAILED"; exit 1; }
-FCB_JWT_SECRET=smoke-secret-$(date +%s) "$SMOKE/server-bin" --config "$SMOKE/config.yaml" > "$SMOKE/server.log" 2>&1 &
-SRV=$!
-redis-server --port 16379 --daemonize no --save '' --appendonly no > "$SMOKE/redis.log" 2>&1 &
-RPID=$!
-trap 'kill $SRV $RPID 2>/dev/null' EXIT
-for i in $(seq 1 30); do
-  curl -sf "$BASE/health" >/dev/null 2>&1 && break
-  sleep 0.5
-done
-curl -sf "$BASE/health" >/dev/null || { echo "SERVER NOT UP"; tail -20 "$SMOKE/server.log"; exit 1; }
+  # 编译 + 起服务
+  cd "$(dirname "$0")/../server" || exit 1
+  go build -o "$SMOKE/server-bin" ./cmd/server || { echo "BUILD FAILED"; exit 1; }
+  FCB_JWT_SECRET=smoke-secret-$(date +%s) "$SMOKE/server-bin" --config "$SMOKE/config.yaml" > "$SMOKE/server.log" 2>&1 &
+  SRV=$!
+  redis-server --port 16379 --daemonize no --save '' --appendonly no > "$SMOKE/redis.log" 2>&1 &
+  RPID=$!
+  trap 'kill $SRV $RPID 2>/dev/null' EXIT
+  for i in $(seq 1 30); do
+    curl -sf "$BASE/health" >/dev/null 2>&1 && break
+    sleep 0.5
+  done
+  curl -sf "$BASE/health" >/dev/null || { echo "SERVER NOT UP"; tail -20 "$SMOKE/server.log"; exit 1; }
+fi
 
 # S1 健康面
 [ -n "$(curl -s "$BASE/live")" ] && ok "S1a live" || bad "S1a live" "$(curl -s $BASE/live)"
@@ -164,7 +180,11 @@ DEL=$(curl -s -X DELETE "$BASE/admin/local-files?root=0&path=local-nas.txt" -H "
 [ ! -f "$SMOKE/import/local-nas.txt" ] && ok "S12d 本地文件删除" || bad "S12d 删除" "$DEL"
 curl -s "$BASE/admin/local-files?root=0&dir=../../etc" -H "$AH" | grep -qi "非法\|越界\|不在" && ok "S12e 路径穿越被拒" || bad "S12e 穿越防护" "-"
 
-# S13 寄件码（用户注册→建链接→访客投递）
+# S13 寄件码（管理端开注册→用户注册→建链接→访客投递）
+# 生产模板默认关注册(安全默认)，故先走管理端配置 API 开启——顺带真测该端点
+UCFG=$(curl -s -X PUT "$BASE/admin/config/user" -H "$AH" -H 'Content-Type: application/json' \
+  -d '{"allowuserregistration":true,"useruploadsize":52428800,"userstoragequota":1073741824,"sessionexpiryhours":168}')
+echo "$UCFG" | J "d['code']" | grep -qE "0|200" && ok "S13-0 管理端开启注册(用户配置 API)" || bad "S13-0 用户配置 API" "$(echo $UCFG | head -c 100)"
 curl -s -X POST "$BASE/user/register" -H 'Content-Type: application/json' -d '{"username":"smoker","password":"smoke12345","nickname":"smoker","email":"smoker@example.com"}' >/dev/null
 UTOK=$(curl -s -X POST "$BASE/user/login" -H 'Content-Type: application/json' -d '{"username":"smoker","password":"smoke12345"}' | J "d['data']['token']")
 [ -n "$UTOK" ] && [ "${UTOK:0:4}" != "JERR" ] && ok "S13a 用户注册登录" || bad "S13a 用户登录" "$UTOK"
@@ -173,7 +193,7 @@ RTOK=$(echo "$REQ" | J "d['data']['token']")
 [ -n "$RTOK" ] && [ "${RTOK:0:4}" != "JERR" ] && ok "S13b 建寄件链接 token" || bad "S13b 寄件链接" "$REQ"
 curl -s "$BASE/request/$RTOK" | grep -q "smoke-req\|title" && ok "S13c 访客可取链接信息" || bad "S13c 访客取链接" "-"
 GUP=$(curl -s -X POST "$BASE/api/v1/request/$RTOK/upload" -F "files=@$SMOKE/src/m1.txt")
-echo "$GUP" | grep -qi "code\|success" && ok "S13d 访客投递" || bad "S13d 投递" "$(echo $GUP | head -c 100)"
+echo "$GUP" | grep -q "投递成功" && ok "S13d 访客投递" || bad "S13d 投递" "$(echo $GUP | head -c 100)"
 
 # S14 MCP
 MCP=$(curl -s -X POST "$BASE/api/v1/mcp" -H "$AH" -H 'Content-Type: application/json' -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}')
