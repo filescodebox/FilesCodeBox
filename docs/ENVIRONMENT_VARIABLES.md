@@ -99,6 +99,8 @@
 
 `FCB_DATA_PATH`（数据目录）、`FCB_STORAGE_TYPE` / `FCB_STORAGE_PATH`（存储后端）、`FCB_STORAGE_QUOTA`（站点级全局存储配额，字节，0=不限）、`FCB_USER_ALLOW_REGISTRATION`（开放注册）、`CONFIG_PATH`（配置文件路径）。
 
+S3 兼容存储凭据/连接（v0.7.7 起，对应 `storage.s3.*` 配置键；此前文档宣称可用但映射缺失，已补齐）：`FCB_STORAGE_S3_ACCESS_KEY` / `FCB_STORAGE_S3_SECRET_KEY` / `FCB_STORAGE_S3_ENDPOINT` / `FCB_STORAGE_S3_REGION` / `FCB_STORAGE_S3_BUCKET` / `FCB_STORAGE_S3_USE_SSL` / `FCB_STORAGE_S3_PATH_STYLE`（自建 MinIO 置 `true`）。
+
 ## 2026-10 能力扩展（P0-P3）
 
 | 变量 | 默认 | 说明 |
