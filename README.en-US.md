@@ -54,4 +54,4 @@ make smoke     # boot server & smoke-test
 
 ## License
 
-[MIT](LICENSE) © FilesCodeBox
+[Apache-2.0](LICENSE) © FilesCodeBox
