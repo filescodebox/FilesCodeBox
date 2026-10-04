@@ -105,7 +105,7 @@ echo "$AC" | J "d['data']['expireStyle']" | grep -q week && ok "S3 api/config �
 echo "$AC" | J "d['data']['showAdminAddr']" | grep -q "False" && ok "S3b showAdminAddr 下发(默认 false)" || bad "S3b showAdminAddr" "-"
 
 # S4 admin 登录
-TOK=$(curl -s -X POST "$BASE/admin/login" -H 'Content-Type: application/json' -d '{"username":"admin","password":"admin123"}' | J "d['data']['token']")
+TOK=$(curl -s -X POST "$BASE/admin/login" -H 'Content-Type: application/json' -d "{\"username\":\"admin\",\"password\":\"${SMOKE_ADMIN_PASSWORD:-admin123}\"}" | J "d['data']['token']")
 [ -n "$TOK" ] && [ "$TOK" != "JERR"* ] && ok "S4 admin 登录" || bad "S4 admin 登录" "$TOK"
 AH="Authorization: Bearer $TOK"
 
