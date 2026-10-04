@@ -5,6 +5,27 @@
 ## [Unreleased]
 
 ### Added
+- **站点级全局存储配额**（core v0.7.0）：`storage.quota`（字节，0=不限，env `FCB_STORAGE_QUOTA`），
+  全通道统一闸口（直传/分片完成/预签名完成/本地导入/多文件）；超限返回
+  `CodeStorageQuota`；统计口径=存活 file_codes 合计，统计故障 fail-open。
+- **分片逐片期望哈希强校验**（core v0.7.0，对标上游）：分片上传可携带 `hash`
+  （32 位=MD5/64 位=SHA-256 自适应），服务端恒时比对不符即拒收该分片（422 retryable）；
+  前端逐片 SHA-256 随片携带并自动重传。
+- **六种新存储驱动**（core v0.7.0）：FTP/FTPS、SFTP（密码/PEM 私钥+可选 host_key 严格校验）、
+  Google Cloud Storage（S3 兼容 XML+HMAC，region 留空即用）、Azure Blob（SharedKey/SAS 零 SDK）、
+  HDFS（WebHDFS REST）、OneDrive（Microsoft Graph，refresh_token 自动续期+大文件分片会话）。
+- **安全版主题**（core/frontend v0.7.0）：`ui.background`（http(s) 图片 URL）与
+  `ui.accent_color`（#hex）serve 白名单校验后经 `/api/config` 下发；前端深浅模式蒙层
+  与 Element Plus 色阶覆盖。**不接受自由 CSS**（对齐上游 2.6.0 CSS 注入修复教训）。
+- **管理入口可见性**：`ui.show_admin_addr=true` 时首页页脚展示管理入口（默认隐藏）。
+- 冒烟矩阵扩至 43 项（分片哈希 422/放行、showAdminAddr 下发）；存储驱动新增
+  `live` 构建标签 Docker 真机集成测试（atmoz/sftp + pure-ftpd）。
+
+### Changed
+- 冒烟脚本（scripts/smoke-full.sh）修复头部变量丢失并新增 `SMOKE_BASE` 外置实例模式
+  （一条命令验证任意 Docker/compose/K8s 部署）。
+- charts：chart-releaser 加 `skip_existing`（非发版 push 不再 422 打红）。
+
 - **真·S3 预签名直传直下**（core）：存储后端为 s3 时 `presign.Init` 直接签发对象存储
   预签名 PUT URL（`meta.Scheme=s3`），上传流量不过服务器；`Complete` 向 S3 核实对象
   真实存在并以实际大小落库（服务器未接触内容，秒传指纹依赖客户端预计算哈希）。

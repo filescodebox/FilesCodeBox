@@ -29,7 +29,10 @@
 - [x] OIDC 单点登录 / Range 断点续传 / 自定义取件码 / NAS 本地文件免上传导入与管理
 - [x] `/share/metadata` 元数据端点（查询不扣次数）+ openapi.json 运行时生成（零漂移）
 - [x] 开源合规件：LICENSE（7 仓）/ CONTRIBUTING / SECURITY / CHANGELOG / 文档站（docs-site VitePress）
-- [x] 质量基建：golangci-lint 门禁（CI 同款 make lint）、40 项全能力冒烟（scripts/smoke-full.sh）、
+- [x] 全局存储配额（storage.quota）+ 分片逐片哈希强校验
+- [x] 存储驱动扩展：FTP/FTPS、SFTP、GCS、Azure Blob、HDFS(WebHDFS)、OneDrive(Graph)
+- [x] 安全版主题（背景图/主题色白名单校验）
+- [x] 质量基建：golangci-lint 门禁（CI 同款 make lint）、43 项全能力冒烟（scripts/smoke-full.sh）、
   chunk 大文件生命周期回归、Helm CI 真装 + helm test
 
 ## 现在（进行中）
@@ -40,8 +43,10 @@
 
 ## 下一步（近期规划）
 
-- [ ] 存储迁移工具：local → s3/webdav 存量数据搬运
+- [ ] 存储迁移工具：local → 远端后端存量数据搬运
 - [ ] 跨会话断点续传：按 file_hash 匹配未完成会话（现有同会话续传 + 跨会话秒传）
+- [ ] Azure Blob/HDFS/OneDrive 驱动真机联调（REST 语义按官方文档实现，Azure 已签名单测；
+      OneDrive 需 Azure AD 凭证）
 - [ ] Telegram / Bark 通知渠道（SMTP 已落地，架构上扩渠道）
 - [ ] Playwright E2E + 前端测试加密
 - [ ] 飞牛 fnOS 深度集成落地（SSO / 共享目录 / 内网穿透 / 通知中心，等 Open API 凭证解锁）
