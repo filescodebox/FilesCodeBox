@@ -110,7 +110,7 @@ services:
         condition: service_healthy
     restart: unless-stopped
     healthcheck: # 镜像内置同款;显式声明便于 compose 事件/depends_on 语义清晰
-      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:8080/"]
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/"]  # localhost 会先解析 ::1,nginx 仅 IPv4 → 永远 refused
       interval: 30s
       timeout: 3s
       start_period: 5s
