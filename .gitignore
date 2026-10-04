@@ -3,7 +3,7 @@
 /core/
 /server/
 /frontend/
-/filecodebox-fnos/
+/fnos/
 
 # Go 构建产物
 bin/

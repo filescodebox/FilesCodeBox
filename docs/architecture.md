@@ -15,7 +15,7 @@ graph TB
         CORE["🧩 core<br/>业务核心库 v0.6.4<br/>10 域服务 + bootstrap"]
         SRV["🚀 server<br/>部署应用 v0.6.4<br/>main 薄壳 + Dockerfile"]
         FE["🖥️ frontend<br/>Vue3 + TS"]
-        FNOS["🐂 filescodebox-fnos<br/>飞牛 fnOS 应用 v0.2.2<br/>SSO/共享目录/通知/穿透"]
+        FNOS["🐂 fnos<br/>飞牛 fnOS 应用 v0.3.0<br/>SSO/共享目录/通知/穿透"]
     end
 
     USER["👤 自托管用户"] -->|"docker run / compose"| SRV
@@ -37,7 +37,7 @@ graph TB
 graph LR
     FE["frontend<br/>(Vue3)"] -->|"/openapi.json 运行时规范<br/>(swagger 页直连后端)"| SRV["server"]
     SRV -->|"require v0.6.x"| CORE["core"]
-    FNOS["filescodebox-fnos"] -->|"require v0.6.x<br/>库式调用 bootstrap"| CORE
+    FNOS["fnos"] -->|"require v0.7.x<br/>库式调用 bootstrap"| CORE
     CORE -->|"require v0.2.x"| CTX["contracts"]
 
     classDef plain fill:#eef,stroke:#88a
@@ -60,7 +60,7 @@ graph LR
 | contracts | v0.2.1 | thrift v0.13 生成代码,版本约束以 require 传递(下游零 replace) |
 | core | v0.6.4 | 分片完成 hotfix/多文件+zip/E2E/ClamAV/SMTP/寄件码/OIDC/openapi 运行时生成/本地文件管理 |
 | server | v0.6.4 | 镜像 `ghcr.io/filescodebox/server`(≥v0.6.1 才含分片完成修复) |
-| filescodebox-fnos | v0.2.2(master 已升 core v0.6.4,待发 v0.2.3) | 镜像 `ghcr.io/filescodebox/filescodebox-fnos`(2026-10-03 随仓库改名,旧镜像 `filecodebox-fnos` 冻结在 v0.2.1) |
+| fnos | v0.3.0(master,随 core v0.7.6) | 镜像 `ghcr.io/filescodebox/fnos`(2026-10-04 随仓改名 filescodebox-fnos → fnos;旧镜像 `filescodebox-fnos` 冻结在 v0.2.6,更早 `filecodebox-fnos` 冻结在 v0.2.1) |
 
 ---
 
@@ -211,7 +211,7 @@ graph LR
 | 配置 | config.yaml + FCB_* env | FNOS_* env + 飞牛向导变量 |
 | JWT 密钥 | FCB_JWT_SECRET 必填(强校验) | 自动生成并持久化(装机即用) |
 | 数据 | docker volume | NAS 共享目录(用户可见可备份) |
-| 镜像 | ghcr.io/filescodebox/server | ghcr.io/filescodebox/filescodebox-fnos |
+| 镜像 | ghcr.io/filescodebox/server | ghcr.io/filescodebox/fnos |
 
 Kubernetes 形态（charts/filecodebox，chart 0.3+）为**前后端分离两容器**：`frontend` Deployment（ghcr.io/filescodebox/frontend，nginx 静态资源 + API 反代，无状态）+ `server` Deployment（API/数据，携带 PVC），Ingress 指向 frontend Service、API 由其反代后端；两镜像由 server 仓 release 工作流以同一 `v*` tag 同步发布（与 chart appVersion 单点对齐）。
 

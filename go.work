@@ -6,5 +6,5 @@ use (
 	./contracts
 	./core
 	./server
-	./filecodebox-fnos
+	./fnos
 )

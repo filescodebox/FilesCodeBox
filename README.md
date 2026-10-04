@@ -19,7 +19,7 @@
 | [core](https://github.com/filescodebox/core) | 业务核心库:10 个域服务 + repo/storage + `bootstrap.Bootstrap()` 库入口 | v0.6.4 |
 | [server](https://github.com/filescodebox/server) | 独立部署应用:main 薄壳 + 前端静态资源 + Dockerfile | v0.6.4(跟随 core) |
 | [frontend](https://github.com/filescodebox/frontend) | Vue3 + TS + Vite + Element Plus(API 规范由后端运行时生成 `/openapi.json`) | - |
-| [filescodebox-fnos](https://github.com/filescodebox/filescodebox-fnos) | 飞牛 fnOS 应用适配(可选,`make setup` 默认拉取) | v0.2.2 |
+| [fnos](https://github.com/filescodebox/fnos) | 飞牛 fnOS 应用适配(可选,`make setup` 默认拉取) | v0.3.0 |
 
 依赖方向(单向,CI 守护):`server / fnos / frontend ──► core ──► contracts`
 

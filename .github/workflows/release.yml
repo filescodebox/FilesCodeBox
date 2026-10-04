@@ -19,8 +19,8 @@ jobs:
             echo "### 生态组件"
             echo "- core / server：见各自仓 Release"
             echo "- charts：helm repo add filescodebox https://filescodebox.github.io/charts"
-            echo "- 桌面客户端：见 Assets 或 filescodebox-desktop 仓 Releases"
-            echo "- fnOS 应用：filescodebox-fnos 仓 Releases"
+            echo "- 桌面客户端：见 Assets 或 desktop 仓 Releases"
+            echo "- fnOS 应用：fnos 仓 Releases"
             echo ""
             echo "### 变更摘要"
             sed -n '/^## \[Unreleased\]/,/^## \[0\./p' CHANGELOG.md | head -120 || true
