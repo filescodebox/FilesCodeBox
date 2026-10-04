@@ -4,7 +4,7 @@ title: 快速开始
 
 # 快速开始
 
-用 Docker Compose 三步把 FilesCodeBox 跑起来：单容器部署，镜像内置前端页面，全部状态落在本机 `./data` 目录。
+用 Docker Compose 三步把 FilesCodeBox 跑起来：前后端分离双容器部署（frontend 静态入口 + server API，外加 Redis），全部状态落在本机 `./data` 目录。
 
 ## 前置要求
 
@@ -21,7 +21,7 @@ cd filescodebox
 # 2. 生成环境配置（全部项有安全默认，可留空；生产至少设 FCB_ADMIN_PASSWORD）
 cp .env.example .env
 
-# 3. 启动（拉取 ghcr.io/filescodebox/server 镜像，含前端静态资源）
+# 3. 启动（拉取 ghcr.io/filescodebox 的 server + frontend 双镜像，版本由 FCB_IMAGE_TAG 同钉）
 docker compose up -d
 ```
 
@@ -43,7 +43,7 @@ curl http://localhost:12345/live    # 健康检查
 
 | 端口 | 说明 |
 | --- | --- |
-| `12345` | 后端 API + 前端页面直连端口（`.env` 的 `FCB_API_PORT` 可改） |
+| `12345` | 对外入口（frontend 容器：静态页面 + API 反代，`.env` 的 `FCB_API_PORT` 可改；server 不直接对外） |
 | `80` | nginx 反代入口（仅 `--profile nginx` 启用时占用，`FCB_HTTP_PORT` 可改） |
 
 ## 下一步

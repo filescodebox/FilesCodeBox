@@ -1,4 +1,4 @@
-# FileCodeBox 架构文档
+# FilesCodeBox 架构文档
 
 > 装配仓的架构总览:生态全景、仓库依赖、core 内部分层、运行时请求流、数据流、部署形态与发布流水线。
 > 所有图均为 Mermaid,GitHub 原生渲染。版本与仓库角色速查见 [README](../README.md)。
@@ -12,20 +12,21 @@ graph TB
     subgraph ORG["filescodebox 组织"]
         UMB["📁 filescodebox<br/>(装配仓·本仓库)<br/>make setup 拉齐工作区"]
         CT["📦 contracts<br/>契约层 v0.2.1<br/>errcode + Thrift 类型"]
-        CORE["🧩 core<br/>业务核心库 v0.6.4<br/>10 域服务 + bootstrap"]
-        SRV["🚀 server<br/>部署应用 v0.6.4<br/>main 薄壳 + Dockerfile"]
+        CORE["🧩 core<br/>业务核心库 v0.7.7<br/>10 域服务 + bootstrap"]
+        SRV["🚀 server<br/>部署应用 v0.9.3<br/>main 薄壳 + Dockerfile"]
         FE["🖥️ frontend<br/>Vue3 + TS"]
-        FNOS["🐂 fnos<br/>飞牛 fnOS 应用 v0.3.0<br/>SSO/共享目录/通知/穿透"]
+        FNOS["🐂 fnos<br/>飞牛 fnOS 应用 v1.2.0<br/>SSO/共享目录/通知/穿透"]
+        P2P["🕸️ p2p<br/>联邦注册中心 v0.1.0<br/>租约注册/联邦路由"]
     end
 
-    USER["👤 自托管用户"] -->|"docker run / compose"| SRV
+    USER["👤 自托管用户"] -->|"compose / Helm"| SRV
     NAS["🏠 飞牛 NAS 用户"] -->|".fpk 单容器"| FNOS
     DEV["👨‍💻 开发者"] -->|"git clone + make setup"| UMB
 
-    UMB -.->|"setup.sh 拉取"| CT & CORE & SRV & FE
+    UMB -.->|"setup.sh 拉取"| CT & CORE & SRV & FE & FNOS & P2P
 ```
 
-**职责边界**:装配仓不含业务代码,只提供工作区装配(`setup.sh`/`go.work`/`Makefile`/`docker-compose.yml`);六个模块仓库独立开发、独立 CI、独立发版。
+**职责边界**:装配仓不含业务代码,只提供工作区装配(`setup.sh`/`go.work`/`Makefile`/`docker-compose.yml`);六个模块仓库(经 setup.sh 拉取)与 desktop(桌面客户端)、charts(Helm Chart)两个产物仓独立开发、独立 CI、独立发版。
 
 ---
 
@@ -36,12 +37,14 @@ graph TB
 ```mermaid
 graph LR
     FE["frontend<br/>(Vue3)"] -->|"/openapi.json 运行时规范<br/>(swagger 页直连后端)"| SRV["server"]
-    SRV -->|"require v0.6.x"| CORE["core"]
+    SRV -->|"require v0.7.x"| CORE["core"]
     FNOS["fnos"] -->|"require v0.7.x<br/>库式调用 bootstrap"| CORE
     CORE -->|"require v0.2.x"| CTX["contracts"]
+    P2P["p2p<br/>(联邦注册中心)"]
+    CORE -.->|"M2 起 federation 域服务<br/>为 p2p 客户端(在建)"| P2P
 
     classDef plain fill:#eef,stroke:#88a
-    class CTX,CORE,SRV,FE,FNOS plain
+    class CTX,CORE,SRV,FE,FNOS,P2P plain
 ```
 
 ### 2.2 依赖规则(CI 强制守护)
@@ -58,9 +61,12 @@ graph LR
 | 仓库 | 当前版本 | 说明 |
 |------|---------|------|
 | contracts | v0.2.1 | thrift v0.13 生成代码,版本约束以 require 传递(下游零 replace) |
-| core | v0.6.4 | 分片完成 hotfix/多文件+zip/E2E/ClamAV/SMTP/寄件码/OIDC/openapi 运行时生成/本地文件管理 |
-| server | v0.6.4 | 镜像 `ghcr.io/filescodebox/server`(≥v0.6.1 才含分片完成修复) |
-| fnos | v0.3.0(master,随 core v0.7.6) | 镜像 `ghcr.io/filescodebox/fnos`(2026-10-04 随仓改名 filescodebox-fnos → fnos;旧镜像 `filescodebox-fnos` 冻结在 v0.2.6,更早 `filecodebox-fnos` 冻结在 v0.2.1) |
+| core | v0.7.7 | 存储 S3 env 映射/寄件码通知/API Token/多文件+zip/OIDC/openapi 运行时生成/本地文件管理;M2 federation 域服务在建 |
+| server | v0.9.3 | 纯后端镜像;frontend 分离镜像由同一 `v*` tag 同步发布(`ghcr.io/filescodebox/server` / `frontend`) |
+| fnos | v1.2.0(内置 core v0.7.6) | 镜像 `ghcr.io/filescodebox/fnos`(旧镜像 `filescodebox-fnos` 冻结在 v0.2.6,更早 `filecodebox-fnos` 冻结在 v0.2.1) |
+| p2p | v0.1.0 | 叶子仓零生态依赖;镜像 `ghcr.io/filescodebox/p2p`(新建包自动 public) |
+| desktop | desktop-v1.2.0 | Tauri 2 桌面客户端;三平台安装包回挂本仓 Release(`desktop-v*` tag) |
+| charts | chart 1.3.x(app v0.9.3) | `filecodebox` chart:1.2.x 起内置数据面,1.3.x 增内置 S3 对象存储;Pages + OCI 双发布 |
 
 ---
 
@@ -213,7 +219,7 @@ graph LR
 | 数据 | docker volume | NAS 共享目录(用户可见可备份) |
 | 镜像 | ghcr.io/filescodebox/server | ghcr.io/filescodebox/fnos |
 
-Kubernetes 形态（charts/filecodebox，chart 0.3+）为**前后端分离两容器**：`frontend` Deployment（ghcr.io/filescodebox/frontend，nginx 静态资源 + API 反代，无状态）+ `server` Deployment（API/数据，携带 PVC），Ingress 指向 frontend Service、API 由其反代后端；两镜像由 server 仓 release 工作流以同一 `v*` tag 同步发布（与 chart appVersion 单点对齐）。
+Kubernetes 形态（charts/filecodebox，chart 1.3.x，1.2.x 起可选内置数据面）为**前后端分离两容器**：`frontend` Deployment（ghcr.io/filescodebox/frontend，nginx 静态资源 + API 反代，无状态）+ `server` Deployment（API/数据，携带 PVC），Ingress 指向 frontend Service、API 由其反代后端；两镜像由 server 仓 release 工作流以同一 `v*` tag 同步发布（与 chart appVersion 单点对齐）。
 
 ---
 
@@ -221,13 +227,16 @@ Kubernetes 形态（charts/filecodebox，chart 0.3+）为**前后端分离两容
 
 ```mermaid
 flowchart LR
-    subgraph PR["每次 push / PR(五仓)"]
-        GO["contracts/core/fnos:<br/>build + vet + test + 依赖守护"]
-        FECI["frontend:<br/>typecheck + build + 类型同步校验"]
-        SRVCI["server:<br/>build + vet(+ main 时 docker 构建)"]
+    subgraph PR["每次 push / PR"]
+        GO["Go 五仓(contracts/core/server/fnos/p2p):<br/>build + vet + test + 依赖守护"]
+        FECI["frontend:<br/>typecheck + build"]
+        DSK["desktop:<br/>rust 构建 + 前端 build"]
+        CHT["charts:<br/>lint + template + kind 安装冒烟"]
     end
-    subgraph REL["打 v* tag(server / fnos)"]
-        B["buildx 多架构<br/>amd64 + arm64"] --> P["推 ghcr.io/filescodebox/*<br/>version + minor + latest"]
+    subgraph REL["打 tag / push main 发版"]
+        IMG["server/fnos/p2p: v* → buildx 多架构<br/>推 ghcr.io/filescodebox/*"]
+        BIN["desktop: desktop-v* → 三平台安装包<br/>fnos: fnos-v* → fpk 包(均回挂本仓 Release)"]
+        PUB["hub: v* → 生态快照 Release<br/>charts: push main → Pages + OCI"]
     end
     COREDEV["core 发新版本"] -->|"各下游 go.mod 升级<br/>(require 正式版本)"| REL
 ```

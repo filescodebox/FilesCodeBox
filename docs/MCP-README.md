@@ -1,6 +1,6 @@
-# FileCodeBox MCP Server（AI 客户端集成）
+# FilesCodeBox MCP Server（AI 客户端集成）
 
-FileCodeBox 内置 **Model Context Protocol (MCP) server**，AI 客户端（Claude Desktop / 任意标准 MCP 客户端）可以直接管理文件分享——上游 vastsa/FileCodeBox 没有的能力。
+FilesCodeBox 内置 **Model Context Protocol (MCP) server**，AI 客户端（Claude Desktop / 任意标准 MCP 客户端）可以直接管理文件分享——上游 vastsa/FileCodeBox 没有的能力。
 
 - 传输：**Streamable HTTP**（`POST /api/v1/mcp`，JSON-RPC 2.0，符合 MCP 规范；legacy 文档的裸 TCP 方案已废弃）
 - 认证：管理员 JWT（`Authorization: Bearer <token>`）

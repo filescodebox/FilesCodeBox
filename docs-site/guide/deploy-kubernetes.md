@@ -4,7 +4,7 @@ title: 部署 Kubernetes (Helm)
 
 # 部署 Kubernetes（Helm）
 
-官方 Helm Chart 位于 [filescodebox/charts](https://github.com/filescodebox/charts) 仓库，chart 名 `filecodebox`：部署 `ghcr.io/filescodebox/server` 单容器（镜像内置前端静态资源），可选 Ingress / PVC / Prometheus ServiceMonitor。
+官方 Helm Chart 位于 [filescodebox/charts](https://github.com/filescodebox/charts) 仓库，chart 名 `filecodebox`：前后端分离两 Deployment（frontend nginx 静态+反代 → server API，Ingress 指向 frontend），可选内置数据面（1.2.x 起 Redis 默认开，MySQL/PostgreSQL 可选；1.3.x 增内置 S3 对象存储）、Ingress / PVC / Prometheus ServiceMonitor。
 
 ## 安装
 
@@ -38,8 +38,11 @@ helm install filecodebox oci://ghcr.io/filescodebox/charts/filecodebox
 
 | 参数 | 说明 | 默认值 |
 | --- | --- | --- |
-| `replicaCount` | 副本数（SQLite 部署保持 1） | `1` |
-| `containerPort` | 容器内应用监听端口 | `12345` |
+| `replicaCount` | server 副本数（SQLite 部署保持 1） | `1` |
+| `frontend.replicaCount` | frontend 副本数（无状态，可独立扩缩） | `1` |
+| `containerPort` | server 容器内应用监听端口 | `12345` |
+| `redis.enabled` | 内置 Redis（匿名取件码等强依赖；`config.redis` 显式配置时自动让位） | `true` |
+| `mysql.enabled` / `postgresql.enabled` | 内置单副本数据库 StatefulSet，开启即自动注入 `FCB_DATABASE_*` | `false` |
 | `persistence.enabled` | 持久化 SQLite + 本地上传文件（容器 `/app/data`） | `true` |
 | `ingress.enabled` | Ingress（networking.k8s.io/v1） | `false` |
 | `metrics.serviceMonitor.enabled` | Prometheus Operator ServiceMonitor | `false` |
