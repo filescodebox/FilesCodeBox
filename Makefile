@@ -15,19 +15,19 @@ setup:            ## 拉齐/更新四个模块仓库(幂等)
 update: setup
 
 build:            ## workspace 联编 Go 模块(产物 bin/)
-	go build -o bin/ ./contracts/... ./core/... ./server/... ./p2p/...
+	go build -o bin/ ./contracts/... ./core/... ./server/... ./p2p/... ./kit/...
 	@echo "✓ build OK → bin/"
 
 test:             ## 全仓 Go 测试 + 前端 typecheck
-	go test ./contracts/... ./core/... ./server/... ./p2p/...
+	go test ./contracts/... ./core/... ./server/... ./p2p/... ./kit/...
 	cd frontend && ([ -d node_modules ] || npm ci) && npm run typecheck
 
 vet:
-	go vet ./contracts/... ./core/... ./server/... ./p2p/...
+	go vet ./contracts/... ./core/... ./server/... ./p2p/... ./kit/...
 
 lint:             ## golangci-lint 各 Go 模块（CI 同款门禁；本地提交前建议跑，防 lint 溜进 CI）
 	@command -v golangci-lint >/dev/null || { echo "golangci-lint 未安装: brew install golangci-lint"; exit 1; }
-	for m in contracts core server p2p; do echo "── $$m"; (cd $$m && golangci-lint run ./...); done
+	for m in contracts core server p2p kit; do echo "── $$m"; (cd $$m && golangci-lint run ./...); done
 	@echo "✓ lint OK"
 
 smoke: build      ## 本地起 server 并跑冒烟(健康检查/登录/文本分享)

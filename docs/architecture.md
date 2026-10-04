@@ -17,16 +17,17 @@ graph TB
         FE["🖥️ frontend<br/>Vue3 + TS"]
         FNOS["🐂 fnos<br/>飞牛 fnOS 应用 v1.2.0<br/>SSO/共享目录/通知/穿透"]
         P2P["🕸️ p2p<br/>联邦注册中心 v0.1.0<br/>租约注册/联邦路由"]
+        KIT["🧰 kit<br/>共享 Go 工具库 v0.1.0<br/>retry/syncx/ratelimit 等 20 包"]
     end
 
     USER["👤 自托管用户"] -->|"compose / Helm"| SRV
     NAS["🏠 飞牛 NAS 用户"] -->|".fpk 单容器"| FNOS
     DEV["👨‍💻 开发者"] -->|"git clone + make setup"| UMB
 
-    UMB -.->|"setup.sh 拉取"| CT & CORE & SRV & FE & FNOS & P2P
+    UMB -.->|"setup.sh 拉取"| CT & CORE & SRV & FE & FNOS & P2P & KIT
 ```
 
-**职责边界**:装配仓不含业务代码,只提供工作区装配(`setup.sh`/`go.work`/`Makefile`/`docker-compose.yml`);六个模块仓库(经 setup.sh 拉取)与 desktop(桌面客户端)、charts(Helm Chart)两个产物仓独立开发、独立 CI、独立发版。
+**职责边界**:装配仓不含业务代码,只提供工作区装配(`setup.sh`/`go.work`/`Makefile`/`docker-compose.yml`);七个模块仓库(经 setup.sh 拉取)与 desktop(桌面客户端)、charts(Helm Chart)两个产物仓独立开发、独立 CI、独立发版。
 
 ---
 
@@ -42,9 +43,11 @@ graph LR
     CORE -->|"require v0.2.x"| CTX["contracts"]
     P2P["p2p<br/>(联邦注册中心)"]
     CORE -.->|"M2 起 federation 域服务<br/>为 p2p 客户端(在建)"| P2P
+    KIT["kit<br/>(共享 Go 工具库)"]
+    CORE -.->|"通用工具包<br/>(按需渐进接入)"| KIT
 
     classDef plain fill:#eef,stroke:#88a
-    class CTX,CORE,SRV,FE,FNOS,P2P plain
+    class CTX,CORE,SRV,FE,FNOS,P2P,KIT plain
 ```
 
 ### 2.2 依赖规则(CI 强制守护)
@@ -52,6 +55,7 @@ graph LR
 | 规则 | 守护方式 |
 |------|---------|
 | contracts 零项目内依赖(纯类型,仅 thrift runtime + 标准库) | contracts CI:`go list -deps` 检查 |
+| p2p / kit 叶子仓零生态依赖(禁 import 任何兄弟模块) | p2p / kit CI dep guard:`go list -deps` 检查 |
 | core 不许 import server / frontend / fnos | core CI 同上 |
 | server / fnos 只经 go.mod 正式版本引用 core,**零 replace** | 各仓 go.mod 无 replace(本地联编由本仓 go.work 承担) |
 | frontend 走后端运行时 OpenAPI 规范(`/openapi.json`),不再维护快照/生成类型 | swagger 页与 vite 代理均直连后端同源(2026-10-04 移除漂移快照) |
@@ -65,6 +69,7 @@ graph LR
 | server | v0.9.3 | 纯后端镜像;frontend 分离镜像由同一 `v*` tag 同步发布(`ghcr.io/filescodebox/server` / `frontend`) |
 | fnos | v1.2.0(内置 core v0.7.6) | 镜像 `ghcr.io/filescodebox/fnos`(旧镜像 `filescodebox-fnos` 冻结在 v0.2.6,更早 `filecodebox-fnos` 冻结在 v0.2.1) |
 | p2p | v0.1.0 | 叶子仓零生态依赖;镜像 `ghcr.io/filescodebox/p2p`(新建包自动 public) |
+| kit | v0.1.0 | 共享 Go 工具库(20 包,零生态依赖叶子仓);纯库仓无镜像,`go get github.com/filescodebox/kit/<包名>` 消费 |
 | desktop | desktop-v1.2.0 | Tauri 2 桌面客户端;三平台安装包回挂本仓 Release(`desktop-v*` tag) |
 | charts | chart 1.3.x(app v0.9.3) | `filecodebox` chart:1.2.x 起内置数据面,1.3.x 增内置 S3 对象存储;Pages + OCI 双发布 |
 
@@ -228,7 +233,7 @@ Kubernetes 形态（charts/filecodebox，chart 1.3.x，1.2.x 起可选内置数�
 ```mermaid
 flowchart LR
     subgraph PR["每次 push / PR"]
-        GO["Go 五仓(contracts/core/server/fnos/p2p):<br/>build + vet + test + 依赖守护"]
+        GO["Go 六仓(contracts/core/server/fnos/p2p/kit):<br/>build + vet + test + 依赖守护"]
         FECI["frontend:<br/>typecheck + build"]
         DSK["desktop:<br/>rust 构建 + 前端 build"]
         CHT["charts:<br/>lint + template + kind 安装冒烟"]

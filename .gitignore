@@ -5,6 +5,7 @@
 /frontend/
 /fnos/
 /p2p/
+/kit/
 
 # Go 构建产物
 bin/

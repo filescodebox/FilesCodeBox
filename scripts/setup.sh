@@ -32,4 +32,9 @@ if [ "${SETUP_P2P:-1}" = "1" ]; then
   clone_or_update p2p p2p main
 fi
 
+# kit 共享 Go 工具库(go.work 已引用,默认拉取;SETUP_KIT=0 可跳过)
+if [ "${SETUP_KIT:-1}" = "1" ]; then
+  clone_or_update kit kit main
+fi
+
 echo "✓ 工作区就绪:$(ls -d */ 2>/dev/null | tr -d '/' | tr '\n' ' ')"

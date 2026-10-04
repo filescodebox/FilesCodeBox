@@ -15,14 +15,16 @@
 | 仓库 | 角色 | 版本 |
 |------|------|------|
 | [contracts](https://github.com/filescodebox/contracts) | 契约层:错误码 + Thrift 生成类型(纯类型,零业务依赖) | v0.2.1 |
-| [core](https://github.com/filescodebox/core) | 业务核心库:10 个域服务 + repo/storage + `bootstrap.Bootstrap()` 库入口 | v0.7.6 |
-| [server](https://github.com/filescodebox/server) | 独立部署应用:main 薄壳 + 配置模板 + Dockerfile(0.9.0 起纯后端) | v0.9.2 |
+| [core](https://github.com/filescodebox/core) | 业务核心库:11 个域服务 + repo/storage + `bootstrap.Bootstrap()` 库入口 | v0.8.0 |
+| [server](https://github.com/filescodebox/server) | 独立部署应用:main 薄壳 + 配置模板 + Dockerfile(0.9.0 起纯后端) | v0.10.0 |
 | [frontend](https://github.com/filescodebox/frontend) | Vue3 + TS + Vite + Element Plus(nginx 分离镜像,随 server 同版本发布) | - |
 | [desktop](https://github.com/filescodebox/desktop) | 桌面客户端:Tauri 2 托盘常驻,连接任意 FilesCodeBox 服务器 | desktop-v1.2.0 |
 | [fnos](https://github.com/filescodebox/fnos) | 飞牛 fnOS 应用适配(可选,`make setup` 默认拉取) | v1.2.0 |
-| [charts](https://github.com/filescodebox/charts) | Kubernetes Helm Chart:前后端分离双 Deployment | filecodebox-1.2.0 |
+| [p2p](https://github.com/filescodebox/p2p) | P2P 联邦注册中心:节点租约注册 + 口令联邦路由(可选,默认拉取) | v0.1.0 |
+| [kit](https://github.com/filescodebox/kit) | 共享 Go 工具库:20 个零生态依赖通用包(retry/syncx/ratelimit 等) | v0.1.0 |
+| [charts](https://github.com/filescodebox/charts) | Kubernetes Helm Chart:前后端分离双 Deployment | filecodebox-1.3.5 |
 
-依赖方向(单向,CI 守护):`server / fnos / frontend ──► core ──► contracts`(desktop 经 HTTP API 连接,无构建期依赖)
+依赖方向(单向,CI 守护):`server / fnos / frontend ──► core ──► contracts`;`p2p`、`kit` 为零生态依赖叶子仓(desktop 经 HTTP API 连接,无构建期依赖)
 
 ## 快速开始
 
@@ -30,8 +32,8 @@
 git clone https://github.com/filescodebox/filescodebox.git && cd filescodebox
 
 make setup     # 拉齐模块仓库(幂等,重复执行=更新)
-make test      # 全仓测试(Go 三模块 + 前端 typecheck)
-make lint      # golangci-lint 三 Go 模块(CI 同款门禁)
+make test      # 全仓测试(Go 各模块 + 前端 typecheck)
+make lint      # golangci-lint 各 Go 模块(CI 同款门禁)
 make build     # workspace 联编
 make smoke     # 起 server 跑冒烟(健康检查/admin登录/文本分享)
 # bash scripts/smoke-full.sh   # 全能力真机冒烟(39 项断言,含临时 Redis)
@@ -52,8 +54,8 @@ docker compose up -d          # ghcr 发布镜像;前端入口 http://localhost(
 
 ```
 filescodebox/           ← 本仓(装配层:脚本/联编/编排)
-├── go.work             # contracts+core+server 本地联编
-├── contracts/  core/  server/  frontend/  fnos/   ← 独立 git 仓库(gitignore 掉)
+├── go.work             # contracts+core+server+fnos+p2p+kit 本地联编
+├── contracts/  core/  server/  frontend/  fnos/  p2p/  kit/   ← 独立 git 仓库(gitignore 掉)
 └── data/               ← compose 数据卷
 ```
 

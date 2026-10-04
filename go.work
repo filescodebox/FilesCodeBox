@@ -8,4 +8,5 @@ use (
 	./server
 	./fnos
 	./p2p
+	./kit
 )
