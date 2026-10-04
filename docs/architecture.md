@@ -213,6 +213,8 @@ graph LR
 | 数据 | docker volume | NAS 共享目录(用户可见可备份) |
 | 镜像 | ghcr.io/filescodebox/server | ghcr.io/filescodebox/filescodebox-fnos |
 
+Kubernetes 形态（charts/filecodebox，chart 0.3+）为**前后端分离两容器**：`frontend` Deployment（ghcr.io/filescodebox/frontend，nginx 静态资源 + API 反代，无状态）+ `server` Deployment（API/数据，携带 PVC），Ingress 指向 frontend Service、API 由其反代后端；两镜像由 server 仓 release 工作流以同一 `v*` tag 同步发布（与 chart appVersion 单点对齐）。
+
 ---
 
 ## 7. CI / 发布流水线

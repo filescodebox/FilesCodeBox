@@ -25,6 +25,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: filecodebox
+                # 流量统一进 frontend(nginx)容器, API 由其反代到 filecodebox Service
+                name: filecodebox-frontend
                 port:
                   name: http
