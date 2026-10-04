@@ -102,6 +102,7 @@ case "$N" in JERR*|"") bad "S2c openapi paths 数" "$N";; [0-9]*) [ "$N" -ge 90 
 # S3 /api/config
 AC=$(curl -s "$BASE/api/config")
 echo "$AC" | J "d['data']['expireStyle']" | grep -q week && ok "S3 api/config 下发 expireStyle" || bad "S3 api/config" "$(echo $AC | head -c 100)"
+echo "$AC" | J "d['data']['showAdminAddr']" | grep -q "False" && ok "S3b showAdminAddr 下发(默认 false)" || bad "S3b showAdminAddr" "-"
 
 # S4 admin 登录
 TOK=$(curl -s -X POST "$BASE/admin/login" -H 'Content-Type: application/json' -d '{"username":"admin","password":"admin123"}' | J "d['data']['token']")
@@ -168,6 +169,17 @@ CMP_CODE=$(echo "$CMP" | J "d['data']['share_code']") ; [ "$CMP_CODE" = "JERR"* 
 HA=$(sha256sum "$SMOKE/src/big-a.txt" | cut -d' ' -f1)
 QI=$(curl -s -X POST "$BASE/chunk/upload/init/" -H 'Content-Type: application/json' -d "{\"file_name\":\"big-a.txt\",\"file_size\":300000,\"chunk_size\":1048576,\"total_chunks\":1,\"file_hash\":\"$HA\"}")
 [ "$(echo "$QI" | J "d['data']['is_quick_upload']")" = "True" ] && ok "S11b 秒传命中" || bad "S11b 秒传" "$(echo $QI | head -c 120)"
+
+# S11c/d 分片期望哈希强校验（hash 参数：不符 422 可重试 / 相符放行）
+head -c 1024 /dev/zero | tr '\0' 'B' > "$SMOKE/src/bad-chunk.bin"
+HBAD=$(printf 'a%.0s' $(seq 1 64))
+INIT2=$(curl -s -X POST "$BASE/chunk/upload/init/" -H 'Content-Type: application/json' -d "{\"file_name\":\"bad-chunk.bin\",\"file_size\":1024,\"chunk_size\":1048576,\"total_chunks\":1,\"file_hash\":\"$(sha256sum "$SMOKE/src/bad-chunk.bin" | cut -d' ' -f1)\"}")
+UP2=$(echo "$INIT2" | J "d['data']['upload_id']")
+BADR=$(curl -s -o /dev/null -w '%{http_code}' -X POST "$BASE/chunk/upload/chunk/$UP2/0?hash=$HBAD" -F "chunk=@$SMOKE/src/bad-chunk.bin")
+[ "$BADR" = 422 ] && ok "S11c 期望哈希不符拒收(422)" || bad "S11c 哈希校验" "$BADR"
+HOK=$(sha256sum "$SMOKE/src/bad-chunk.bin" | cut -d' ' -f1)
+OKR=$(curl -s -o /dev/null -w '%{http_code}' -X POST "$BASE/chunk/upload/chunk/$UP2/0?hash=$HOK" -F "chunk=@$SMOKE/src/bad-chunk.bin")
+[ "$OKR" = 200 ] && ok "S11d 正确 SHA-256 放行" || bad "S11d 正确哈希" "$OKR"
 
 # S12 管理端本地文件
 LF=$(curl -s "$BASE/admin/local-files?root=0" -H "$AH")
