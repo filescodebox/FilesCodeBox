@@ -12,7 +12,7 @@ FileCodeBox is the Go multirepo workspace of the [filescodebox](https://github.c
 | [core](https://github.com/filescodebox/core) | Business core library: 10 domain services + repo/storage + `bootstrap.Bootstrap()` | v0.2.0 |
 | [server](https://github.com/filescodebox/server) | Deployable app: thin main + static frontend + Dockerfile | follows core |
 | [frontend](https://github.com/filescodebox/frontend) | Vue3 + TS + Vite + Element Plus | - |
-| [filecodebox-fnos](https://github.com/filescodebox/filecodebox-fnos) | fnOS (fnNAS) adapter (optional) | v0.1.1 |
+| [fnos](https://github.com/filescodebox/fnos) | fnOS (fnNAS) adapter (optional) | v0.3.0 |
 | [charts](https://github.com/filescodebox/charts) | Kubernetes Helm chart | chart 0.1.0 |
 
 Dependency direction (CI-enforced): `server / fnos / frontend ──► core ──► contracts`

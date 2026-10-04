@@ -204,7 +204,7 @@ graph LR
 
 ## 6. 部署形态对比
 
-| | server(自托管) | filecodebox-fnos(飞牛) |
+| | server(自托管) | fnos(飞牛) |
 |---|---|---|
 | 进程 | 1 个二进制(main → core) | 1 个二进制(adapter → core) |
 | 前端 | 无(0.9.0 起纯后端镜像;分离部署由 frontend 镜像承担静态+反代) | 同镜像复用 core 静态服务(StaticDir) |

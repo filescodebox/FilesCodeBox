@@ -61,7 +61,7 @@ FileCodeBox/            ← 本仓(装配层:脚本/联编/编排)
 ## 发版
 
 打 `v*` tag 即自动构建多架构镜像推 ghcr(见各仓 `release.yml`):
-`ghcr.io/filescodebox/server` · `ghcr.io/filescodebox/filecodebox-fnos`
+`ghcr.io/filescodebox/server` · `ghcr.io/filescodebox/fnos`
 
 ## 原 README(产品功能/截图/API 说明)
 
