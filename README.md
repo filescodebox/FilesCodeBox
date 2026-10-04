@@ -21,7 +21,7 @@
 | [desktop](https://github.com/filescodebox/desktop) | 桌面客户端:Tauri 2 托盘常驻,连接任意 FilesCodeBox 服务器 | desktop-v1.2.0 |
 | [fnos](https://github.com/filescodebox/fnos) | 飞牛 fnOS 应用适配(可选,`make setup` 默认拉取) | v1.2.0 |
 | [p2p](https://github.com/filescodebox/p2p) | P2P 联邦注册中心:节点租约注册 + 口令联邦路由(可选,默认拉取) | v0.1.0 |
-| [kit](https://github.com/filescodebox/kit) | 共享 Go 工具库:20 个零生态依赖通用包(retry/syncx/ratelimit 等) | v0.1.0 |
+| [kit](https://github.com/filescodebox/kit) | 共享 Go 工具库:24 个零生态依赖通用包(retry/syncx/singleflight/group 等) | v0.2.0 |
 | [charts](https://github.com/filescodebox/charts) | Kubernetes Helm Chart:前后端分离双 Deployment | filecodebox-1.3.5 |
 
 依赖方向(单向,CI 守护):`server / fnos / frontend ──► core ──► contracts`;`p2p`、`kit` 为零生态依赖叶子仓(desktop 经 HTTP API 连接,无构建期依赖)
