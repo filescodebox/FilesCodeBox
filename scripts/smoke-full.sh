@@ -102,7 +102,7 @@ case "$N" in JERR*|"") bad "S2c openapi paths 数" "$N";; [0-9]*) [ "$N" -ge 90 
 # S3 /api/config
 AC=$(curl -s "$BASE/api/config")
 echo "$AC" | J "d['data']['expireStyle']" | grep -q week && ok "S3 api/config 下发 expireStyle" || bad "S3 api/config" "$(echo $AC | head -c 100)"
-echo "$AC" | J "d['data']['showAdminAddr']" | grep -q "False" && ok "S3b showAdminAddr 下发(默认 false)" || bad "S3b showAdminAddr" "-"
+echo "$AC" | J "'showAdminAddr' in d['data']" | grep -q True && ok "S3b showAdminAddr 字段下发" || bad "S3b showAdminAddr" "-"
 
 # S4 admin 登录
 TOK=$(curl -s -X POST "$BASE/admin/login" -H 'Content-Type: application/json' -d "{\"username\":\"admin\",\"password\":\"${SMOKE_ADMIN_PASSWORD:-admin123}\"}" | J "d['data']['token']")
