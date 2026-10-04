@@ -1,19 +1,20 @@
-# FileCodeBox
+# FilesCodeBox
 
 **Anonymous code-based file & text sharing — like picking up a parcel.** Upload, get a pickup code, share the code; the recipient enters the code and downloads. No registration required.
 
-FileCodeBox is the Go multirepo workspace of the [filescodebox](https://github.com/orgs/filescodebox/repositories) organization. This repository is the **umbrella (hub)**: no business code, only tooling to assemble the module repos into a buildable workspace.
+FilesCodeBox is the Go multirepo workspace of the [filescodebox](https://github.com/orgs/filescodebox/repositories) organization. This repository is the **umbrella (hub)**: no business code, only tooling to assemble the module repos into a buildable workspace.
 
 ## Repositories
 
 | Repo | Role | Version |
 |------|------|---------|
-| [contracts](https://github.com/filescodebox/contracts) | Contract layer: error codes + Thrift-generated types (zero business deps) | v0.1.0 |
-| [core](https://github.com/filescodebox/core) | Business core library: 10 domain services + repo/storage + `bootstrap.Bootstrap()` | v0.2.0 |
-| [server](https://github.com/filescodebox/server) | Deployable app: thin main + static frontend + Dockerfile | follows core |
-| [frontend](https://github.com/filescodebox/frontend) | Vue3 + TS + Vite + Element Plus | - |
-| [fnos](https://github.com/filescodebox/fnos) | fnOS (fnNAS) adapter (optional) | v0.3.0 |
-| [charts](https://github.com/filescodebox/charts) | Kubernetes Helm chart | chart 0.1.0 |
+| [contracts](https://github.com/filescodebox/contracts) | Contract layer: error codes + Thrift-generated types (zero business deps) | v0.2.1 |
+| [core](https://github.com/filescodebox/core) | Business core library: 10 domain services + repo/storage + `bootstrap.Bootstrap()` | v0.7.6 |
+| [server](https://github.com/filescodebox/server) | Deployable app: thin main + configs + Dockerfile (pure backend since 0.9.0) | v0.9.2 |
+| [frontend](https://github.com/filescodebox/frontend) | Vue3 + TS + Vite + Element Plus (nginx image, released with server) | - |
+| [desktop](https://github.com/filescodebox/desktop) | Desktop client: Tauri 2 tray app connecting to any FilesCodeBox server | desktop-v1.2.0 |
+| [fnos](https://github.com/filescodebox/fnos) | fnOS (fnNAS) adapter (optional) | v1.2.0 |
+| [charts](https://github.com/filescodebox/charts) | Kubernetes Helm chart (frontend + server split deployments) | chart 1.2.0 |
 
 Dependency direction (CI-enforced): `server / fnos / frontend ──► core ──► contracts`
 
@@ -33,12 +34,12 @@ Dependency direction (CI-enforced): `server / fnos / frontend ──► core ─
 docker compose up -d          # or: BUILD=1 docker compose up -d
 ```
 
-Open `http://localhost:12345`. Default admin is `admin / admin123` — override with `FCB_ADMIN_PASSWORD` in production.
+Frontend entry `http://localhost` (`FCB_HTTP_PORT`, default 80); API on `:12345`. Default admin is `admin / admin123` — override with `FCB_ADMIN_PASSWORD` in production.
 
 Build from source:
 
 ```bash
-git clone https://github.com/filescodebox/FileCodeBox.git && cd FileCodeBox
+git clone https://github.com/filescodebox/filescodebox.git && cd filescodebox
 make setup     # fetch module repos (idempotent)
 make test      # Go tests + frontend typecheck
 make build     # workspace build → bin/

@@ -1,34 +1,35 @@
-# FileCodeBox(umbrella)
+# FilesCodeBox(umbrella) · 文件快递柜
 
-高性能文件/文本匿名分享平台的**装配仓库**:本仓不含业务代码,只负责把各模块仓库拉齐成一个可开发、可构建、可部署的完整工作区。
+[![License](https://img.shields.io/github/license/filescodebox/filescodebox)](LICENSE)
+[![Tag](https://img.shields.io/github/v/tag/filescodebox/filescodebox)](https://github.com/filescodebox/filescodebox/tags)
+[![Downloads](https://img.shields.io/github/downloads/filescodebox/filescodebox/total?label=%E5%AE%89%E8%A3%85%E5%8C%85%E4%B8%8B%E8%BD%BD)](https://github.com/filescodebox/filescodebox/releases)
 
+高性能文件/文本匿名分享平台(**FilesCodeBox · 文件快递柜**)的**装配仓库**:本仓不含业务代码,只负责把各模块仓库拉齐成一个可开发、可构建、可部署的完整工作区。
+
+> 🗂️ [组织主页](https://github.com/orgs/filescodebox)有生态总览与各形态(Docker / Kubernetes / 桌面 / NAS)快速开始。
 > 拆分前的单仓库完整版本保留在 [legacy 分支](https://github.com/filescodebox/FileCodeBox/tree/legacy)(全量历史)。
 > English overview: [README.en-US.md](README.en-US.md)
-
-## 架构文档
-
-完整的架构图集(生态全景 / 仓库依赖 / core 分层 / 请求流 / 数据流 / 部署形态 / 发布流水线)见 **[docs/architecture.md](docs/architecture.md)**(Mermaid 渲染)。
-
-产品路线图见 **[ROADMAP.md](ROADMAP.md)**;参与贡献前请读 [CONTRIBUTING.md](CONTRIBUTING.md),安全漏洞请走 [SECURITY.md](SECURITY.md) 的披露流程。变更记录见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## 模块仓库
 
 | 仓库 | 角色 | 版本 |
 |------|------|------|
 | [contracts](https://github.com/filescodebox/contracts) | 契约层:错误码 + Thrift 生成类型(纯类型,零业务依赖) | v0.2.1 |
-| [core](https://github.com/filescodebox/core) | 业务核心库:10 个域服务 + repo/storage + `bootstrap.Bootstrap()` 库入口 | v0.6.4 |
-| [server](https://github.com/filescodebox/server) | 独立部署应用:main 薄壳 + 前端静态资源 + Dockerfile | v0.6.4(跟随 core) |
-| [frontend](https://github.com/filescodebox/frontend) | Vue3 + TS + Vite + Element Plus(API 规范由后端运行时生成 `/openapi.json`) | - |
-| [fnos](https://github.com/filescodebox/fnos) | 飞牛 fnOS 应用适配(可选,`make setup` 默认拉取) | v0.3.0 |
+| [core](https://github.com/filescodebox/core) | 业务核心库:10 个域服务 + repo/storage + `bootstrap.Bootstrap()` 库入口 | v0.7.6 |
+| [server](https://github.com/filescodebox/server) | 独立部署应用:main 薄壳 + 配置模板 + Dockerfile(0.9.0 起纯后端) | v0.9.2 |
+| [frontend](https://github.com/filescodebox/frontend) | Vue3 + TS + Vite + Element Plus(nginx 分离镜像,随 server 同版本发布) | - |
+| [desktop](https://github.com/filescodebox/desktop) | 桌面客户端:Tauri 2 托盘常驻,连接任意 FilesCodeBox 服务器 | desktop-v1.2.0 |
+| [fnos](https://github.com/filescodebox/fnos) | 飞牛 fnOS 应用适配(可选,`make setup` 默认拉取) | v1.2.0 |
+| [charts](https://github.com/filescodebox/charts) | Kubernetes Helm Chart:前后端分离双 Deployment | filecodebox-1.2.0 |
 
-依赖方向(单向,CI 守护):`server / fnos / frontend ──► core ──► contracts`
+依赖方向(单向,CI 守护):`server / fnos / frontend ──► core ──► contracts`(desktop 经 HTTP API 连接,无构建期依赖)
 
 ## 快速开始
 
 ```bash
 git clone https://github.com/filescodebox/filescodebox.git && cd filescodebox
 
-make setup     # 拉齐五个模块仓库(幂等,重复执行=更新)
+make setup     # 拉齐模块仓库(幂等,重复执行=更新)
 make test      # 全仓测试(Go 三模块 + 前端 typecheck)
 make lint      # golangci-lint 三 Go 模块(CI 同款门禁)
 make build     # workspace 联编
@@ -40,7 +41,7 @@ make smoke     # 起 server 跑冒烟(健康检查/admin登录/文本分享)
 
 ```bash
 cp .env.example .env          # 可选,全部项有安全默认
-docker compose up -d          # ghcr 发布镜像,http://localhost:12345
+docker compose up -d          # ghcr 发布镜像;前端入口 http://localhost(FCB_HTTP_PORT,默认 80),API :12345
 # BUILD=1 make compose-up     # 本地构建(需先 make setup)
 # docker compose --profile nginx up -d   # 加 nginx 反代(须配 FCB_TRUSTED_PROXIES,见部署指南)
 ```
@@ -50,9 +51,9 @@ docker compose up -d          # ghcr 发布镜像,http://localhost:12345
 ## 工作区布局(setup 后)
 
 ```
-FileCodeBox/            ← 本仓(装配层:脚本/联编/编排)
+filescodebox/           ← 本仓(装配层:脚本/联编/编排)
 ├── go.work             # contracts+core+server 本地联编
-├── contracts/  core/  server/  frontend/   ← 独立 git 仓库(gitignore 掉)
+├── contracts/  core/  server/  frontend/  fnos/   ← 独立 git 仓库(gitignore 掉)
 └── data/               ← compose 数据卷
 ```
 
@@ -61,8 +62,13 @@ FileCodeBox/            ← 本仓(装配层:脚本/联编/编排)
 ## 发版
 
 打 `v*` tag 即自动构建多架构镜像推 ghcr(见各仓 `release.yml`):
-`ghcr.io/filescodebox/server` · `ghcr.io/filescodebox/fnos`
+`ghcr.io/filescodebox/server` · `ghcr.io/filescodebox/frontend`(与 server 同版本) · `ghcr.io/filescodebox/fnos`。
+桌面安装包(desktop-v*)与飞牛应用包(fnos-v*)统一回挂[本仓 Releases](https://github.com/filescodebox/filescodebox/releases)。
 
 ## 原 README(产品功能/截图/API 说明)
 
 见 [legacy 分支 README](https://github.com/filescodebox/FileCodeBox/blob/legacy/README.md)。
+
+## License
+
+[Apache-2.0](LICENSE)
