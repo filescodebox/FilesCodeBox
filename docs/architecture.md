@@ -207,7 +207,7 @@ graph LR
 | | server(自托管) | filecodebox-fnos(飞牛) |
 |---|---|---|
 | 进程 | 1 个二进制(main → core) | 1 个二进制(adapter → core) |
-| 前端 | 镜像内 static/(npm ci 现场构建) | 同镜像复用 core 静态服务(StaticDir) |
+| 前端 | 无(0.9.0 起纯后端镜像;分离部署由 frontend 镜像承担静态+反代) | 同镜像复用 core 静态服务(StaticDir) |
 | 配置 | config.yaml + FCB_* env | FNOS_* env + 飞牛向导变量 |
 | JWT 密钥 | FCB_JWT_SECRET 必填(强校验) | 自动生成并持久化(装机即用) |
 | 数据 | docker volume | NAS 共享目录(用户可见可备份) |

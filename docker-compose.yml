@@ -1,36 +1,38 @@
-# FilesCodeBox 快速体验 / 自托管编排
+# FilesCodeBox 快速体验 / 自托管编排（前后端分离两容器）
 #
 #   cp .env.example .env          # 按需修改(最少 0 必改项,开箱即用)
-#   docker compose up -d          # 用 ghcr 发布镜像(需包可匿名拉取,或 docker login ghcr.io)
-#   BUILD=1 make compose-up       # 本地构建(make setup 后可用;= docker compose up -d --build)
+#   docker compose up -d          # 用 ghcr 发布镜像(两包均已 public 可匿名拉取)
+#   BUILD=1 make compose-up       # 本地构建双镜像(= docker compose up -d --build)
 #   docker compose --profile nginx up -d
 #                                 # 加挂 deploy/nginx/nginx.conf 反代(占用 80,
 #                                 # 须在 .env 设 FCB_TRUSTED_PROXIES,见下)
 #
-# 数据持久化:./data(SQLite 库 + 上传文件 + .jwt_secret)。
+# 架构(0.9.0 起,"server 镜像内嵌前端"模式已剔除):
+#   对外端口 → filecodebox-frontend(nginx: 静态资源 + API 反代)
+#                → filecodebox(server, 纯后端 API/数据, 不发布端口)
+#   .env 的 FCB_API_BIND/FCB_API_PORT 语义不变,作用对象变为 frontend 容器。
+#
+# 数据持久化:./data(SQLite 库 + 上传文件 + .jwt_secret),挂在后端容器。
 # Linux 裸 Docker(非 Desktop)宿主首次启动前: mkdir -p data && sudo chown 1000:1000 data
 # (容器以 uid 1000 运行,bind 挂载目录 root 属主会导致库/密钥文件写不进)。
 #
-# JWT 密钥:FCB_JWT_SECRET 未注入时,容器首启自动生成强随机值并持久化到
+# JWT 密钥:FCB_JWT_SECRET 未注入时,后端容器首启自动生成强随机值并持久化到
 # ./data/.jwt_secret,重启/升级不丢;显式注入 .env 的 FCB_JWT_SECRET 则以注入值为准
 # (轮换即改 .env 后 up -d,旧会话全部失效)。生产建议显式注入。
 #
 # 反代必读:启用 nginx profile 时必须设 FCB_TRUSTED_PROXIES=容器网段 CIDR
 # (默认 bridge 池通常为 172.16.0.0/12 覆盖;精确值可用
 #  docker network inspect <项目名>_default | grep Subnet 查询),
-# 否则后端不采信 X-Forwarded-For,限流/失败锁定全部按 nginx 的 IP 计数。
+# 否则后端不采信 X-Forwarded-For,限流/失败锁定全部按代理的 IP 计数。
 services:
+  # ── 后端(server 镜像, 纯后端): 仅被 frontend 反代,不对外发布端口 ──
+  # 需临时直连 API 调试时,自行给本服务加 "127.0.0.1:12345:12345" 端口映射。
   filecodebox:
     image: ghcr.io/filescodebox/server:${FCB_IMAGE_TAG:-latest}
     build:
       context: .
       dockerfile: server/Dockerfile
     container_name: filecodebox
-    ports:
-      # FCB_API_BIND=127.0.0.1 可把后端收进回环、仅经反代对外:
-      # 注意发布端口若被宿主 NAT(SNAT 成网关地址),直连客户端的源 IP 会落进
-      # trusted_proxies 网段,伪造 XFF 可绕过限流——有反代时建议回收直连入口
-      - "${FCB_API_BIND:-0.0.0.0}:${FCB_API_PORT:-12345}:12345"
     environment:
       - TZ=${TZ:-Asia/Shanghai}
       - FCB_SERVER_MODE=${FCB_SERVER_MODE:-release}
@@ -89,6 +91,36 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  # ── 前端(frontend 镜像, nginx 静态+反代): 对外唯一入口 ──
+  # 端口语义与旧单容器版一致:FCB_API_BIND/FCB_API_PORT 作用于本容器(镜像监听 8080)。
+  filecodebox-frontend:
+    image: ghcr.io/filescodebox/frontend:${FCB_IMAGE_TAG:-latest}
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: filecodebox-frontend
+    ports:
+      - "${FCB_API_BIND:-0.0.0.0}:${FCB_API_PORT:-12345}:8080"
+    environment:
+      # 反代上游 = 本编排的后端服务(与镜像 envsubst 默认值一致,显式写出便于理解)
+      - BACKEND_HOST=filecodebox
+      - BACKEND_PORT=12345
+    depends_on:
+      filecodebox:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck: # 镜像内置同款;显式声明便于 compose 事件/depends_on 语义清晰
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 3s
+      start_period: 5s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   # Redis(编排内置,开箱即用):匿名取件码仅存于 Redis(过期/次数/密码仍以
   # SQLite 为准)。AOF 持久化保证 redis 重启后取件码映射不丢;
   # 数据在命名卷 redisdata 中,不与 ./data(SQLite/上传文件)混放。
@@ -112,6 +144,7 @@ services:
 
   # 可选反代:docker compose --profile nginx up -d
   # 模板全文(deploy/nginx/nginx.conf)含 HTTPS/子路径部署注释块与大小配平说明。
+  # 上游指向 frontend 容器(静态+反代已在其中收敛),TLS 终结/统一入口仍由它承担。
   nginx:
     image: nginx:alpine
     profiles: ["nginx"]
@@ -121,7 +154,7 @@ services:
     volumes:
       - ./deploy/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
-      filecodebox:
+      filecodebox-frontend:
         condition: service_healthy
     restart: unless-stopped
     healthcheck: # 用 127.0.0.1:nginx 仅绑 IPv4,localhost 在 alpine 先解析 ::1 会被拒

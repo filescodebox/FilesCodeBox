@@ -42,10 +42,11 @@ smoke: build      ## 本地起 server 并跑冒烟(健康检查/登录/文本分
 smoke-full:       ## 全能力真机冒烟(39 项断言;独立端口/临时数据目录/临时 Redis,跑完即清理)
 	bash scripts/smoke-full.sh
 
-docker:           ## 构建完整 server 镜像(前端现场 npm ci;上下文=本目录)
+docker:           ## 本地构建双镜像: server(纯后端) + frontend(nginx 静态+反代)
 	docker build -f server/Dockerfile -t $(SERVER_IMAGE) .
+	docker build -f frontend/Dockerfile -t ghcr.io/filescodebox/frontend:latest frontend/
 
-compose-up:       ## docker compose 起 server(默认拉 ghcr 镜像;BUILD=1 本地构建;NGINX=1 加反代)
+compose-up:       ## docker compose 起前后端分离栈(默认拉 ghcr 镜像;BUILD=1 本地构建;NGINX=1 加反代)
 	docker compose up -d $${BUILD:+--build} $${NGINX:+--profile nginx}
 
 compose-down:
