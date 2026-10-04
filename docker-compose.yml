@@ -105,6 +105,9 @@ services:
       # 反代上游 = 本编排的后端服务(与镜像 envsubst 默认值一致,显式写出便于理解)
       - BACKEND_HOST=filecodebox
       - BACKEND_PORT=12345
+      # nginx 反代体积上限(镜像默认 20m 是隐性瓶颈: 分片上传不受影响,但多文件 zip
+      # 流式下载/大请求体会被 nginx 先拒;后端仍有 upload.upload_size 强校验)
+      - CLIENT_MAX_BODY_SIZE=${FCB_MAX_BODY_SIZE:-1024m}
     depends_on:
       filecodebox:
         condition: service_healthy
