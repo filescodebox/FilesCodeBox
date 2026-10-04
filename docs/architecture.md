@@ -12,8 +12,8 @@ graph TB
     subgraph ORG["filescodebox 组织"]
         UMB["📁 filescodebox<br/>(装配仓·本仓库)<br/>make setup 拉齐工作区"]
         CT["📦 contracts<br/>契约层 v0.2.1<br/>errcode + Thrift 类型"]
-        CORE["🧩 core<br/>业务核心库 v0.7.7<br/>10 域服务 + bootstrap"]
-        SRV["🚀 server<br/>部署应用 v0.9.3<br/>main 薄壳 + Dockerfile"]
+        CORE["🧩 core<br/>业务核心库 v0.8.0<br/>11 域服务 + bootstrap"]
+        SRV["🚀 server<br/>部署应用 v0.10.0<br/>main 薄壳 + Dockerfile"]
         FE["🖥️ frontend<br/>Vue3 + TS"]
         FNOS["🐂 fnos<br/>飞牛 fnOS 应用 v1.2.0<br/>SSO/共享目录/通知/穿透"]
         P2P["🕸️ p2p<br/>联邦注册中心 v0.1.0<br/>租约注册/联邦路由"]
@@ -38,11 +38,11 @@ graph TB
 ```mermaid
 graph LR
     FE["frontend<br/>(Vue3)"] -->|"/openapi.json 运行时规范<br/>(swagger 页直连后端)"| SRV["server"]
-    SRV -->|"require v0.7.x"| CORE["core"]
+    SRV -->|"require v0.8.x"| CORE["core"]
     FNOS["fnos"] -->|"require v0.7.x<br/>库式调用 bootstrap"| CORE
     CORE -->|"require v0.2.x"| CTX["contracts"]
     P2P["p2p<br/>(联邦注册中心)"]
-    CORE -.->|"M2 起 federation 域服务<br/>为 p2p 客户端(在建)"| P2P
+    CORE -.->|"core v0.8.0 起 federation 域<br/>为 p2p 客户端(已落地)"| P2P
     KIT["kit<br/>(共享 Go 工具库)"]
     CORE -.->|"通用工具包<br/>(按需渐进接入)"| KIT
 
@@ -65,13 +65,13 @@ graph LR
 | 仓库 | 当前版本 | 说明 |
 |------|---------|------|
 | contracts | v0.2.1 | thrift v0.13 生成代码,版本约束以 require 传递(下游零 replace) |
-| core | v0.7.7 | 存储 S3 env 映射/寄件码通知/API Token/多文件+zip/OIDC/openapi 运行时生成/本地文件管理;M2 federation 域服务在建 |
-| server | v0.9.3 | 纯后端镜像;frontend 分离镜像由同一 `v*` tag 同步发布(`ghcr.io/filescodebox/server` / `frontend`) |
+| core | v0.8.0 | 11 域服务(新增 federation P2P 联邦接入);此前 v0.7.x:存储 S3 env 映射/寄件码通知/API Token/多文件+zip/OIDC/openapi 运行时生成/本地文件管理 |
+| server | v0.10.0 | 纯后端镜像;frontend 分离镜像由同一 `v*` tag 同步发布(`ghcr.io/filescodebox/server` / `frontend`) |
 | fnos | v1.2.0(内置 core v0.7.6) | 镜像 `ghcr.io/filescodebox/fnos`(旧镜像 `filescodebox-fnos` 冻结在 v0.2.6,更早 `filecodebox-fnos` 冻结在 v0.2.1) |
 | p2p | v0.1.0 | 叶子仓零生态依赖;镜像 `ghcr.io/filescodebox/p2p`(新建包自动 public) |
 | kit | v0.1.0 | 共享 Go 工具库(20 包,零生态依赖叶子仓);纯库仓无镜像,`go get github.com/filescodebox/kit/<包名>` 消费 |
 | desktop | desktop-v1.2.0 | Tauri 2 桌面客户端;三平台安装包回挂本仓 Release(`desktop-v*` tag) |
-| charts | chart 1.3.x(app v0.9.3) | `filecodebox` chart:1.2.x 起内置数据面,1.3.x 增内置 S3 对象存储;Pages + OCI 双发布 |
+| charts | chart 1.3.5(app v0.9.3) | `filecodebox` chart:1.2.x 起内置数据面,1.3.x 增内置 S3 对象存储;Pages + OCI 双发布 |
 
 ---
 
@@ -89,7 +89,7 @@ graph TB
         HAND["transport/http<br/>(手写 handler + 9 个中间件)"]
     end
 
-    subgraph APP["业务层 app/(10 个域,近零耦合)"]
+    subgraph APP["业务层 app/(11 个域,近零耦合)"]
         SHARE["share 分享"]
         CHUNK["chunk 分片"]
         ANON["anonymous 匿名取件"]
@@ -100,6 +100,7 @@ graph TB
         QRCODE["qrcode 二维码"]
         SETUP["setup 初始化"]
         STORAGESVC["storage 存储管理"]
+        FED["federation P2P 联邦"]
     end
 
     subgraph INFRA["基础设施层"]
@@ -118,6 +119,7 @@ graph TB
     BS --> GENH & HAND
     GENH --> SHARE & CHUNK & ANON & PRESIGN & ADMIN & USER & NOTIFY & QRCODE & SETUP & STORAGESVC
     HAND --> SHARE
+    BS -.->|"federation 路由手工接线<br/>(/api/v1/federation/*)"| FED
     PRESIGN -.->|"唯一跨域依赖<br/>经接口注入"| SHARE
     APP --> REPO & STOR & PKG & PREVIEW
     REPO --> DB & REDIS

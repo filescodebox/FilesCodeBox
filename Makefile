@@ -1,7 +1,7 @@
 .PHONY: setup update build test vet lint smoke docker compose-up compose-down clean
 
-# FileCodeBox umbrella —— 一次 clone 拉齐全部模块并统一构建。
-# 模块仓库(contracts/core/server/frontend)由 scripts/setup.sh 拉入本目录,
+# FilesCodeBox umbrella —— 一次 clone 拉齐全部模块并统一构建。
+# 模块仓库(contracts/core/server/frontend/fnos/p2p/kit)由 scripts/setup.sh 拉入本目录,
 # go.work 联编本地改动;各模块亦可独立构建(go.mod 均为正式版本依赖)。
 
 SERVER_IMAGE ?= filecodebox-server:dev
@@ -30,7 +30,7 @@ lint:             ## golangci-lint 各 Go 模块（CI 同款门禁；本地提�
 	for m in contracts core server p2p kit; do echo "── $$m"; (cd $$m && golangci-lint run ./...); done
 	@echo "✓ lint OK"
 
-smoke: build      ## 本地起 server 并跑冒烟(健康检查/登录/文本分享)
+smoke: build      ## 本地起 server 并跑冒烟(健康检查/admin 登录;全量断言见 scripts/smoke-full.sh)
 	cd server && mkdir -p data logs && (FCB_JWT_SECRET=$$(openssl rand -hex 32) \
 	  go run ./cmd/server --config ./configs/config.yaml & echo $$! > /tmp/fcb.pid; \
 	  sleep 8; \

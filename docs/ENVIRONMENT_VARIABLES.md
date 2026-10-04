@@ -20,16 +20,21 @@
 | `FCB_SERVER_PORT` / `PORT` | 12345 | 监听端口 |
 | `FCB_SERVER_MODE` | debug | debug / release（release 视为生产） |
 | `FCB_SERVER_BASE_URL` / `BASE_URL` | 空 | 对外访问地址（分享链接生成用） |
+| `FCB_SERVER_READ_TIMEOUT` / `FCB_SERVER_WRITE_TIMEOUT` | 30（镜像 config） | 读写超时（秒） |
 
 ## 数据库 / Redis
 
 | 变量 | 默认 | 说明 |
 |---|---|---|
 | `FCB_DATABASE_DRIVER` / `DB_TYPE` | sqlite | sqlite / mysql / postgres |
-| `FCB_DATABASE_DB_NAME` / `DB_NAME` | ./data/filecodebox.db | SQLite 文件路径或库名 |
+| `FCB_DATABASE_DB_NAME` / `DB_NAME` | ./data/filecodebox.db | SQLite 文件路径或库名；**镜像内置 config.yaml 实际写死 `./data/fileCodeBox.db`（驼峰），compose 部署以镜像配置为准** |
 | `FCB_DATABASE_HOST` / `DB_HOST` | — | MySQL/PG 主机 |
+| `FCB_DATABASE_PORT` / `DB_PORT` | — | MySQL/PG 端口 |
+| `FCB_DATABASE_USER` / `DB_USER` | — | MySQL/PG 用户名 |
 | `FCB_REDIS_HOST` / `REDIS_HOST` | 空 | **为空 = 禁用**；匿名取件/预签名/分布式限流/JWT 黑名单共享依赖 Redis，连不上自动降级并在启动日志告警 |
 | `FCB_REDIS_PORT` / `REDIS_PORT` | 6379 | |
+| `FCB_REDIS_DB` / `REDIS_DB` | 0 | Redis 库号 |
+| `FCB_PRODUCTION` / `PRODUCTION` | false | 等价 `app.production=true`：强制校验 admin 密码/JWT 密钥等敏感项（compose 默认注入 `FCB_PRODUCTION=1`） |
 
 ## 上传安全
 
@@ -42,6 +47,7 @@
 | `FCB_UPLOAD_BLOCKED_EXTENSIONS` | 内置默认 | 扩展名黑名单，逗号分隔；非空覆盖内置默认，白名单命中也拦截 |
 | `FCB_ENABLE_MAGIC_CHECK` | true | 魔数校验（拦截改扩展名伪装的可执行文件） |
 | `FCB_UPLOAD_ANON_DAILY_COUNT` / `FCB_UPLOAD_ANON_DAILY_BYTES` | 0（不限） | 匿名上传 per-IP 日配额（次数 / 字节） |
+| `FCB_UPLOAD_MAX_SAVE_SECONDS_CAP` | — | 分享保存时长上限钳制（秒）；用户提交的过期时间超过此值时按上限落库 |
 
 ## 下载
 
@@ -88,6 +94,26 @@
 |---|---|---|
 | `FCB_MCP_ENABLED` | true | MCP server（POST /api/v1/mcp，Streamable HTTP/JSON-RPC 2.0，管理员 JWT 认证；8 个工具：share_text/get_share/list_shares/delete_share/get_system_status/get_storage_info/list_users/cleanup_expired） |
 
+## 内容审核（moderation）
+
+| 变量 | 默认 | 说明 |
+|---|---|---|
+| `FCB_MODERATION_ENABLED` | false | 内容审核总开关（命中处理对匿名与用户上传生效） |
+| `FCB_MODERATION_BLOCKED_WORDS` | 空 | 敏感词表，逗号分隔 |
+| `FCB_MODERATION_BLOCK_ACTION` | reject | 命中动作（当前实现为直接拒绝） |
+
+## P2P 联邦（federation，core v0.8.0 起）
+
+接入 [p2p](https://github.com/filescodebox/p2p) 联邦注册中心：本实例注册为联邦节点，口令分享可被联邦内其他节点路由解析。默认关闭；启用须同时提供 `FCB_FEDERATION_REGISTRY_URL` 与 `FCB_FEDERATION_PUBLIC_URL`。
+
+| 变量 | 默认 | 说明 |
+|---|---|---|
+| `FCB_FEDERATION_ENABLED` | false | 联邦接入总开关 |
+| `FCB_FEDERATION_REGISTRY_URL` | 空 | p2p 注册中心地址（如 `http://registry:12346`） |
+| `FCB_FEDERATION_PUBLIC_URL` | 空 | 本节点对外可达地址（联邦内其他节点回源取件用） |
+| `FCB_FEDERATION_NODE_KEY_PATH` | data/federation.key | Ed25519 节点私钥路径（缺失自动生成） |
+| `FCB_FEDERATION_MIN_ENTROPY` | 40 | 允许注册到联邦的口令最小熵（bit），低熵口令不上榜 |
+
 ## 可观测性
 
 | 变量 | 默认 | 说明 |
@@ -107,6 +133,7 @@ S3 兼容存储凭据/连接（v0.7.7 起，对应 `storage.s3.*` 配置键；�
 |---|---|---|
 | `FCB_MODERATION_CLAMAV_ENABLED` | `false` | 文件病毒扫描总开关（clamd INSTREAM；moderation.enabled=true 时生效，fail-open） |
 | `FCB_MODERATION_CLAMAV_ADDR` | `localhost:3310` | clamd 地址 |
+| `FCB_ADMIN_LOG_RETENTION_DAYS` | 90 | 管理端审计/传输日志保留天数（janitor 定期清理超期记录） |
 | `FCB_SMTP_HOST` / `FCB_SMTP_PORT` / `FCB_SMTP_USERNAME` / `FCB_SMTP_PASSWORD` / `FCB_SMTP_FROM` | 空 | SMTP 邮件通知（站内信创建后对登记邮箱异步补发；port 465=隐式 TLS，587/25=STARTTLS） |
 | `FCB_OIDC_ENABLED` | `false` | OIDC 单点登录（回调 `<base_url>/api/v1/user/oidc/callback`，登录页按钮随 `/api/config` 的 `oidcEnabled` 出现） |
 | `FCB_OIDC_ISSUER` / `FCB_OIDC_CLIENT_ID` / `FCB_OIDC_CLIENT_SECRET` / `FCB_OIDC_SCOPES` | 空 | OIDC 参数（scopes 默认 `openid profile email`） |

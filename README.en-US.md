@@ -11,7 +11,7 @@ FilesCodeBox is the Go multirepo workspace of the [filescodebox](https://github.
 | [contracts](https://github.com/filescodebox/contracts) | Contract layer: error codes + Thrift-generated types (zero business deps) | v0.2.1 |
 | [core](https://github.com/filescodebox/core) | Business core library: 11 domain services + repo/storage + `bootstrap.Bootstrap()` | v0.8.0 |
 | [server](https://github.com/filescodebox/server) | Deployable app: thin main + configs + Dockerfile (pure backend since 0.9.0) | v0.10.0 |
-| [frontend](https://github.com/filescodebox/frontend) | Vue3 + TS + Vite + Element Plus (nginx image, released with server) | - |
+| [frontend](https://github.com/filescodebox/frontend) | Vue3 + TS + Vite + Element Plus (nginx image, released with server) | with server `v*` |
 | [desktop](https://github.com/filescodebox/desktop) | Desktop client: Tauri 2 tray app connecting to any FilesCodeBox server | desktop-v1.2.0 |
 | [fnos](https://github.com/filescodebox/fnos) | fnOS (fnNAS) adapter (optional) | v1.2.0 |
 | [p2p](https://github.com/filescodebox/p2p) | P2P federated registry: node leases + passcode federation routing (optional) | v0.1.0 |
@@ -24,7 +24,7 @@ Dependency direction (CI-enforced): `server / fnos / frontend ──► core ─
 
 - **Share text or files anonymously** with pickup codes, expiry by time and/or download count, optional access password (bcrypt).
 - **Chunked uploads** with resume + instant upload (SHA-256 dedup) + presigned direct upload.
-- **Storage backends**: local disk, S3-compatible (AWS/MinIO/OSS/COS/B2…), WebDAV — hot-switchable at runtime, persisted across restarts.
+- **Storage backends**: local disk, S3-compatible (AWS/MinIO/OSS/COS/B2…), WebDAV, FTP/FTPS, SFTP, GCS, Azure Blob, HDFS, OneDrive — hot-switchable at runtime, persisted across restarts.
 - **Admin console**: dashboard, file/user management, audit log, site config persisted in DB, transfer logs.
 - **User system**: quotas, API keys, notifications (in-app + webhook).
 - **Ops-ready**: Prometheus metrics, OpenTelemetry tracing (opt-in), health checks, Helm chart with ServiceMonitor, multi-arch images.
@@ -33,10 +33,10 @@ Dependency direction (CI-enforced): `server / fnos / frontend ──► core ─
 ## Quick start
 
 ```bash
-docker compose up -d          # or: BUILD=1 docker compose up -d
+docker compose up -d          # or: BUILD=1 make compose-up (local build, run make setup first)
 ```
 
-Frontend entry `http://localhost` (`FCB_HTTP_PORT`, default 80); API on `:12345`. Default admin is `admin / admin123` — override with `FCB_ADMIN_PASSWORD` in production.
+Frontend entry `http://localhost:12345` (`FCB_API_PORT`, default 12345) — the frontend image also proxies the API, the server publishes no ports. `FCB_HTTP_PORT` (default 80) only applies to the optional nginx profile. Default admin is `admin / admin123` — override with `FCB_ADMIN_PASSWORD` in production.
 
 Build from source:
 
@@ -53,7 +53,7 @@ make smoke     # boot server & smoke-test
 - Architecture (Mermaid): [docs/architecture.md](docs/architecture.md)
 - Roadmap: [ROADMAP.md](ROADMAP.md) · Changelog: [CHANGELOG.md](CHANGELOG.md)
 - Contributing: [CONTRIBUTING.md](CONTRIBUTING.md) · Security policy: [SECURITY.md](SECURITY.md)
-- Environment variables: see `docs/` in the server repo / legacy docs (being consolidated)
+- Environment variables: [docs/ENVIRONMENT_VARIABLES.md](docs/ENVIRONMENT_VARIABLES.md)
 
 ## License
 

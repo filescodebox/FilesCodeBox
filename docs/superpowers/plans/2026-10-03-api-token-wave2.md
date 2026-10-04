@@ -1,5 +1,7 @@
 # API Token 波次 2（配置面 + 契约 + 文档 + 前端管理页）实现计划
 
+> **存档（2026-10-04）**：本计划已全部实施上线（`FCB_API_TOKEN_ENABLED` 开关、openapi securitySchemes、`docs/API-TOKENS.md`、前端 `/#/user/tokens` 页均已交付），checkbox 保留计划时点原样；文中 `frontend/openapi.json` 快照链路已废弃（规范真相源=后端运行时 `/openapi.json`）。请勿据此计划再实施。
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 补齐波次 1 之后的体验闭环：`security.api_token.enabled` 总开关、openapi/Swagger 契约、`docs/API-TOKENS.md` 使用指南、前端 `/user/tokens` 管理页。

@@ -1,5 +1,5 @@
 #!/bin/bash
-# 拉齐/更新 FileCodeBox 工作区的五个模块仓库。
+# 拉齐/更新 FilesCodeBox 工作区的七个模块仓库(contracts/core/server/frontend/fnos/p2p/kit)。
 # 幂等:已存在则 git pull --ff-only。
 set -e
 cd "$(dirname "$0")/.."

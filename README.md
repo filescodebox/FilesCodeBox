@@ -17,7 +17,7 @@
 | [contracts](https://github.com/filescodebox/contracts) | 契约层:错误码 + Thrift 生成类型(纯类型,零业务依赖) | v0.2.1 |
 | [core](https://github.com/filescodebox/core) | 业务核心库:11 个域服务 + repo/storage + `bootstrap.Bootstrap()` 库入口 | v0.8.0 |
 | [server](https://github.com/filescodebox/server) | 独立部署应用:main 薄壳 + 配置模板 + Dockerfile(0.9.0 起纯后端) | v0.10.0 |
-| [frontend](https://github.com/filescodebox/frontend) | Vue3 + TS + Vite + Element Plus(nginx 分离镜像,随 server 同版本发布) | - |
+| [frontend](https://github.com/filescodebox/frontend) | Vue3 + TS + Vite + Element Plus(nginx 分离镜像,随 server 同版本发布) | 随 server 同 `v*` |
 | [desktop](https://github.com/filescodebox/desktop) | 桌面客户端:Tauri 2 托盘常驻,连接任意 FilesCodeBox 服务器 | desktop-v1.2.0 |
 | [fnos](https://github.com/filescodebox/fnos) | 飞牛 fnOS 应用适配(可选,`make setup` 默认拉取) | v1.2.0 |
 | [p2p](https://github.com/filescodebox/p2p) | P2P 联邦注册中心:节点租约注册 + 口令联邦路由(可选,默认拉取) | v0.1.0 |
@@ -35,7 +35,7 @@ make setup     # 拉齐模块仓库(幂等,重复执行=更新)
 make test      # 全仓测试(Go 各模块 + 前端 typecheck)
 make lint      # golangci-lint 各 Go 模块(CI 同款门禁)
 make build     # workspace 联编
-make smoke     # 起 server 跑冒烟(健康检查/admin登录/文本分享)
+make smoke     # 起 server 跑冒烟(健康检查/admin 登录;39 项全量断言见下一行)
 # bash scripts/smoke-full.sh   # 全能力真机冒烟(39 项断言,含临时 Redis)
 ```
 
@@ -43,9 +43,9 @@ make smoke     # 起 server 跑冒烟(健康检查/admin登录/文本分享)
 
 ```bash
 cp .env.example .env          # 可选,全部项有安全默认
-docker compose up -d          # ghcr 发布镜像;前端入口 http://localhost(FCB_HTTP_PORT,默认 80),API :12345
+docker compose up -d          # ghcr 发布镜像;前端入口 http://localhost:12345(FCB_API_PORT,默认 12345),前端镜像同时反代 API,server 不发布端口
 # BUILD=1 make compose-up     # 本地构建(需先 make setup)
-# docker compose --profile nginx up -d   # 加 nginx 反代(须配 FCB_TRUSTED_PROXIES,见部署指南)
+# docker compose --profile nginx up -d   # 加 nginx 反代(须配 FCB_TRUSTED_PROXIES,见部署指南;FCB_HTTP_PORT 默认 80 仅作用于此 profile)
 ```
 
 默认管理员 `admin / admin123`(生产务必以 `FCB_ADMIN_PASSWORD` 覆盖)。JWT 密钥留空时首启自动生成并持久化到 `./data/.jwt_secret`。
@@ -64,7 +64,7 @@ filescodebox/           ← 本仓(装配层:脚本/联编/编排)
 ## 发版
 
 打 `v*` tag 即自动构建多架构镜像推 ghcr(见各仓 `release.yml`):
-`ghcr.io/filescodebox/server` · `ghcr.io/filescodebox/frontend`(与 server 同版本) · `ghcr.io/filescodebox/fnos`。
+`ghcr.io/filescodebox/server` · `ghcr.io/filescodebox/frontend`(与 server 同版本) · `ghcr.io/filescodebox/fnos` · `ghcr.io/filescodebox/p2p`。
 桌面安装包(desktop-v*)与飞牛应用包(fnos-v*)统一回挂[本仓 Releases](https://github.com/filescodebox/filescodebox/releases)。
 
 ## 原 README(产品功能/截图/API 说明)

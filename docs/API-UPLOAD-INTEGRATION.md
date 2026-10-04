@@ -82,7 +82,7 @@ X-API-Key: fcb_sk_xxx
 | 大文件 | 分块 `POST /chunk/upload/*`（§5） | 50 MB（`upload.user_upload_size`，登录用户整文件上限） |
 | 代码片段 / 日志 / 文本内容 | `POST /share/text/`（§4） | 222 KB（`upload.text_max_bytes`） |
 
-> 多文件打包分享（`/api/v1/share/multi-direct`）当前部署版本**未开放**（404），请循环调用单文件通道，或客户端自行打 zip 后直传。
+> 多文件打包分享自 server v0.9.3 / core v0.7.7 起**已开放**:`POST /api/v1/share/multi-direct`(multipart 多文件直传打包)与 `POST /api/v1/share/multi-bind`(把多个已传 chunk 会话绑定为一个多文件分享)。更早版本镜像调用返回 404,届时可循环单文件通道或客户端自行打 zip。
 
 ## 3. 文件直传（推荐，≤10MB）
 

@@ -1,6 +1,6 @@
 # Docker Compose 部署指南
 
-单容器自托管的推荐路径。三种部署形态,按需选择:
+前后端分离自托管(frontend 入口 + server API + Redis)的推荐路径。三种部署形态,按需选择:
 
 | 形态 | 命令 | 适用 |
 |---|---|---|
@@ -55,8 +55,9 @@ HTTPS / 子路径部署:模板 `deploy/nginx/nginx.conf` 内置了 443 server �
 
 ## 数据、备份与升级
 
-- 全部状态在 `./data`:SQLite 库、上传文件、`.jwt_secret`。容器本身无状态,可随时销毁重建。
-- 备份:停机窗口内直接拷贝 `./data`;不停机则用 `sqlite3 data/filecodebox.db ".backup '...'"` 做一致性快照(上传文件目录另行拷贝)。管理后台在线改过的站点配置也在这份库里(`system_configs` 表),备库即备份全部配置。
+- 应用状态在 `./data`:SQLite 库、上传文件、`.jwt_secret`。容器本身无状态,可随时销毁重建。
+- **Redis 数据在命名卷 `redisdata`(不在 `./data`)**:匿名取件码映射仅存于 Redis。同机重建卷会保留;**跨机迁移/彻底清理后需一并导出**(`docker run --rm -v <项目名>_redisdata:/d alpine tar czf - -C /d . > redisdata.tgz`),否则匿名取件码全部失效。
+- 备份:停机窗口内直接拷贝 `./data`(跨机迁移另按上行导出 redisdata);不停机则用 `sqlite3 data/fileCodeBox.db ".backup '...'"` 做一致性快照(上传文件目录另行拷贝)。注意库文件名是镜像内置 config.yaml 写死的 `fileCodeBox.db`(驼峰);管理后台在线改过的站点配置也在这份库里(`system_configs` 表),备库即备份全部配置。
 - 升级:`.env` 钉住 `FCB_IMAGE_TAG`(建议具体版本而非 latest)→ 改 tag → `docker compose pull && docker compose up -d`(server/frontend 两镜像同 tag 一起更新,数据卷不动)。回滚即把 tag 改回旧版本。
 - 容器日志已配 json-file 轮转(单容器 10MB×3),无担心无限增长。
 
