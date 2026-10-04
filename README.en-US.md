@@ -54,4 +54,4 @@ make smoke     # boot server & smoke-test
 
 ## License
 
-[MIT](LICENSE) © The FileCodeBox Authors
+[MIT](LICENSE) © FilesCodeBox
