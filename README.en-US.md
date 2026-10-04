@@ -9,14 +9,16 @@ FilesCodeBox is the Go multirepo workspace of the [filescodebox](https://github.
 | Repo | Role | Version |
 |------|------|---------|
 | [contracts](https://github.com/filescodebox/contracts) | Contract layer: error codes + Thrift-generated types (zero business deps) | v0.2.1 |
-| [core](https://github.com/filescodebox/core) | Business core library: 10 domain services + repo/storage + `bootstrap.Bootstrap()` | v0.7.6 |
-| [server](https://github.com/filescodebox/server) | Deployable app: thin main + configs + Dockerfile (pure backend since 0.9.0) | v0.9.2 |
+| [core](https://github.com/filescodebox/core) | Business core library: 11 domain services + repo/storage + `bootstrap.Bootstrap()` | v0.8.0 |
+| [server](https://github.com/filescodebox/server) | Deployable app: thin main + configs + Dockerfile (pure backend since 0.9.0) | v0.10.0 |
 | [frontend](https://github.com/filescodebox/frontend) | Vue3 + TS + Vite + Element Plus (nginx image, released with server) | - |
 | [desktop](https://github.com/filescodebox/desktop) | Desktop client: Tauri 2 tray app connecting to any FilesCodeBox server | desktop-v1.2.0 |
 | [fnos](https://github.com/filescodebox/fnos) | fnOS (fnNAS) adapter (optional) | v1.2.0 |
-| [charts](https://github.com/filescodebox/charts) | Kubernetes Helm chart (frontend + server split deployments) | chart 1.2.0 |
+| [p2p](https://github.com/filescodebox/p2p) | P2P federated registry: node leases + passcode federation routing (optional) | v0.1.0 |
+| [kit](https://github.com/filescodebox/kit) | Shared Go toolkit: 20 general-purpose packages with zero ecosystem deps | v0.1.0 |
+| [charts](https://github.com/filescodebox/charts) | Kubernetes Helm chart (frontend + server split deployments) | chart 1.3.5 |
 
-Dependency direction (CI-enforced): `server / fnos / frontend ──► core ──► contracts`
+Dependency direction (CI-enforced): `server / fnos / frontend ──► core ──► contracts`; `p2p` and `kit` are leaf repos with zero ecosystem deps
 
 ## Highlights
 
