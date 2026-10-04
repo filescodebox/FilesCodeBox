@@ -15,7 +15,7 @@ FilesCodeBox is the Go multirepo workspace of the [filescodebox](https://github.
 | [desktop](https://github.com/filescodebox/desktop) | Desktop client: Tauri 2 tray app connecting to any FilesCodeBox server | desktop-v1.2.0 |
 | [fnos](https://github.com/filescodebox/fnos) | fnOS (fnNAS) adapter (optional) | v1.2.0 |
 | [p2p](https://github.com/filescodebox/p2p) | P2P federated registry: node leases + passcode federation routing (optional) | v0.1.0 |
-| [kit](https://github.com/filescodebox/kit) | Shared Go toolkit: 24 general-purpose packages with zero ecosystem deps | v0.2.0 |
+| [kit](https://github.com/filescodebox/kit) | Shared Go toolkit: 28 general-purpose packages with zero ecosystem deps | v0.3.0 |
 | [charts](https://github.com/filescodebox/charts) | Kubernetes Helm chart (frontend + server split deployments) | chart 1.3.5 |
 
 Dependency direction (CI-enforced): `server / fnos / frontend ──► core ──► contracts`; `p2p` and `kit` are leaf repos with zero ecosystem deps
