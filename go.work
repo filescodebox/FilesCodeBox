@@ -7,4 +7,5 @@ use (
 	./core
 	./server
 	./fnos
+	./p2p
 )

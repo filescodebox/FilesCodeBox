@@ -27,4 +27,9 @@ if [ "${SETUP_FNOS:-1}" = "1" ]; then
   clone_or_update fnos fnos master
 fi
 
+# P2P 联邦注册中心(go.work 已引用,默认拉取;SETUP_P2P=0 可跳过)
+if [ "${SETUP_P2P:-1}" = "1" ]; then
+  clone_or_update p2p p2p main
+fi
+
 echo "✓ 工作区就绪:$(ls -d */ 2>/dev/null | tr -d '/' | tr '\n' ' ')"

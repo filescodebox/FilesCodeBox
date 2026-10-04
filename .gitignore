@@ -4,6 +4,7 @@
 /server/
 /frontend/
 /fnos/
+/p2p/
 
 # Go 构建产物
 bin/
