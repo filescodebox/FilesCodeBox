@@ -1,0 +1,32 @@
+name: Release
+
+# 生态版本快照发布：tag v* → 自动生成 Release（变更摘要取自 CHANGELOG）
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 生成说明
+        run: |
+          {
+            echo "### 生态组件"
+            echo "- core / server：见各自仓 Release"
+            echo "- charts：helm repo add filescodebox https://filescodebox.github.io/charts"
+            echo "- 桌面客户端：见 Assets 或 filescodebox-desktop 仓 Releases"
+            echo "- fnOS 应用：filescodebox-fnos 仓 Releases"
+            echo ""
+            echo "### 变更摘要"
+            sed -n '/^## \[Unreleased\]/,/^## \[0\./p' CHANGELOG.md | head -120 || true
+          } > notes.md
+      - name: 创建 Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "FilesCodeBox ${{ github.ref_name }}"
+          body_path: notes.md
