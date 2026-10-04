@@ -16,8 +16,8 @@ graph TB
         SRV["🚀 server<br/>部署应用 v0.10.0<br/>main 薄壳 + Dockerfile"]
         FE["🖥️ frontend<br/>Vue3 + TS"]
         FNOS["🐂 fnos<br/>飞牛 fnOS 应用 v1.2.0<br/>SSO/共享目录/通知/穿透"]
-        P2P["🕸️ p2p<br/>联邦注册中心 v0.1.0<br/>租约注册/联邦路由"]
-        KIT["🧰 kit<br/>共享 Go 工具库 v0.1.0<br/>retry/syncx/ratelimit 等 20 包"]
+        P2P["🕸️ p2p<br/>联邦注册中心 v0.2.0<br/>租约注册/联邦路由/WS 信令"]
+        KIT["🧰 kit<br/>共享 Go 工具库 v0.3.0<br/>retry/syncx/shutdown/workflow 等 28 包"]
     end
 
     USER["👤 自托管用户"] -->|"compose / Helm"| SRV
@@ -44,7 +44,8 @@ graph LR
     P2P["p2p<br/>(联邦注册中心)"]
     CORE -.->|"core v0.8.0 起 federation 域<br/>为 p2p 客户端(已落地)"| P2P
     KIT["kit<br/>(共享 Go 工具库)"]
-    CORE -.->|"通用工具包<br/>(按需渐进接入)"| KIT
+    CORE -->|"httpjson/retry/uidgen/<br/>async/singleflight 已接入"| KIT
+    P2P -->|"ratelimit 已接入"| KIT
 
     classDef plain fill:#eef,stroke:#88a
     class CTX,CORE,SRV,FE,FNOS,P2P,KIT plain
@@ -55,7 +56,7 @@ graph LR
 | 规则 | 守护方式 |
 |------|---------|
 | contracts 零项目内依赖(纯类型,仅 thrift runtime + 标准库) | contracts CI:`go list -deps` 检查 |
-| p2p / kit 叶子仓零生态依赖(禁 import 任何兄弟模块) | p2p / kit CI dep guard:`go list -deps` 检查 |
+| kit 零生态依赖(禁 import 任何兄弟模块);p2p 业务链零依赖(kit 地基层放行) | kit / p2p CI dep guard:`go list -deps` 检查 |
 | core 不许 import server / frontend / fnos | core CI 同上 |
 | server / fnos 只经 go.mod 正式版本引用 core,**零 replace** | 各仓 go.mod 无 replace(本地联编由本仓 go.work 承担) |
 | frontend 走后端运行时 OpenAPI 规范(`/openapi.json`),不再维护快照/生成类型 | swagger 页与 vite 代理均直连后端同源(2026-10-04 移除漂移快照) |
@@ -68,10 +69,10 @@ graph LR
 | core | v0.8.0 | 11 域服务(新增 federation P2P 联邦接入);此前 v0.7.x:存储 S3 env 映射/寄件码通知/API Token/多文件+zip/OIDC/openapi 运行时生成/本地文件管理 |
 | server | v0.10.0 | 纯后端镜像;frontend 分离镜像由同一 `v*` tag 同步发布(`ghcr.io/filescodebox/server` / `frontend`) |
 | fnos | v1.2.0(内置 core v0.7.6) | 镜像 `ghcr.io/filescodebox/fnos`(旧镜像 `filescodebox-fnos` 冻结在 v0.2.6,更早 `filecodebox-fnos` 冻结在 v0.2.1) |
-| p2p | v0.1.0 | 叶子仓零生态依赖;镜像 `ghcr.io/filescodebox/p2p`(新建包自动 public) |
-| kit | v0.1.0 | 共享 Go 工具库(20 包,零生态依赖叶子仓);纯库仓无镜像,`go get github.com/filescodebox/kit/<包名>` 消费 |
+| p2p | v0.2.0 | WS 信令信道(M3 服务端);业务链零生态依赖,地基层 kit;镜像 `ghcr.io/filescodebox/p2p`(新建包自动 public) |
+| kit | v0.3.0 | 共享 Go 工具库(28 包);已被 core(httpjson/retry/uidgen/async/singleflight)、p2p(ratelimit)、fnos/server(version) 消费;纯库仓无镜像,`go get github.com/filescodebox/kit/<包名>` |
 | desktop | desktop-v1.2.0 | Tauri 2 桌面客户端;三平台安装包回挂本仓 Release(`desktop-v*` tag) |
-| charts | chart 1.3.5(app v0.9.3) | `filecodebox` chart:1.2.x 起内置数据面,1.3.x 增内置 S3 对象存储;Pages + OCI 双发布 |
+| charts | chart 1.3.6(app v0.10.0) | `filecodebox` chart:1.2.x 起内置数据面,1.3.x 增内置 S3 对象存储,1.3.4 增 p2p 可选组件;Pages + OCI 双发布 |
 
 ---
 
