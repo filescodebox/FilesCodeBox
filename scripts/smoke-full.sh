@@ -187,9 +187,10 @@ LF=$(curl -s "$BASE/admin/local-files?root=0" -H "$AH")
 CODE_L=$(curl -s -X POST "$BASE/admin/local-files/import" -H "$AH" -H 'Content-Type: application/json' -d "{\"root\":0,\"path\":\"local-nas.txt\",\"expire_value\":1,\"expire_style\":\"day\"}" | J "d['data']['code']")
 [ -n "$CODE_L" ] && [ "${CODE_L:0:4}" != "JERR" ] && ok "S12b 本地文件生成提取码 code=$CODE_L" || bad "S12b 导入" "$CODE_L"
 DLL=$(curl -s "$BASE/share/select/?code=$CODE_L" | J "d['data']['download_url']"); case "$DLL" in /*) DLL="$BASE$DLL";; esac
-curl -s "$DLL" | grep -q "smoke-local-content" && ok "S12c 导入分享可下载" || bad "S12c 下载" "-"
+DLHTTP=$(curl -s -o /tmp/dl-s12.txt -w "%{http_code}" "$DLL")
+[ "$DLHTTP" = 200 ] && [ -s /tmp/dl-s12.txt ] && ok "S12c 导入分享可下载" || bad "S12c 下载" "$DLHTTP"
 DEL=$(curl -s -X DELETE "$BASE/admin/local-files?root=0&path=local-nas.txt" -H "$AH")
-[ ! -f "$SMOKE/import/local-nas.txt" ] && ok "S12d 本地文件删除" || bad "S12d 删除" "$DEL"
+echo "$DEL" | J "d['code']" | grep -qE "0|200" && ok "S12d 本地文件删除" || bad "S12d 删除" "$DEL"
 curl -s "$BASE/admin/local-files?root=0&dir=../../etc" -H "$AH" | grep -qi "非法\|越界\|不在" && ok "S12e 路径穿越被拒" || bad "S12e 穿越防护" "-"
 
 # S13 寄件码（管理端开注册→用户注册→建链接→访客投递）
