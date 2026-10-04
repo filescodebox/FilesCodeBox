@@ -1,7 +1,7 @@
 #!/bin/bash
 # FilesCodeBox 全能力真机冒烟（39+ 项断言）：健康面/openapi 运行时生成/api config/admin 登录/
 # 文本+密码分享/元数据不泄露/select 不扣次数/文件分享+Range/多文件+zip/chunk 完成+秒传/
-# 本地文件管理(穿越防护)/寄件码全链路/MCP/二维码/匿名码(需 Redis)/robots。
+# 本地文件管理(穿越防护，目标需启用 local_import)/寄件码全链路/MCP/二维码/匿名码(需 Redis)/robots。
 #
 # 用法一(默认):bash scripts/smoke-full.sh
 #   自动编译 server、起临时实例(含临时 Redis,端口 18777)、跑完即清理。
