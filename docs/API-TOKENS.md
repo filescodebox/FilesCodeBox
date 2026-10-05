@@ -4,6 +4,11 @@
 
 ## 1. 获取 Key
 
+> 浏览器 Web 端会话自 v0.12.x 起走 **HttpOnly Cookie**（服务端登录时下发），前端不再持久化令牌；
+> API Token / 脚本 / 桌面端继续使用 `Authorization` 头，**零改动**。Cookie 认证的写请求需携带
+> `X-Requested-With: XMLHttpRequest`（CSRF 防御），Bearer 通道不受影响。
+
+
 **方式 A（推荐）**：登录后进入 用户中心 → **API 令牌**（`/#/user/tokens`），点"签发新 Key"。明文 Key **仅创建时显示一次**，请立即保存。
 
 **方式 B（curl）**：先登录拿 JWT，再调签发接口：
