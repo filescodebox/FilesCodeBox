@@ -31,7 +31,8 @@ docker compose up -d
 curl http://localhost:12345/live    # 健康检查
 ```
 
-浏览器打开 `http://localhost:12345` 即可使用。
+浏览器打开 `http://localhost:12345` 即可使用(compose 入口默认仅本机可访问;
+**局域网其他设备访问**需在 `.env` 设 `FCB_API_BIND=0.0.0.0` 后 `docker compose up -d` 重建)。
 
 ## 首次初始化
 

@@ -4,7 +4,7 @@
 
 | 形态 | 命令 | 适用 |
 |---|---|---|
-| 直连体验 | `docker compose up -d` | 本机/内网快速试用,`http://<host>:12345`(入口=frontend 容器) |
+| 直连体验 | `docker compose up -d` | 本机快速试用,`http://localhost:12345`(入口=frontend 容器);**默认仅本机可访问**,局域网访问在 .env 设 `FCB_API_BIND=0.0.0.0` |
 | nginx 反代 | `docker compose --profile nginx up -d` | 正式对外:统一 80/443 入口、TLS、缓存与超时治理 |
 | Kubernetes | `charts/` 仓库 `filecodebox` chart | 多副本、Ingress、监控接入(见 charts 仓库 README) |
 
@@ -15,6 +15,9 @@ cp .env.example .env      # 全部项有安全默认,可留空;生产至少设 F
 docker compose up -d
 curl http://localhost:12345/live    # 健康检查
 ```
+
+> **局域网访问**:入口默认绑定 `127.0.0.1`(仅部署机本机可用,安全默认——防绕过反代直连)。
+> 局域网其他设备访问时,在 `.env` 里设 `FCB_API_BIND=0.0.0.0` 后 `docker compose up -d` 重建即可。
 
 默认管理员 `admin / admin123`(未注入 `FCB_ADMIN_PASSWORD` 时,启动日志有警告),登录后请立即改密。
 
