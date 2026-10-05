@@ -90,7 +90,10 @@ fi
 # S1 健康面
 [ -n "$(curl -s "$BASE/live")" ] && ok "S1a live" || bad "S1a live" "$(curl -s $BASE/live)"
 curl -s "$BASE/readyz" | grep -qi 'ok\|ready\|true' && ok "S1b readyz" || bad "S1b readyz" "$(curl -s $BASE/readyz | head -c 120)"
-[ -n "$(curl -s "$BASE/version")" ] && ok "S1c version" || bad "S1c version" "-"
+# S1c /version 已收归管理员（2026-10-06 攻击面收缩：版本披露辅助 CVE 匹配），
+# 未认证应为 401；带 admin token 可读（TOK 在 S3 段取得，此处先做未认证断言）
+V=$(curl -s -o /dev/null -w "%{http_code}" "$BASE/version")
+[ "$V" = "401" ] && ok "S1c version 未认证 401" || bad "S1c version 未认证 401" "$V"
 
 # S2 openapi.json 运行时生成
 OA=$(curl -s "$BASE/openapi.json")
@@ -106,6 +109,7 @@ echo "$AC" | J "'showAdminAddr' in d['data']" | grep -q True && ok "S3b showAdmi
 
 # S4 admin 登录
 TOK=$(curl -s -X POST "$BASE/admin/login" -H 'Content-Type: application/json' -d "{\"username\":\"admin\",\"password\":\"${SMOKE_ADMIN_PASSWORD:-admin123}\"}" | J "d['data']['token']")
+[ -n "$(curl -s "$BASE/version" -H "Authorization: Bearer $TOK")" ] && ok "S3a0 version admin 可读" || bad "S3a0 version admin 可读" "-"
 [ -n "$TOK" ] && [ "$TOK" != "JERR"* ] && ok "S4 admin 登录" || bad "S4 admin 登录" "$TOK"
 AH="Authorization: Bearer $TOK"
 
