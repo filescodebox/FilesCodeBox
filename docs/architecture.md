@@ -12,12 +12,14 @@ graph TB
     subgraph ORG["filescodebox 组织"]
         UMB["📁 filescodebox<br/>(装配仓·本仓库)<br/>make setup 拉齐工作区"]
         CT["📦 contracts<br/>契约层 v0.2.1<br/>errcode + Thrift 类型"]
-        CORE["🧩 core<br/>业务核心库 v0.8.0<br/>11 域服务 + bootstrap"]
-        SRV["🚀 server<br/>部署应用 v0.10.0<br/>main 薄壳 + Dockerfile"]
+        CORE["🧩 core<br/>业务核心库 v0.10.0<br/>16 域服务 + bootstrap"]
+        SRV["🚀 server<br/>部署应用 v0.11.0<br/>main 薄壳 + Dockerfile"]
         FE["🖥️ frontend<br/>Vue3 + TS"]
-        FNOS["🐂 fnos<br/>飞牛 fnOS 应用 v1.2.0<br/>SSO/共享目录/通知/穿透"]
-        P2P["🕸️ p2p<br/>联邦注册中心 v0.2.0<br/>租约注册/联邦路由/WS 信令"]
+        FNOS["🐂 fnos<br/>飞牛 fnOS 应用 v1.2.2<br/>SSO/共享目录/通知/穿透"]
+        P2P["🕸️ p2p<br/>联邦注册中心 v0.4.0<br/>租约注册/联邦路由/WS 信令/设备直传"]
         KIT["🧰 kit<br/>共享 Go 工具库 v0.3.0<br/>retry/syncx/shutdown/workflow 等 28 包"]
+        DESK["💻 desktop<br/>Tauri 桌面客户端 desktop-v1.3.0<br/>p2pc sidecar 设备直传"]
+        CHT["☸️ charts<br/>Helm Chart 1.3.7<br/>Pages + OCI 双发布"]
     end
 
     USER["👤 自托管用户"] -->|"compose / Helm"| SRV
@@ -25,9 +27,11 @@ graph TB
     DEV["👨‍💻 开发者"] -->|"git clone + make setup"| UMB
 
     UMB -.->|"setup.sh 拉取"| CT & CORE & SRV & FE & FNOS & P2P & KIT
+    DESK -.->|"HTTP API 连接任意服务器"| SRV
+    CHT -.->|"Helm 编排前后端分离栈"| SRV
 ```
 
-**职责边界**:装配仓不含业务代码,只提供工作区装配(`setup.sh`/`go.work`/`Makefile`/`docker-compose.yml`);七个模块仓库(经 setup.sh 拉取)与 desktop(桌面客户端)、charts(Helm Chart)两个产物仓独立开发、独立 CI、独立发版。
+**职责边界**:装配仓不含业务代码,只提供工作区装配(`setup.sh`/`go.work`/`Makefile`/`docker-compose.yml`);七个模块仓库(经 setup.sh 拉取)与 desktop(桌面客户端,Rust 项目不入 go.work)、charts(Helm Chart)两个产物仓独立开发、独立 CI、独立发版。
 
 ---
 
@@ -38,18 +42,20 @@ graph TB
 ```mermaid
 graph LR
     FE["frontend<br/>(Vue3)"] -->|"/openapi.json 运行时规范<br/>(swagger 页直连后端)"| SRV["server"]
-    SRV -->|"require v0.8.x"| CORE["core"]
-    FNOS["fnos"] -->|"require v0.7.x<br/>库式调用 bootstrap"| CORE
+    SRV -->|"require v0.10.x"| CORE["core"]
+    FNOS["fnos"] -->|"require v0.10.x<br/>库式调用 bootstrap"| CORE
     CORE -->|"require v0.2.x"| CTX["contracts"]
     P2P["p2p<br/>(联邦注册中心)"]
-    CORE -.->|"core v0.8.0 起 federation 域<br/>为 p2p 客户端(已落地)"| P2P
+    CORE -.->|"core v0.8.0 起 federation 域<br/>为 p2p 客户端"| P2P
     KIT["kit<br/>(共享 Go 工具库)"]
-    CORE -->|"httpjson/retry/uidgen/<br/>async/singleflight 已接入"| KIT
+    CORE -->|"17 处接入(httpjson/retry/<br/>uidgen/async/singleflight 等)"| KIT
     P2P -->|"ratelimit 已接入"| KIT
 
     classDef plain fill:#eef,stroke:#88a
     class CTX,CORE,SRV,FE,FNOS,P2P,KIT plain
 ```
+
+desktop 不进 go.work(Rust 项目),经 HTTP API 连接任意 FilesCodeBox 服务器,无构建期依赖。
 
 ### 2.2 依赖规则(CI 强制守护)
 
@@ -66,13 +72,13 @@ graph LR
 | 仓库 | 当前版本 | 说明 |
 |------|---------|------|
 | contracts | v0.2.1 | thrift v0.13 生成代码,版本约束以 require 传递(下游零 replace) |
-| core | v0.8.0 | 11 域服务(新增 federation P2P 联邦接入);此前 v0.7.x:存储 S3 env 映射/寄件码通知/API Token/多文件+zip/OIDC/openapi 运行时生成/本地文件管理 |
-| server | v0.10.0 | 纯后端镜像;frontend 分离镜像由同一 `v*` tag 同步发布(`ghcr.io/filescodebox/server` / `frontend`) |
-| fnos | v1.2.0(内置 core v0.7.6) | 镜像 `ghcr.io/filescodebox/fnos`(旧镜像 `filescodebox-fnos` 冻结在 v0.2.6,更早 `filecodebox-fnos` 冻结在 v0.2.1) |
-| p2p | v0.2.0 | WS 信令信道(M3 服务端);业务链零生态依赖,地基层 kit;镜像 `ghcr.io/filescodebox/p2p`(新建包自动 public) |
-| kit | v0.3.0 | 共享 Go 工具库(28 包);已被 core(httpjson/retry/uidgen/async/singleflight)、p2p(ratelimit)、fnos/server(version) 消费;纯库仓无镜像,`go get github.com/filescodebox/kit/<包名>` |
-| desktop | desktop-v1.2.0 | Tauri 2 桌面客户端;三平台安装包回挂本仓 Release(`desktop-v*` tag) |
-| charts | chart 1.3.6(app v0.10.0) | `filecodebox` chart:1.2.x 起内置数据面,1.3.x 增内置 S3 对象存储,1.3.4 增 p2p 可选组件;Pages + OCI 双发布 |
+| core | v0.10.0 | 16 域服务;v0.10.0=全面安全审计加固(管理面/chunk 链路/JWT 纪元·封禁改密即时失效/纵深防御);v0.9.0=federation M4(registry 多主备 failover+心跳短退避);v0.8.x=federation 接入+kit 化;v0.7.x=API Token/多文件+zip/OIDC/寄件码/运行时 OpenAPI |
+| server | v0.11.0 | 纯后端镜像(默认 release 模式,alpine 钉 3.22);frontend 分离镜像由同一 `v*` tag 同步发布(`ghcr.io/filescodebox/server` / `frontend`) |
+| fnos | v1.2.2(内置 core v0.10.0) | 镜像 `ghcr.io/filescodebox/fnos`(旧镜像 `filescodebox-fnos` 冻结在 v0.2.6,更早 `filecodebox-fnos` 冻结在 v0.2.1) |
+| p2p | v0.4.0 | v0.3.x=M3 设备直传全量(p2pc)+六平台二进制;v0.4.0=wire AEAD/注册 token/中继限流安全加固;镜像 `ghcr.io/filescodebox/p2p`(含 p2pc) |
+| kit | v0.3.0 | 共享 Go 工具库(28 包);已被 core(17 处)、p2p(ratelimit)、fnos/server(version) 消费;纯库仓无镜像,`go get github.com/filescodebox/kit/<包名>` |
+| desktop | desktop-v1.3.0 | Tauri 2 桌面客户端+**p2pc sidecar 设备直传**;三平台安装包回挂本仓 Release(`desktop-v*` tag) |
+| charts | chart 1.3.7(app v0.10.0) | `filecodebox` chart:1.2.x 起内置数据面,1.3.x 增内置 S3(SeaweedFS),1.3.4 增 p2p 可选组件,1.3.7 增直传中继开关;Pages + OCI 双发布 |
 
 ---
 
@@ -87,10 +93,10 @@ graph TB
 
     subgraph TRANSPORT["传输层"]
         GENH["gen/handler + gen/router<br/>(thrift 生成装配,15 域路由)"]
-        HAND["transport/http<br/>(手写 handler + 9 个中间件)"]
+        HAND["transport/http<br/>(手写 handler + 认证中间件)"]
     end
 
-    subgraph APP["业务层 app/(11 个域,近零耦合)"]
+    subgraph APP["业务层 app/(16 个域,近零耦合)"]
         SHARE["share 分享"]
         CHUNK["chunk 分片"]
         ANON["anonymous 匿名取件"]
@@ -102,32 +108,38 @@ graph TB
         SETUP["setup 初始化"]
         STORAGESVC["storage 存储管理"]
         FED["federation P2P 联邦"]
+        MCP["mcp AI 管理端点"]
+        MOD["moderation 内容审核"]
+        OIDC["oidc SSO 登录"]
+        PREVIEWDOM["preview 在线预览"]
+        REQUEST["request 寄件码"]
     end
 
     subgraph INFRA["基础设施层"]
-        REPO["repo/db(gorm dao+model·8表)<br/>repo/redis(可选,缺省降级)"]
-        STOR["storage(OpenDAL: local / s3)"]
+        REPO["repo/db(gorm dao+model·11表)<br/>repo/redis(可选,缺省降级)"]
+        STOR["storage(OpenDAL:14 种后端<br/>fs/s3/webdav/ftp/sftp/gcs/<br/>azureblob/hdfs/onedrive/云厂商 S3 兼容)"]
         PKG["pkg/(auth·logger·middleware<br/>·resp·errcode→contracts·utils)"]
-        PREVIEW["preview(文件预览)"]
     end
 
     subgraph DATA["数据"]
         DB[("SQLite / MySQL / PostgreSQL")]
         REDIS[("Redis(可选)")]
-        OSS[("本地磁盘 / S3 兼容对象存储")]
+        OSS[("本地磁盘 / S3 兼容对象存储等 14 种")]
     end
 
     BS --> GENH & HAND
-    GENH --> SHARE & CHUNK & ANON & PRESIGN & ADMIN & USER & NOTIFY & QRCODE & SETUP & STORAGESVC
-    HAND --> SHARE
-    BS -.->|"federation 路由手工接线<br/>(/api/v1/federation/*)"| FED
+    GENH --> SHARE & CHUNK & ANON & PRESIGN & ADMIN & USER & NOTIFY & QRCODE & SETUP & STORAGESVC & PREVIEWDOM
+    BS -.->|"手工接线路由/钩子:<br/>federation(/api/v1/federation/*)·<br/>mcp(/api/v1/mcp)·oidc(登录回调)·<br/>request(寄件码)"| FED & MCP & OIDC & REQUEST
+    MOD -.->|"钩子注入上传/分享链路"| SHARE
     PRESIGN -.->|"唯一跨域依赖<br/>经接口注入"| SHARE
-    APP --> REPO & STOR & PKG & PREVIEW
+    APP --> REPO & STOR & PKG
     REPO --> DB & REDIS
     STOR --> OSS
 ```
 
-**分层纪律**(继承原 internal 设计):业务层不依赖传输协议、不直接操作数据库(经 repo);域与域之间不互相 import(presign→share 唯一例外,经接口注入)。
+**分层纪律**(继承原 internal 设计):业务层不依赖传输协议、不直接操作数据库(经 repo);域与域之间不互相 import(presign→share 唯一例外,经接口注入;moderation 以钩子注入,不算 import)。
+
+> 域到路由的两种挂法:share/chunk/preview 等走 gen 生成路由;federation/mcp/oidc/request 在 bootstrap 手工注册(mcp 为 JSON-RPC 2.0 单端点,非 REST)。
 
 ### 3.1 全局中间件链(顺序敏感)
 
@@ -135,6 +147,8 @@ graph TB
 Recovery → RequestID → AccessLog → Metrics → SecurityHeaders → CORS → handler
 (panic→500) (trace_id)  (结构化日志) (RED指标)  (安全响应头)     (跨域)
 ```
+
+Metrics 默认绑定 `127.0.0.1:9090`(可用 `FCB_METRICS_ADDR` 配置),仅供同节点 Prometheus 抓取。
 
 ---
 
@@ -162,7 +176,7 @@ sequenceDiagram
     GH-->>B: 200 {code, url}(经 resp 统一包装/errcode)
 ```
 
-**关键路径**:`/live` `/ready` 健康检查、`/metrics` Prometheus(9090 独立端口)、静态资源(StaticDir 选项,SPA fallback)均在 bootstrap 层注册,不经过业务。
+**关键路径**:`/live` `/ready` 健康检查、`/metrics` Prometheus、静态资源(StaticDir 选项,SPA fallback)均在 bootstrap 层注册,不经过业务。另有 `POST /api/v1/mcp` 单端点(JSON-RPC 2.0,管理员 token)供 AI 客户端(Claude Desktop 等)执行建分享/查询/清理等管理操作。
 
 ---
 
@@ -195,7 +209,27 @@ flowchart TD
     Z --> Y["记录取件人 → 通知 owner(fire-and-forget)<br/>下载链路扣减次数(原子防超卖)"]
 ```
 
-### 5.3 飞牛 fnOS 形态(单容器库式调用)
+### 5.3 P2P 联邦与设备直传(可选,默认关)
+
+```mermaid
+flowchart TB
+    subgraph SRC["源节点(分享方 server)"]
+        FED1["core federation 域<br/>宣布:熵门槛口令公告<br/>Ed25519 签名+心跳续租"]
+    end
+    R["🕸️ p2p 注册中心(自部署)<br/>租约注册·口令联邦路由<br/>多主备 failover"]
+    FED1 -->|"公告/心跳"| R
+    subgraph DST["取件方 server"]
+        FED2["core federation 域<br/>SHA-256(口令)→解析源节点<br/>校验留在源节点,零跨节点信任"]
+    end
+    FED2 -->|"resolve + 反代取件"| R
+    subgraph P2PC["设备直传(桌面客户端 sidecar)"]
+        S1["p2pc send"] -->|"PAKE 密钥协商<br/>候选加密交换"| HOLE["UDP 同时开洞<br/>(反射器与 HTTP 同端口)"]
+        HOLE -->|"QUIC 指纹钉定 mTLS"| S2["p2pc recv"]
+        HOLE -.->|"直连失败兜底<br/>加密中继(默认关)"| S2
+    end
+```
+
+### 5.4 飞牛 fnOS 形态(单容器库式调用)
 
 ```mermaid
 graph LR
@@ -218,16 +252,16 @@ graph LR
 
 ## 6. 部署形态对比
 
-| | server(自托管) | fnos(飞牛) |
-|---|---|---|
-| 进程 | 1 个二进制(main → core) | 1 个二进制(adapter → core) |
-| 前端 | 无(0.9.0 起纯后端镜像;分离部署由 frontend 镜像承担静态+反代) | 同镜像复用 core 静态服务(StaticDir) |
-| 配置 | config.yaml + FCB_* env | FNOS_* env + 飞牛向导变量 |
-| JWT 密钥 | FCB_JWT_SECRET 必填(强校验) | 自动生成并持久化(装机即用) |
-| 数据 | docker volume | NAS 共享目录(用户可见可备份) |
-| 镜像 | ghcr.io/filescodebox/server | ghcr.io/filescodebox/fnos |
+| | server(自托管) | fnos(飞牛) | desktop(桌面) |
+|---|---|---|---|
+| 进程 | 1 个二进制(main → core) | 1 个二进制(adapter → core) | Tauri 常驻托盘(+p2pc sidecar) |
+| 前端 | 无(0.9.0 起纯后端镜像;分离部署由 frontend 镜像承担静态+反代) | 同镜像复用 core 静态服务(StaticDir) | 连接任意服务器 URL,无本地前端服务 |
+| 配置 | config.yaml + FCB_* env | FNOS_* env + 飞牛向导变量 | 连接配置本地保存 |
+| JWT 密钥 | FCB_JWT_SECRET 必填(强校验) | 自动生成并持久化(装机即用) | 不持有(服务端事务) |
+| 数据 | docker volume | NAS 共享目录(用户可见可备份) | 服务端存储;直传端到端加密 |
+| 镜像/制品 | ghcr.io/filescodebox/server | ghcr.io/filescodebox/fnos | `desktop-v*` 安装包(hub Release) |
 
-Kubernetes 形态（charts/filecodebox，chart 1.3.x，1.2.x 起可选内置数据面）为**前后端分离两容器**：`frontend` Deployment（ghcr.io/filescodebox/frontend，nginx 静态资源 + API 反代，无状态）+ `server` Deployment（API/数据，携带 PVC），Ingress 指向 frontend Service、API 由其反代后端；两镜像由 server 仓 release 工作流以同一 `v*` tag 同步发布（与 chart appVersion 单点对齐）。
+Kubernetes 形态（charts/filecodebox，chart 1.3.7）为**前后端分离两容器**：`frontend` Deployment（ghcr.io/filescodebox/frontend，nginx 静态资源 + API 反代，无状态）+ `server` Deployment（API/数据，携带 PVC），Ingress 指向 frontend Service、API 由其反代后端；两镜像由 server 仓 release 工作流以同一 `v*` tag 同步发布。chart 另提供可选内置组件：数据面（Redis 默认开，MySQL/PostgreSQL 可选）、内置 S3 对象存储（`s3.enabled=true`，SeaweedFS 单进程）、p2p 联邦注册中心（`p2p.enabled=true`，1.3.7 起含直传中继开关）——均默认关闭。
 
 ---
 
@@ -236,20 +270,20 @@ Kubernetes 形态（charts/filecodebox，chart 1.3.x，1.2.x 起可选内置数�
 ```mermaid
 flowchart LR
     subgraph PR["每次 push / PR"]
-        GO["Go 六仓(contracts/core/server/fnos/p2p/kit):<br/>build + vet + test + 依赖守护"]
+        GO["Go 六仓(contracts/core/server/fnos/p2p/kit):<br/>build + vet + test(-race) + 依赖守护"]
         FECI["frontend:<br/>typecheck + build"]
         DSK["desktop:<br/>rust 构建 + 前端 build"]
         CHT["charts:<br/>lint + template + kind 安装冒烟"]
     end
     subgraph REL["打 tag / push main 发版"]
-        IMG["server/fnos/p2p: v* → buildx 多架构<br/>推 ghcr.io/filescodebox/*"]
-        BIN["desktop: desktop-v* → 三平台安装包<br/>fnos: fnos-v* → fpk 包(均回挂本仓 Release)"]
+        IMG["server/fnos/p2p: v* → buildx 多架构<br/>推 ghcr.io/filescodebox/*(p2p 镜像含 p2pc)"]
+        BIN["desktop: desktop-v* → 三平台安装包(CI 按 triple 拉 p2pc sidecar)<br/>fnos: fnos-v* → fpk 包(均回挂本仓 Release)"]
         PUB["hub: v* → 生态快照 Release<br/>charts: push main → Pages + OCI"]
     end
     COREDEV["core 发新版本"] -->|"各下游 go.mod 升级<br/>(require 正式版本)"| REL
 ```
 
-**发版流程**:core 改动 → tag(core vX)→ server/fnos `go mod edit -require core@vX` → commit → 打自身 tag → CI 自动出镜像。全程无需 replace。
+**发版流程**:core 改动 → tag(core vX)→ server/fnos `go mod edit -require core@vX` → commit → 打自身 tag → CI 自动出镜像。全程无需 replace。p2p 自 v0.3.1 起随 Release 发布 p2pc 六平台二进制(命名=Tauri target triple),desktop 仓 CI 按平台拉取作 sidecar 打进安装包。
 
 ---
 
@@ -258,9 +292,10 @@ flowchart LR
 | 层 | 技术 |
 |----|------|
 | 后端 | Go 1.26 · CloudWeGo Hertz · GORM(SQLite/MySQL/Postgres) · go-redis(可选) |
-| 契约 | Thrift IDL(v0.13 生成,require 传递版本约束) · OpenAPI 3 |
-| 存储 | OpenDAL(local / S3 兼容) |
-| 前端 | Vue 3 · TypeScript · Vite · Element Plus · Pinia · openapi-typescript |
+| 契约 | Thrift IDL(v0.13 生成,require 传递版本约束) · OpenAPI 3(后端运行时生成 `/openapi.json`) |
+| 存储 | OpenDAL 统一抽象,14 种后端(local / S3 兼容及各云厂商 / webdav / ftp / sftp / gcs / azureblob / hdfs / onedrive) |
+| 前端 | Vue 3 · TypeScript · Vite · Element Plus · Pinia(API 规范直连后端运行时 OpenAPI) |
 | 可观测 | zap 结构化日志 · Prometheus RED 指标 · X-Trace-Id 链路 |
-| 安全 | bcrypt 分享密码 · JWT + API Key · CORS 白名单 · 限流(Redis/内存) · 安全响应头 |
+| 安全 | bcrypt 分享密码 · JWT(JWT 纪元+封禁/改密即时失效) + API Key · OIDC SSO · CORS 白名单 · 限流(Redis/内存) · 安全响应头(CSP) · 内容审核钩子(敏感词/ClamAV) · MCP 管理端点(管理员 token) |
+| 端到端 | p2pc 设备直传(PAKE + QUIC mTLS + 加密中继兜底 + AEAD 断点续传) |
 | 构建 | Docker 三阶段 · GitHub Actions(多架构) · ghcr |

@@ -109,7 +109,7 @@
 | 变量 | 默认 | 说明 |
 |---|---|---|
 | `FCB_FEDERATION_ENABLED` | false | 联邦接入总开关 |
-| `FCB_FEDERATION_REGISTRY_URL` | 空 | p2p 注册中心地址（如 `http://registry:12346`） |
+| `FCB_FEDERATION_REGISTRY_URL` | 空 | p2p 注册中心地址（如 `http://registry:12346`）；支持逗号分隔多主备——写全推、读依次 failover（core v0.9.0 起） |
 | `FCB_FEDERATION_PUBLIC_URL` | 空 | 本节点对外可达地址（联邦内其他节点回源取件用） |
 | `FCB_FEDERATION_NODE_KEY_PATH` | data/federation.key | Ed25519 节点私钥路径（缺失自动生成） |
 | `FCB_FEDERATION_MIN_ENTROPY` | 40 | 允许注册到联邦的口令最小熵（bit），低熵口令不上榜 |

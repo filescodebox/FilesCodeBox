@@ -32,4 +32,10 @@ features:
   - icon: 🤖
     title: MCP AI 集成
     details: 内置 Model Context Protocol server（Streamable HTTP），Claude Desktop 等 AI 客户端可直接创建/查询/清理文件分享。
+  - icon: 🕸️
+    title: P2P 联邦与设备直传
+    details: 可选联邦注册中心让多节点互相发现、口令跨站可达（文件始终源节点直出）；桌面客户端 p2pc 端到端加密设备直传。
+  - icon: 🔐
+    title: OIDC 单点登录
+    details: 对接任意 OIDC IdP（Keycloak 等），按账号映射或自动建号，签发本站 JWT；API Token、内容审核、SMTP 通知等治理能力内建。
 ---

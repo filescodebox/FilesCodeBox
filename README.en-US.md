@@ -9,16 +9,16 @@ FilesCodeBox is the Go multirepo workspace of the [filescodebox](https://github.
 | Repo | Role | Version |
 |------|------|---------|
 | [contracts](https://github.com/filescodebox/contracts) | Contract layer: error codes + Thrift-generated types (zero business deps) | v0.2.1 |
-| [core](https://github.com/filescodebox/core) | Business core library: 11 domain services + repo/storage + `bootstrap.Bootstrap()` | v0.8.0 |
-| [server](https://github.com/filescodebox/server) | Deployable app: thin main + configs + Dockerfile (pure backend since 0.9.0) | v0.10.0 |
+| [core](https://github.com/filescodebox/core) | Business core library: 16 domain services + repo/storage + `bootstrap.Bootstrap()` | v0.10.0 |
+| [server](https://github.com/filescodebox/server) | Deployable app: thin main + configs + Dockerfile (pure backend since 0.9.0) | v0.11.0 |
 | [frontend](https://github.com/filescodebox/frontend) | Vue3 + TS + Vite + Element Plus (nginx image, released with server) | with server `v*` |
-| [desktop](https://github.com/filescodebox/desktop) | Desktop client: Tauri 2 tray app connecting to any FilesCodeBox server | desktop-v1.2.0 |
-| [fnos](https://github.com/filescodebox/fnos) | fnOS (fnNAS) adapter (optional) | v1.2.0 |
-| [p2p](https://github.com/filescodebox/p2p) | P2P federated registry: node leases + passcode federation routing (optional) | v0.1.0 |
+| [desktop](https://github.com/filescodebox/desktop) | Desktop client: Tauri 2 tray app connecting to any FilesCodeBox server, p2pc sidecar direct transfer | desktop-v1.3.0 |
+| [fnos](https://github.com/filescodebox/fnos) | fnOS (fnNAS) adapter (optional) | v1.2.2 |
+| [p2p](https://github.com/filescodebox/p2p) | P2P federated registry: node leases + passcode federation routing + device transfer signaling (optional) | v0.4.0 |
 | [kit](https://github.com/filescodebox/kit) | Shared Go toolkit: 28 general-purpose packages with zero ecosystem deps | v0.3.0 |
-| [charts](https://github.com/filescodebox/charts) | Kubernetes Helm chart (frontend + server split deployments) | chart 1.3.5 |
+| [charts](https://github.com/filescodebox/charts) | Kubernetes Helm chart (frontend + server split deployments) | chart 1.3.7 |
 
-Dependency direction (CI-enforced): `server / fnos / frontend ──► core ──► contracts`; `p2p` and `kit` are leaf repos with zero ecosystem deps
+Dependency direction (CI-enforced): `server / fnos / frontend ──► core ──► contracts`; `core` and `p2p` consume `kit` on demand (kit is a zero-ecosystem-dep foundation); `p2p` is a leaf repo with a zero-dep business chain
 
 ## Highlights
 
@@ -26,7 +26,8 @@ Dependency direction (CI-enforced): `server / fnos / frontend ──► core ─
 - **Chunked uploads** with resume + instant upload (SHA-256 dedup) + presigned direct upload.
 - **Storage backends**: local disk, S3-compatible (AWS/MinIO/OSS/COS/B2…), WebDAV, FTP/FTPS, SFTP, GCS, Azure Blob, HDFS, OneDrive — hot-switchable at runtime, persisted across restarts.
 - **Admin console**: dashboard, file/user management, audit log, site config persisted in DB, transfer logs.
-- **User system**: quotas, API keys, notifications (in-app + webhook).
+- **User system**: quotas, API keys, OIDC SSO login, notifications (in-app + webhook + SMTP).
+- **Federated P2P (opt-in)**: multi-node federation with passcode-based routing; end-to-end encrypted device-to-device direct transfer via the desktop client's p2pc sidecar; MCP endpoint for AI clients.
 - **Ops-ready**: Prometheus metrics, OpenTelemetry tracing (opt-in), health checks, Helm chart with ServiceMonitor, multi-arch images.
 - Light by design: a parcel locker, not a cloud drive.
 
