@@ -130,7 +130,19 @@ services:
   redis:
     image: redis:7-alpine
     container_name: filecodebox-redis
-    command: ["redis-server", "--appendonly", "yes"]
+    # 密码接线（2026-10-05 审计遗留）：.env 设 FCB_REDIS_PASSWORD 即两端生效
+    # （server 侧 FCB_REDIS_PASSWORD 已接同名变量）；未设时保持无密码——端口
+    # 未对宿主发布，仅编排内网可达，但建议生产设置。
+    command:
+      - /bin/sh
+      - -c
+      - |
+        if [ -n "$$FCB_REDIS_PASSWORD" ]; then
+          exec redis-server --appendonly yes --requirepass "$$FCB_REDIS_PASSWORD"
+        fi
+        exec redis-server --appendonly yes
+    environment:
+      - FCB_REDIS_PASSWORD=${FCB_REDIS_PASSWORD:-}
     volumes:
       - redisdata:/data
     restart: unless-stopped
