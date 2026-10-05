@@ -9,7 +9,7 @@ FilesCodeBox is the Go multirepo workspace of the [filescodebox](https://github.
 | Repo | Role | Version |
 |------|------|---------|
 | [contracts](https://github.com/filescodebox/contracts) | Contract layer: error codes + Thrift-generated types (zero business deps) | v0.2.1 |
-| [core](https://github.com/filescodebox/core) | Business core library: 16 domain services + repo/storage + `bootstrap.Bootstrap()` | v0.10.0 |
+| [core](https://github.com/filescodebox/core) | Business core library: 16 domain services + repo/storage + `bootstrap.Bootstrap()` | v0.11.0 |
 | [server](https://github.com/filescodebox/server) | Deployable app: thin main + configs + Dockerfile (pure backend since 0.9.0) | v0.12.4 |
 | [frontend](https://github.com/filescodebox/frontend) | Vue3 + TS + Vite + Element Plus (nginx image, released with server) | with server `v*` |
 | [desktop](https://github.com/filescodebox/desktop) | Desktop client: Tauri 2 tray app connecting to any FilesCodeBox server, p2pc sidecar direct transfer | desktop-v1.3.1 |
