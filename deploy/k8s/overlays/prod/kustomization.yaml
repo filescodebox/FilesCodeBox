@@ -1,11 +1,21 @@
 # 生产环境 overlay
 # 用法: kubectl apply -k deploy/k8s/overlays/prod
+#
+# ⚠️ 部署前必须完成两件事（漏做会启动失败——这是刻意的 fail-fast）：
+#   1. 编辑 base/secret.yaml 把 FCB_JWT_SECRET 换成强随机值
+#      (openssl rand -hex 32)。占位值在服务端黑名单中，直接 apply 会 crash-loop。
+#   2. 下方面像 tag 钉到实际发布的版本(ghcr tag 无 v 前缀)，勿用 latest。
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: filecodebox
 resources:
   - ../../base
-# 生产覆盖：副本数、镜像 tag（部署前修改）
+images:
+  - name: ghcr.io/filescodebox/server
+    newTag: 0.10.2
+  - name: ghcr.io/filescodebox/frontend
+    newTag: 0.10.2
+# 生产覆盖：副本数
 patches:
   - target:
       kind: Deployment
@@ -14,6 +24,3 @@ patches:
       - op: replace
         path: /spec/replicas
         value: 3
-      - op: replace
-        path: /spec/template/spec/containers/0/image
-        value: ghcr.io/filescodebox/server:latest  # 替换为具体版本 tag
