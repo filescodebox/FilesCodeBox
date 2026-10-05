@@ -18,6 +18,8 @@ curl http://localhost:12345/live    # 健康检查
 
 默认管理员 `admin / admin123`(未注入 `FCB_ADMIN_PASSWORD` 时,启动日志有警告),登录后请立即改密。
 
+内置 redis 密码:.env 设 `FCB_REDIS_PASSWORD=<随机串>` 即 server 与 redis 两端同时生效(未设时编排内网无密码,端口不对宿主发布;生产建议设置)。
+
 server 与 frontend 两镜像同版本列车(`FCB_IMAGE_TAG` 一变量同钉),均已 public 可匿名拉取;若仍 403 再 `docker login ghcr.io`。
 
 本地构建(需先 `make setup` 拉齐模块仓):

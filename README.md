@@ -15,12 +15,12 @@
 | 仓库 | 角色 | 版本 |
 |------|------|------|
 | [contracts](https://github.com/filescodebox/contracts) | 契约层:错误码 + Thrift 生成类型(纯类型,零业务依赖) | v0.2.1 |
-| [core](https://github.com/filescodebox/core) | 业务核心库:16 个域服务 + repo/storage + `bootstrap.Bootstrap()` 库入口 | v0.10.0 |
-| [server](https://github.com/filescodebox/server) | 独立部署应用:main 薄壳 + 配置模板 + Dockerfile(0.9.0 起纯后端) | v0.11.0 |
+| [core](https://github.com/filescodebox/core) | 业务核心库:16 个域服务 + repo/storage + `bootstrap.Bootstrap()` 库入口 | v0.11.0 |
+| [server](https://github.com/filescodebox/server) | 独立部署应用:main 薄壳 + 配置模板 + Dockerfile(0.9.0 起纯后端) | v0.12.4 |
 | [frontend](https://github.com/filescodebox/frontend) | Vue3 + TS + Vite + Element Plus(nginx 分离镜像,随 server 同版本发布) | 随 server 同 `v*` |
-| [desktop](https://github.com/filescodebox/desktop) | 桌面客户端:Tauri 2 托盘常驻,连接任意 FilesCodeBox 服务器,p2pc sidecar 设备直传 | desktop-v1.3.0 |
-| [fnos](https://github.com/filescodebox/fnos) | 飞牛 fnOS 应用适配(可选,`make setup` 默认拉取) | v1.2.2 |
-| [p2p](https://github.com/filescodebox/p2p) | P2P 联邦注册中心:节点租约注册 + 口令联邦路由 + 设备直传信令(可选,默认拉取) | v0.4.0 |
+| [desktop](https://github.com/filescodebox/desktop) | 桌面客户端:Tauri 2 托盘常驻,连接任意 FilesCodeBox 服务器,p2pc sidecar 设备直传 | desktop-v1.3.1 |
+| [fnos](https://github.com/filescodebox/fnos) | 飞牛 fnOS 应用适配(可选,`make setup` 默认拉取) | v1.2.3 |
+| [p2p](https://github.com/filescodebox/p2p) | P2P 联邦注册中心:节点租约注册 + 口令联邦路由 + 设备直传信令(可选,默认拉取) | v0.4.1 |
 | [kit](https://github.com/filescodebox/kit) | 共享 Go 工具库:28 个零生态依赖通用包(retry/syncx/singleflight/shutdown/workflow 等) | v0.3.0 |
 | [charts](https://github.com/filescodebox/charts) | Kubernetes Helm Chart:前后端分离双 Deployment | filecodebox-1.3.7 |
 

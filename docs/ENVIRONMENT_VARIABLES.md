@@ -11,6 +11,7 @@
 | `FCB_DATABASE_PASSWORD` | MySQL/Postgres 密码 |
 | `FCB_REDIS_PASSWORD` | Redis 密码 |
 | `FCB_PRESIGN_SIGNING_KEY` | 预签名直传专用签名密钥（缺省复用 jwt_secret） |
+| `FCB_DOWNLOAD_TOKEN_SECRET` | 下载令牌（防盗链）专用签名密钥（缺省派生自 jwt_secret；独立设置可隔离泄露面，core v0.11.0 起） |
 
 ## 服务器
 

@@ -12,8 +12,8 @@ graph TB
     subgraph ORG["filescodebox 组织"]
         UMB["📁 filescodebox<br/>(装配仓·本仓库)<br/>make setup 拉齐工作区"]
         CT["📦 contracts<br/>契约层 v0.2.1<br/>errcode + Thrift 类型"]
-        CORE["🧩 core<br/>业务核心库 v0.10.0<br/>16 域服务 + bootstrap"]
-        SRV["🚀 server<br/>部署应用 v0.11.0<br/>main 薄壳 + Dockerfile"]
+        CORE["🧩 core<br/>业务核心库 v0.11.0<br/>16 域服务 + bootstrap"]
+        SRV["🚀 server<br/>部署应用 v0.12.4<br/>main 薄壳 + Dockerfile"]
         FE["🖥️ frontend<br/>Vue3 + TS"]
         FNOS["🐂 fnos<br/>飞牛 fnOS 应用 v1.2.2<br/>SSO/共享目录/通知/穿透"]
         P2P["🕸️ p2p<br/>联邦注册中心 v0.4.0<br/>租约注册/联邦路由/WS 信令/设备直传"]
@@ -72,13 +72,13 @@ desktop 不进 go.work(Rust 项目),经 HTTP API 连接任意 FilesCodeBox 服�
 | 仓库 | 当前版本 | 说明 |
 |------|---------|------|
 | contracts | v0.2.1 | thrift v0.13 生成代码,版本约束以 require 传递(下游零 replace) |
-| core | v0.10.0 | 16 域服务;v0.10.0=全面安全审计加固(管理面/chunk 链路/JWT 纪元·封禁改密即时失效/纵深防御);v0.9.0=federation M4(registry 多主备 failover+心跳短退避);v0.8.x=federation 接入+kit 化;v0.7.x=API Token/多文件+zip/OIDC/寄件码/运行时 OpenAPI |
-| server | v0.11.0 | 纯后端镜像(默认 release 模式,alpine 钉 3.22);frontend 分离镜像由同一 `v*` tag 同步发布(`ghcr.io/filescodebox/server` / `frontend`) |
-| fnos | v1.2.2(内置 core v0.10.0) | 镜像 `ghcr.io/filescodebox/fnos`(旧镜像 `filescodebox-fnos` 冻结在 v0.2.6,更早 `filecodebox-fnos` 冻结在 v0.2.1) |
+| core | v0.11.0 | 16 域服务;v0.11.0=HttpOnly Cookie 会话(CSRF 头门禁)+审计 P2/P3 清欠;v0.10.0=全面安全审计加固(管理面/chunk 链路/JWT 纪元·封禁改密即时失效/纵深防御);v0.9.0=federation M4(registry 多主备 failover+心跳短退避);v0.8.x=federation 接入+kit 化;v0.7.x=API Token/多文件+zip/OIDC/寄件码/运行时 OpenAPI |
+| server | v0.12.4 | 纯后端镜像(默认 release 模式,alpine 钉 3.22);v0.12.x=前端 Cookie 会话/密码分享取件页修复同列车(frontend 镜像随同 tag 发布);frontend 分离镜像由同一 `v*` tag 同步发布(`ghcr.io/filescodebox/server` / `frontend`) |
+| fnos | v1.2.3(内置 core v0.11.0) | 镜像 `ghcr.io/filescodebox/fnos`(旧镜像 `filescodebox-fnos` 冻结在 v0.2.6,更早 `filecodebox-fnos` 冻结在 v0.2.1) |
 | p2p | v0.4.0 | v0.3.x=M3 设备直传全量(p2pc)+六平台二进制;v0.4.0=wire AEAD/注册 token/中继限流安全加固;镜像 `ghcr.io/filescodebox/p2p`(含 p2pc) |
 | kit | v0.3.0 | 共享 Go 工具库(28 包);已被 core(17 处)、p2p(ratelimit)、fnos/server(version) 消费;纯库仓无镜像,`go get github.com/filescodebox/kit/<包名>` |
-| desktop | desktop-v1.3.0 | Tauri 2 桌面客户端+**p2pc sidecar 设备直传**;三平台安装包回挂本仓 Release(`desktop-v*` tag) |
-| charts | chart 1.3.7(app v0.10.0) | `filecodebox` chart:1.2.x 起内置数据面,1.3.x 增内置 S3(SeaweedFS),1.3.4 增 p2p 可选组件,1.3.7 增直传中继开关;Pages + OCI 双发布 |
+| desktop | desktop-v1.3.1 | Tauri 2 桌面客户端+**p2pc sidecar 设备直传**(p2pc 0.4 传输协议 v2,与旧版服务端/客户端互不兼容需双端同版);三平台安装包回挂本仓 Release(`desktop-v*` tag) |
+| charts | chart 1.3.10(app v0.12.4) | `filecodebox` chart:1.2.x 起内置数据面,1.3.x 增内置 S3(SeaweedFS),1.3.4 增 p2p 可选组件(1.3.10 起 p2p 默认镜像 tag 0.4),1.3.7 增直传中继开关;Pages + OCI 双发布 |
 
 ---
 

@@ -10,11 +10,11 @@ FilesCodeBox is the Go multirepo workspace of the [filescodebox](https://github.
 |------|------|---------|
 | [contracts](https://github.com/filescodebox/contracts) | Contract layer: error codes + Thrift-generated types (zero business deps) | v0.2.1 |
 | [core](https://github.com/filescodebox/core) | Business core library: 16 domain services + repo/storage + `bootstrap.Bootstrap()` | v0.10.0 |
-| [server](https://github.com/filescodebox/server) | Deployable app: thin main + configs + Dockerfile (pure backend since 0.9.0) | v0.11.0 |
+| [server](https://github.com/filescodebox/server) | Deployable app: thin main + configs + Dockerfile (pure backend since 0.9.0) | v0.12.4 |
 | [frontend](https://github.com/filescodebox/frontend) | Vue3 + TS + Vite + Element Plus (nginx image, released with server) | with server `v*` |
-| [desktop](https://github.com/filescodebox/desktop) | Desktop client: Tauri 2 tray app connecting to any FilesCodeBox server, p2pc sidecar direct transfer | desktop-v1.3.0 |
-| [fnos](https://github.com/filescodebox/fnos) | fnOS (fnNAS) adapter (optional) | v1.2.2 |
-| [p2p](https://github.com/filescodebox/p2p) | P2P federated registry: node leases + passcode federation routing + device transfer signaling (optional) | v0.4.0 |
+| [desktop](https://github.com/filescodebox/desktop) | Desktop client: Tauri 2 tray app connecting to any FilesCodeBox server, p2pc sidecar direct transfer | desktop-v1.3.1 |
+| [fnos](https://github.com/filescodebox/fnos) | fnOS (fnNAS) adapter (optional) | v1.2.3 |
+| [p2p](https://github.com/filescodebox/p2p) | P2P federated registry: node leases + passcode federation routing + device transfer signaling (optional) | v0.4.1 |
 | [kit](https://github.com/filescodebox/kit) | Shared Go toolkit: 28 general-purpose packages with zero ecosystem deps | v0.3.0 |
 | [charts](https://github.com/filescodebox/charts) | Kubernetes Helm chart (frontend + server split deployments) | chart 1.3.7 |
 
