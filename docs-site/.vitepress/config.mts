@@ -33,6 +33,7 @@ export default defineConfig({
         items: [
           { text: '首页', link: '/' },
           { text: '快速开始', link: '/guide/getting-started' },
+          { text: '使用说明', link: '/guide/usage' },
           { text: '部署 Docker', link: '/guide/deploy-docker' },
           { text: '部署 Kubernetes', link: '/guide/deploy-kubernetes' },
           { text: '环境变量', link: '/guide/environment' }
@@ -53,6 +54,7 @@ export default defineConfig({
         text: '指南',
         items: [
           { text: '快速开始', link: '/guide/getting-started' },
+          { text: '使用说明', link: '/guide/usage' },
           { text: '部署 Docker Compose', link: '/guide/deploy-docker' },
           { text: '部署 Kubernetes (Helm)', link: '/guide/deploy-kubernetes' },
           { text: '环境变量参考', link: '/guide/environment' },
