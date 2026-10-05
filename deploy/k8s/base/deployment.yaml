@@ -15,6 +15,7 @@ spec:
       labels:
         app: filecodebox
     spec:
+      automountServiceAccountToken: false
       containers:
         - name: filecodebox
           image: ghcr.io/filescodebox/server:latest
@@ -62,12 +63,16 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /app/data
-          # 安全上下文：非 root 运行
+          # 安全上下文：非 root + 全能力降权 + seccomp 基线（对齐 chart values）
           securityContext:
             runAsNonRoot: true
             runAsUser: 1000
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: false
+            capabilities:
+              drop: ["ALL"]
+            seccompProfile:
+              type: RuntimeDefault
       volumes:
         - name: data
           persistentVolumeClaim:

@@ -100,7 +100,7 @@ services:
       dockerfile: Dockerfile
     container_name: filecodebox-frontend
     ports:
-      - "${FCB_API_BIND:-0.0.0.0}:${FCB_API_PORT:-12345}:8080"
+      - "${FCB_API_BIND:-127.0.0.1}:${FCB_API_PORT:-12345}:8080"  # 2026-10-05 审计:后端 API 默认仅回环(对外入口=frontend);需直连调试时 .env 设 FCB_API_BIND=0.0.0.0
     environment:
       # 反代上游 = 本编排的后端服务(与镜像 envsubst 默认值一致,显式写出便于理解)
       - BACKEND_HOST=filecodebox
