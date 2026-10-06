@@ -29,7 +29,7 @@ chart 可一键部署有状态依赖，全部为单副本 StatefulSet（密码�
 
 | 组件 | values 键 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| Redis | `redis.enabled` | `true` | 匿名取件码/预签名/限流共享强依赖；AOF 持久化 1Gi；后端由 init 容器等其就绪 |
+| Redis | `redis.enabled` | `true` | 取件码映射/presign 会话持久化 + 多副本共享面（单机关闭后为内存模式：全功能可用、重启丢映射，core v0.14.0+）；AOF 持久化 1Gi；后端由 init 容器等其就绪 |
 | MySQL 8.4 | `mysql.enabled` | `false` | 开启即注入 `FCB_DATABASE_*`（driver/host/密码全托管） |
 | PostgreSQL 17 | `postgresql.enabled` | `false` | 同上 |
 | SeaweedFS(S3) | `s3.enabled` | `false` | 单进程对象存储（master+volume+filer+s3），自动建桶并注入 `FCB_STORAGE_S3_*`，同时自动放行 `FCB_SSRF_ALLOW_PRIVATE`（集群内端点属私网，core 的 SSRF 防护默认拒绝） |
@@ -73,7 +73,7 @@ helm upgrade --install filecodebox filescodebox/filecodebox \
 | `replicaCount` | server 副本数（SQLite 部署保持 1） | `1` |
 | `frontend.replicaCount` | frontend 副本数（无状态，可独立扩缩） | `1` |
 | `containerPort` | server 容器内应用监听端口 | `12345` |
-| `redis.enabled` | 内置 Redis（匿名取件码等强依赖；`config.redis` 显式配置时自动让位） | `true` |
+| `redis.enabled` | 内置 Redis（取件码映射持久化；多副本共享/广播依赖；单机关闭后为内存模式，core v0.14.0+；`config.redis` 显式配置时自动让位） | `true` |
 | `mysql.enabled` / `postgresql.enabled` | 内置单副本数据库 StatefulSet，开启即自动注入 `FCB_DATABASE_*` | `false` |
 | `s3.enabled` | 内置 SeaweedFS 对象存储（自动建桶并注入 `FCB_STORAGE_S3_*`；需 server 镜像 ≥ 0.9.3） | `false` |
 | `persistence.enabled` | 持久化 SQLite + 本地上传文件（容器 `/app/data`） | `true` |
