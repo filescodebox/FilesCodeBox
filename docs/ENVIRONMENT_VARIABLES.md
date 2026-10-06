@@ -93,7 +93,8 @@
 
 | 变量 | 默认 | 说明 |
 |---|---|---|
-| `FCB_MCP_ENABLED` | true | MCP server（POST /api/v1/mcp，Streamable HTTP/JSON-RPC 2.0，管理员 JWT 认证；8 个工具：share_text/get_share/list_shares/delete_share/get_system_status/get_storage_info/list_users/cleanup_expired） |
+| `FCB_MCP_ENABLED` | true | MCP server（POST /api/v1/mcp，Streamable HTTP/JSON-RPC 2.0，管理员 JWT 认证；13 个工具覆盖上传/下载/管理/联邦：share_text/share_file/get_share/get_share_content/download_share_file/list_shares/delete_share/get_system_status/get_storage_info/list_users/cleanup_expired/federation_status/federation_resolve，详见 docs/MCP-README.md） |
+| `FCB_MCP_MAX_FILE_SIZE` | 6291456 | MCP 单文件上传/下载上限（字节；base64 膨胀 4/3 后须低于请求体上限 max(10MB, upload.max_file_size)，超限时同步调大后者） |
 
 ## 内容审核（moderation）
 

@@ -6,6 +6,21 @@
 ## [Unreleased]
 
 ### Added
+- **MCP 能力扩展为分享全生命周期（8→13 工具）+ 对接指南 + agent skill**：
+  - 新增 5 工具——上传 `share_file`（base64 随 JSON-RPC 携带，share 域新 `ShareBytes`
+    入口：文件名消毒/扩展名白名单/大小上限→SaveStream→CreateShare 同链路，配额/审核/
+    联邦公告全生效）、下载 `get_share_content`（文本回正文/文件回清单，不耗次数）与
+    `download_share_file`（base64 回传，单文件/未过期/受 `mcp.max_file_size` 限）、
+    P2P 联邦 `federation_status`（启用/节点 ID/registry/心跳）与 `federation_resolve`
+    （口令联邦路由查询）。
+  - 新配置 `mcp.max_file_size`（默认 6MB，env `FCB_MCP_MAX_FILE_SIZE`；base64 膨胀 4/3
+    后须低于请求体上限，超限时同步调大 `upload.max_file_size`）。
+  - 修复：`CreateShare` 路径（文件/多文件/本地导入/MCP）此前不生成 `full_share_url`，
+    统一下沉到 `modelToResp` 三通道生成。
+  - `docs/MCP-README.md` 重写为完整对接指南（仍为 docs-site `reference/mcp` 页真相源），
+    新增 `skills/filescodebox-mcp/` agent skill（SKILL.md + 自动登录/401 重试的
+    `scripts/mcp.sh`，curl+python3 零额外依赖）；临时实例+真机 p2pd 联邦全链路验证
+    （13 工具/上传下载回环比对/联邦状态与路由/错误路径）全绿。
 - **OpenWrt/iStoreOS 原生 ipk 适配层接入为第 8 模块**（[openwrt](https://github.com/filescodebox/openwrt) v0.1.0）：
   单进程库式调 core + 前端 dist 内置（单端口 12345 同端口服务 Web+API），procd 托管/开机自启，
   UCI 配置（`/etc/config/filescodebox`）+ drop-in config.yaml，`Depends: redis-server`（OpenWrt 官方源）；
