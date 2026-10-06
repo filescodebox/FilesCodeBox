@@ -11,15 +11,15 @@
 graph TB
     subgraph ORG["filescodebox 组织"]
         UMB["📁 filescodebox<br/>(装配仓·本仓库)<br/>make setup 拉齐工作区"]
-        CT["📦 contracts<br/>契约层 v0.2.1<br/>errcode + Thrift 类型"]
-        CORE["🧩 core<br/>业务核心库 v0.11.0<br/>16 域服务 + bootstrap"]
-        SRV["🚀 server<br/>部署应用 v0.12.4<br/>main 薄壳 + Dockerfile"]
+        CT["📦 contracts<br/>契约层 v0.6.5<br/>errcode + Thrift 类型"]
+        CORE["🧩 core<br/>业务核心库 v0.13.0<br/>16 域服务 + bootstrap"]
+        SRV["🚀 server<br/>部署应用 v0.14.0<br/>main 薄壳 + Dockerfile"]
         FE["🖥️ frontend<br/>Vue3 + TS"]
-        FNOS["🐂 fnos<br/>飞牛 fnOS 应用 v1.2.2<br/>SSO/共享目录/通知/穿透"]
-        P2P["🕸️ p2p<br/>联邦注册中心 v0.4.0<br/>租约注册/联邦路由/WS 信令/设备直传"]
+        FNOS["🐂 fnos<br/>飞牛 fnOS 应用 v1.2.3<br/>SSO/共享目录/通知/穿透"]
+        P2P["🕸️ p2p<br/>联邦注册中心 v0.4.1<br/>租约注册/联邦路由/WS 信令/设备直传"]
         KIT["🧰 kit<br/>共享 Go 工具库 v0.3.0<br/>retry/syncx/shutdown/workflow 等 28 包"]
-        DESK["💻 desktop<br/>Tauri 桌面客户端 desktop-v1.3.0<br/>p2pc sidecar 设备直传"]
-        CHT["☸️ charts<br/>Helm Chart 1.3.7<br/>Pages + OCI 双发布"]
+        DESK["💻 desktop<br/>Tauri 桌面客户端 desktop-v1.3.1<br/>p2pc sidecar 设备直传"]
+        CHT["☸️ charts<br/>Helm Chart 1.3.23<br/>Pages + OCI 双发布"]
     end
 
     USER["👤 自托管用户"] -->|"compose / Helm"| SRV
@@ -42,9 +42,9 @@ graph TB
 ```mermaid
 graph LR
     FE["frontend<br/>(Vue3)"] -->|"/openapi.json 运行时规范<br/>(swagger 页直连后端)"| SRV["server"]
-    SRV -->|"require v0.10.x"| CORE["core"]
-    FNOS["fnos"] -->|"require v0.10.x<br/>库式调用 bootstrap"| CORE
-    CORE -->|"require v0.2.x"| CTX["contracts"]
+    SRV -->|"require v0.13.0"| CORE["core"]
+    FNOS["fnos"] -->|"require v0.11.0<br/>库式调用 bootstrap"| CORE
+    CORE -->|"require v0.6.5"| CTX["contracts"]
     P2P["p2p<br/>(联邦注册中心)"]
     CORE -.->|"core v0.8.0 起 federation 域<br/>为 p2p 客户端"| P2P
     KIT["kit<br/>(共享 Go 工具库)"]
@@ -65,20 +65,20 @@ desktop 不进 go.work(Rust 项目),经 HTTP API 连接任意 FilesCodeBox 服�
 | kit 零生态依赖(禁 import 任何兄弟模块);p2p 业务链零依赖(kit 地基层放行) | kit / p2p CI dep guard:`go list -deps` 检查 |
 | core 不许 import server / frontend / fnos | core CI 同上 |
 | server / fnos 只经 go.mod 正式版本引用 core,**零 replace** | 各仓 go.mod 无 replace(本地联编由本仓 go.work 承担) |
-| frontend 走后端运行时 OpenAPI 规范(`/openapi.json`),不再维护快照/生成类型 | swagger 页与 vite 代理均直连后端同源(2026-10-04 移除漂移快照) |
+| frontend wire 契约类型经 `@filescodebox/contracts`(contracts IDL 生成的 TS d.ts,Release tgz 资产依赖);运行时 `/openapi.json` 仍是 API 规范真相源,快照不维护 | contracts CI `--check` 对账生成物;swagger 页与 vite 代理均直连后端同源(2026-10-04 移除漂移快照) |
 
 ### 2.3 版本矩阵
 
 | 仓库 | 当前版本 | 说明 |
 |------|---------|------|
-| contracts | v0.2.1 | thrift v0.13 生成代码,版本约束以 require 传递(下游零 replace) |
-| core | v0.11.0 | 16 域服务;v0.11.0=HttpOnly Cookie 会话(CSRF 头门禁)+审计 P2/P3 清欠;v0.10.0=全面安全审计加固(管理面/chunk 链路/JWT 纪元·封禁改密即时失效/纵深防御);v0.9.0=federation M4(registry 多主备 failover+心跳短退避);v0.8.x=federation 接入+kit 化;v0.7.x=API Token/多文件+zip/OIDC/寄件码/运行时 OpenAPI |
-| server | v0.12.4 | 纯后端镜像(默认 release 模式,alpine 钉 3.22);v0.12.x=前端 Cookie 会话/密码分享取件页修复同列车(frontend 镜像随同 tag 发布);frontend 分离镜像由同一 `v*` tag 同步发布(`ghcr.io/filescodebox/server` / `frontend`) |
+| contracts | v0.6.5 | thrift v0.13 生成代码,版本约束以 require 传递(下游零 replace);IDL 真相源 `idl/`,前端 TS 类型经 `cmd/gen-ts` → Release tgz |
+| core | v0.13.0 | 16 域服务;**v0.13.0=FCB_DEPLOY_MODE 三模式部署拆分(standalone/public×N/admin×1,Redis 配置广播)+回收站**;v0.11.x=HttpOnly Cookie 会话(CSRF 头门禁)+审计清欠+攻击面收缩;v0.10.0=全面安全审计加固(管理面/chunk 链路/JWT 纪元·封禁改密即时失效/纵深防御);v0.9.0=federation M4(registry 多主备 failover+心跳短退避);v0.8.x=federation 接入+kit 化;v0.7.x=API Token/多文件+zip/OIDC/寄件码/运行时 OpenAPI |
+| server | v0.14.0 | **v0.14.x=多副本拆分列车(core v0.13.0,FCB_DEPLOY_MODE)**;纯后端镜像(默认 release 模式,alpine 钉 3.22);frontend 分离镜像由同一 `v*` tag 同步发布(`ghcr.io/filescodebox/server` / `frontend`) |
 | fnos | v1.2.3(内置 core v0.11.0) | 镜像 `ghcr.io/filescodebox/fnos`(旧镜像 `filescodebox-fnos` 冻结在 v0.2.6,更早 `filecodebox-fnos` 冻结在 v0.2.1) |
-| p2p | v0.4.0 | v0.3.x=M3 设备直传全量(p2pc)+六平台二进制;v0.4.0=wire AEAD/注册 token/中继限流安全加固;镜像 `ghcr.io/filescodebox/p2p`(含 p2pc) |
+| p2p | v0.4.1 | v0.3.x=M3 设备直传全量(p2pc)+六平台二进制;v0.4.0=wire AEAD/注册 token/中继限流安全加固;v0.4.1=p2pc 修复;镜像 `ghcr.io/filescodebox/p2p`(含 p2pc) |
 | kit | v0.3.0 | 共享 Go 工具库(28 包);已被 core(17 处)、p2p(ratelimit)、fnos/server(version) 消费;纯库仓无镜像,`go get github.com/filescodebox/kit/<包名>` |
 | desktop | desktop-v1.3.1 | Tauri 2 桌面客户端+**p2pc sidecar 设备直传**(p2pc 0.4 传输协议 v2,与旧版服务端/客户端互不兼容需双端同版);三平台安装包回挂本仓 Release(`desktop-v*` tag) |
-| charts | chart 1.3.10(app v0.12.4) | `filecodebox` chart:1.2.x 起内置数据面,1.3.x 增内置 S3(SeaweedFS),1.3.4 增 p2p 可选组件(1.3.10 起 p2p 默认镜像 tag 0.4),1.3.7 增直传中继开关;Pages + OCI 双发布 |
+| charts | chart 1.3.23(app v0.14.0) | `filecodebox` chart:1.2.x 起内置数据面,1.3.x 增内置 S3(SeaweedFS),1.3.4 增 p2p 可选组件,1.3.7 增直传中继开关,**1.3.22 增多副本双拓扑(FCB_DEPLOY_MODE)**;Pages + OCI 双发布 |
 
 ---
 
@@ -296,7 +296,7 @@ flowchart LR
 | 后端 | Go 1.26 · CloudWeGo Hertz · GORM(SQLite/MySQL/Postgres) · go-redis(可选) |
 | 契约 | Thrift IDL(v0.13 生成,require 传递版本约束) · OpenAPI 3(后端运行时生成 `/openapi.json`) |
 | 存储 | OpenDAL 统一抽象,14 种后端(local / S3 兼容及各云厂商 / webdav / ftp / sftp / gcs / azureblob / hdfs / onedrive) |
-| 前端 | Vue 3 · TypeScript · Vite · Element Plus · Pinia(API 规范直连后端运行时 OpenAPI) |
+| 前端 | Vue 3 · TypeScript · Vite · Element Plus · Pinia(wire 契约类型经 `@filescodebox/contracts`;API 规范真相源=后端运行时 `/openapi.json`) |
 | 可观测 | zap 结构化日志 · Prometheus RED 指标 · X-Trace-Id 链路 |
 | 安全 | bcrypt 分享密码 · JWT(JWT 纪元+封禁/改密即时失效) + API Key · OIDC SSO · CORS 白名单 · 限流(Redis/内存) · 安全响应头(CSP) · 内容审核钩子(敏感词/ClamAV) · MCP 管理端点(管理员 token) |
 | 端到端 | p2pc 设备直传(PAKE + QUIC mTLS + 加密中继兜底 + AEAD 断点续传) |

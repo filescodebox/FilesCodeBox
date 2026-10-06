@@ -22,7 +22,7 @@ features:
     details: 用户注册/登录/封禁管理；个人访问令牌（fcb_sk_ 前缀）让脚本与 CI 直接调用接口，无需浏览器会话。
   - icon: 💾
     title: 多存储后端
-    details: local / S3(MinIO) / 阿里 OSS / 腾讯 COS / 百度 BOS / 金山 KS3 / 华为 OBS / WebDAV，云厂商按 region 自动推导 endpoint。
+    details: 共 14 种热切换后端：local / S3(MinIO) / 阿里 OSS / 腾讯 COS / 百度 BOS / 金山 KS3 / 华为 OBS / WebDAV / FTP / SFTP / GCS / Azure Blob / HDFS / OneDrive，云厂商按 region 自动推导 endpoint。
   - icon: 📦
     title: 分片上传 + 秒传
     details: 大文件分片上传；服务端流式 SHA-256 计算哈希，同哈希文件秒传直接出码，省时省带宽。

@@ -39,7 +39,7 @@
   `effective` 字段展示实际生效后端。
 - **presign 直传接入存储分派**（core）：直传落盘跟随当前激活后端（此前硬编码本地盘）。
 - **首启引导**：`/api/config` 返回真实 `initialized`；前端新增 `/setup` 初始化页（含 i18n）。
-- **开源合规件**：7 仓 MIT LICENSE；CONTRIBUTING / SECURITY / CHANGELOG / ROADMAP / 双语 README。
+- **开源合羄件**：7 仓 LICENSE（初为 MIT，2026-10-04 起全生态切换 **Apache-2.0**）；CONTRIBUTING / SECURITY / CHANGELOG / ROADMAP / 双语 README。
 - **API Key 体系**（core）：`fcb_sk_` 前缀用户级 API Key（SHA256 存储/per-Key 限流/审计归因/
   一键吊销/临期通知），`/api/v1` 组 JWT|API Key 双认证，管理端总开关与热更新。
 - **多文件分享 + zip 打包**（core/frontend）：单/多文件统一子表模型，`/api/v1/share/multi-direct|multi-bind`，

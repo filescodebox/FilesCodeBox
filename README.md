@@ -14,15 +14,15 @@
 
 | 仓库 | 角色 | 版本 |
 |------|------|------|
-| [contracts](https://github.com/filescodebox/contracts) | 契约层:错误码 + Thrift 生成类型(纯类型,零业务依赖) | v0.2.1 |
-| [core](https://github.com/filescodebox/core) | 业务核心库:16 个域服务 + repo/storage + `bootstrap.Bootstrap()` 库入口 | v0.11.0 |
-| [server](https://github.com/filescodebox/server) | 独立部署应用:main 薄壳 + 配置模板 + Dockerfile(0.9.0 起纯后端) | v0.12.4 |
+| [contracts](https://github.com/filescodebox/contracts) | 契约层:错误码 + Thrift 生成类型(纯类型,零业务依赖) | v0.6.5 |
+| [core](https://github.com/filescodebox/core) | 业务核心库:16 个域服务 + repo/storage + `bootstrap.Bootstrap()` 库入口 | v0.13.0 |
+| [server](https://github.com/filescodebox/server) | 独立部署应用:main 薄壳 + 配置模板 + Dockerfile(0.9.0 起纯后端) | v0.14.0 |
 | [frontend](https://github.com/filescodebox/frontend) | Vue3 + TS + Vite + Element Plus(nginx 分离镜像,随 server 同版本发布) | 随 server 同 `v*` |
 | [desktop](https://github.com/filescodebox/desktop) | 桌面客户端:Tauri 2 托盘常驻,连接任意 FilesCodeBox 服务器,p2pc sidecar 设备直传 | desktop-v1.3.1 |
 | [fnos](https://github.com/filescodebox/fnos) | 飞牛 fnOS 应用适配(可选,`make setup` 默认拉取) | v1.2.3 |
 | [p2p](https://github.com/filescodebox/p2p) | P2P 联邦注册中心:节点租约注册 + 口令联邦路由 + 设备直传信令(可选,默认拉取) | v0.4.1 |
 | [kit](https://github.com/filescodebox/kit) | 共享 Go 工具库:28 个零生态依赖通用包(retry/syncx/singleflight/shutdown/workflow 等) | v0.3.0 |
-| [charts](https://github.com/filescodebox/charts) | Kubernetes Helm Chart:前后端分离双 Deployment | filecodebox-1.3.7 |
+| [charts](https://github.com/filescodebox/charts) | Kubernetes Helm Chart:前后端分离双 Deployment | filecodebox-1.3.23 |
 
 依赖方向(单向,CI 守护):`server / fnos / frontend ──► core ──► contracts`;`core`、`p2p` 按需消费 `kit`(kit 为零生态依赖地基层);`p2p` 为业务链零依赖叶子仓(desktop 经 HTTP API 连接,无构建期依赖)
 
@@ -35,8 +35,8 @@ make setup     # 拉齐模块仓库(幂等,重复执行=更新)
 make test      # 全仓测试(Go 各模块 + 前端 typecheck)
 make lint      # golangci-lint 各 Go 模块(CI 同款门禁)
 make build     # workspace 联编
-make smoke     # 起 server 跑冒烟(健康检查/admin 登录;39 项全量断言见下一行)
-# bash scripts/smoke-full.sh   # 全能力真机冒烟(39 项断言,含临时 Redis)
+make smoke     # 起 server 跑冒烟(健康检查/admin 登录;44 项全量断言见下一行)
+# bash scripts/smoke-full.sh   # 全能力真机冒烟(44 项断言,含临时 Redis)
 ```
 
 纯 Docker 部署(详见 [docs/DEPLOY-COMPOSE.md](docs/DEPLOY-COMPOSE.md)):

@@ -8,15 +8,15 @@ FilesCodeBox is the Go multirepo workspace of the [filescodebox](https://github.
 
 | Repo | Role | Version |
 |------|------|---------|
-| [contracts](https://github.com/filescodebox/contracts) | Contract layer: error codes + Thrift-generated types (zero business deps) | v0.2.1 |
-| [core](https://github.com/filescodebox/core) | Business core library: 16 domain services + repo/storage + `bootstrap.Bootstrap()` | v0.11.0 |
-| [server](https://github.com/filescodebox/server) | Deployable app: thin main + configs + Dockerfile (pure backend since 0.9.0) | v0.12.4 |
+| [contracts](https://github.com/filescodebox/contracts) | Contract layer: error codes + Thrift-generated types (zero business deps) | v0.6.5 |
+| [core](https://github.com/filescodebox/core) | Business core library: 16 domain services + repo/storage + `bootstrap.Bootstrap()` | v0.13.0 |
+| [server](https://github.com/filescodebox/server) | Deployable app: thin main + configs + Dockerfile (pure backend since 0.9.0) | v0.14.0 |
 | [frontend](https://github.com/filescodebox/frontend) | Vue3 + TS + Vite + Element Plus (nginx image, released with server) | with server `v*` |
 | [desktop](https://github.com/filescodebox/desktop) | Desktop client: Tauri 2 tray app connecting to any FilesCodeBox server, p2pc sidecar direct transfer | desktop-v1.3.1 |
 | [fnos](https://github.com/filescodebox/fnos) | fnOS (fnNAS) adapter (optional) | v1.2.3 |
 | [p2p](https://github.com/filescodebox/p2p) | P2P federated registry: node leases + passcode federation routing + device transfer signaling (optional) | v0.4.1 |
 | [kit](https://github.com/filescodebox/kit) | Shared Go toolkit: 28 general-purpose packages with zero ecosystem deps | v0.3.0 |
-| [charts](https://github.com/filescodebox/charts) | Kubernetes Helm chart (frontend + server split deployments) | chart 1.3.7 |
+| [charts](https://github.com/filescodebox/charts) | Kubernetes Helm chart (frontend + server split deployments) | chart 1.3.23 |
 
 Dependency direction (CI-enforced): `server / fnos / frontend ──► core ──► contracts`; `core` and `p2p` consume `kit` on demand (kit is a zero-ecosystem-dep foundation); `p2p` is a leaf repo with a zero-dep business chain
 
@@ -24,7 +24,7 @@ Dependency direction (CI-enforced): `server / fnos / frontend ──► core ─
 
 - **Share text or files anonymously** with pickup codes, expiry by time and/or download count, optional access password (bcrypt).
 - **Chunked uploads** with resume + instant upload (SHA-256 dedup) + presigned direct upload.
-- **Storage backends**: local disk, S3-compatible (AWS/MinIO/OSS/COS/B2…), WebDAV, FTP/FTPS, SFTP, GCS, Azure Blob, HDFS, OneDrive — hot-switchable at runtime, persisted across restarts.
+- **Storage backends**: 14 hot-switchable drivers persisted across restarts — local disk, S3/MinIO, cloud vendor presets (Aliyun OSS, Tencent COS, Baidu BOS, Kingsoft KS3, Huawei OBS), WebDAV, FTP/FTPS, SFTP, GCS, Azure Blob, HDFS, OneDrive.
 - **Admin console**: dashboard, file/user management, audit log, site config persisted in DB, transfer logs.
 - **User system**: quotas, API keys, OIDC SSO login, notifications (in-app + webhook + SMTP).
 - **Federated P2P (opt-in)**: multi-node federation with passcode-based routing; end-to-end encrypted device-to-device direct transfer via the desktop client's p2pc sidecar; MCP endpoint for AI clients.

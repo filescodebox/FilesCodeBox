@@ -1,6 +1,6 @@
 # CONTRIBUTING
 
-感谢关注 FileCodeBox！本仓是**装配仓库**（hub）：不含业务代码，负责把各模块仓拉齐成工作区。业务贡献请到对应模块仓提 Issue/PR：
+感谢关注 FilesCodeBox！本仓是**装配仓库**（hub）：不含业务代码，负责把各模块仓拉齐成工作区。业务贡献请到对应模块仓提 Issue/PR：
 
 | 想改什么 | 去哪个仓 |
 |---|---|
@@ -14,9 +14,9 @@
 ## 快速开始（本仓）
 
 ```bash
-git clone git@github.com:filescodebox/FileCodeBox.git && cd FileCodeBox
-make setup     # 拉齐模块仓（幂等；SETUP_FNOS=1 连 fnos 一起拉）
-make test      # Go 三模块测试 + 前端 typecheck
+git clone git@github.com:filescodebox/filescodebox.git && cd filescodebox
+make setup     # 拉齐 7 个模块仓（幂等，重复执行=更新；SETUP_FNOS=0 / SETUP_P2P=0 / SETUP_KIT=0 可跳过对应仓）
+make test      # 五 Go 模块测试（contracts/core/server/p2p/kit） + 前端 typecheck
 make build     # go.work 联编 → bin/
 make smoke     # 起 server 冒烟（健康检查/admin 登录/文本分享）
 ```
@@ -24,7 +24,7 @@ make smoke     # 起 server 冒烟（健康检查/admin 登录/文本分享）
 ## 硬性规则（CI 强制）
 
 1. **依赖单向**：`server / fnos / frontend ──► core ──► contracts`。core 不许 import 上游模块；contracts 不许 import 项目内任何包。
-2. **生成物不手改**：contracts `gen/`（thrift）、core `gen/`、frontend `src/types/api.gen.ts`。流程：改 IDL/后端 → 跑对应 gen 脚本 → 生成物与源一起提交。
+2. **生成物不手改**：contracts `gen/`（thrift 模型 + `gen/ts/` 前端类型 + `openapi/openapi.json`，各生成器带 `--check`/`CHECK=1` CI 校验）、core `gen/`（router/handler，`gen/router/*/middleware.go` 鉴权接线是唯一手工区）。流程：先改 `contracts/idl/`（真相源）→ `contracts/scripts/gen-model.sh` + `core/scripts/gen-router.sh`（前端类型/OpenAPI 为 `go run ./cmd/gen-ts` / `./cmd/gen-openapi`）→ 跑路由守卫测试 → 生成物与源一起提交。
 3. **破坏性变更升主版本**：删/改名字段、改错误码语义必须 bump 主版本；contracts 先发版，core 再升 require。
 4. **钉版本规则**：thrift v0.13.0 由 contracts 传递（下游不要 replace）；core 显式钉 sonic v1.15.0（勿动）。
 

@@ -32,7 +32,7 @@
 - [x] 全局存储配额（storage.quota）+ 分片逐片哈希强校验
 - [x] 存储驱动扩展：FTP/FTPS、SFTP、GCS、Azure Blob、HDFS(WebHDFS)、OneDrive(Graph)
 - [x] 安全版主题（背景图/主题色白名单校验）
-- [x] 质量基建：golangci-lint 门禁（CI 同款 make lint）、43 项全能力冒烟（scripts/smoke-full.sh）、
+- [x] 质量基建：golangci-lint 门禁（CI 同款 make lint）、44 项全能力冒烟（scripts/smoke-full.sh）、
   chunk 大文件生命周期回归、Helm CI 真装 + helm test
 
 ## 现在（进行中）
@@ -49,14 +49,12 @@
       OneDrive 需 Azure AD 凭证）
 - [ ] Telegram / Bark 通知渠道（SMTP 已落地，架构上扩渠道）
 - [ ] Playwright E2E + 前端测试加密
-- [ ] 飞牛 fnOS 深度集成落地（SSO / 共享目录 / 内网穿透 / 通知中心，等 Open API 凭证解锁）
-- [ ] OneDrive 存储后端（原空壳常量已清理，实装时 MSGraph 接入）
+- [ ] 飞牛 fnOS 真机联调（fnos v1.2.x 适配层已就绪：SSO/共享目录/通知/穿透多为接口桩，等 Open API 凭证解锁实调）
 
 ## 更远（探索中）
 
 - [ ] 邮箱找回密码
 - [ ] PWA / 移动端体验
-- [ ] OpenDAL 长尾后端（GCS/Azure/HDFS/FTP/SFTP；主流云已经 S3 兼容预设覆盖）
 
 ## 设计决策记录
 

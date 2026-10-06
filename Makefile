@@ -9,7 +9,7 @@ SERVER_IMAGE ?= filecodebox-server:dev
 ## 全流程:拉模块 → 全仓测试 → 构建 server 二进制
 all: setup test build
 
-setup:            ## 拉齐/更新四个模块仓库(幂等)
+setup:            ## 拉齐/更新七个模块仓库(幂等)
 	./scripts/setup.sh
 
 update: setup

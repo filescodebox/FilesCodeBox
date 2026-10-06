@@ -12,10 +12,13 @@ resources:
   - ../../base
 images:
   - name: ghcr.io/filescodebox/server
-    newTag: 0.10.2
+    newTag: 0.14.0
   - name: ghcr.io/filescodebox/frontend
-    newTag: 0.10.2
+    newTag: 0.14.0
 # 生产覆盖：副本数
+# ⚠️ server ≥ 0.14.0 起多副本须按 FCB_DEPLOY_MODE 拆分拓扑部署
+#    （public×N + admin×1，推荐用 charts 仓 filecodebox chart 1.3.22+ 的 replicaCount>1 渲染；
+#    裸 manifest 直接对单 Deployment 扩副本=多实例同跑迁移/后台任务，语义不成立）。
 patches:
   - target:
       kind: Deployment
