@@ -1,6 +1,6 @@
 # NAS 部署（飞牛 / OpenWrt·iStoreOS / 群晖 / 威联通 / 绿联 / 铁威马）
 
-FilesCodeBox 在 NAS 上的六种交付形态。除飞牛/OpenWrt 为原生单进程适配层外，其余四平台为**官方镜像的 docker-compose 编排壳**（零 Go 代码），行为与 [Docker Compose 部署](./DEPLOY-COMPOSE.md)完全一致：双容器免 Redis（core v0.14.0 起单机内存模式全功能）、JWT 密钥首启自动生成持久化、默认关闭开放注册、默认端口 `12345`。
+FilesCodeBox 在 NAS 上的六种交付形态。除飞牛/OpenWrt 为原生单进程适配层外，其余四平台为**官方镜像的 docker-compose 编排壳**（零 Go 代码），行为与 Docker Compose 部署（`docs/DEPLOY-COMPOSE.md`）完全一致：双容器免 Redis（core v0.14.0 起单机内存模式全功能）、JWT 密钥首启自动生成持久化、默认关闭开放注册、默认端口 `12345`。
 
 | 平台 | 形态 | 系统要求 | 安装入口 |
 |---|---|---|---|
@@ -53,4 +53,4 @@ FilesCodeBox 在 NAS 上的六种交付形态。除飞牛/OpenWrt 为原生单�
 
 ## 与 Docker Compose 部署的关系
 
-四平台壳内的编排与生态主仓 `docker-compose.yml` 同源裁剪（去 redis、绑 0.0.0.0、`.env` 由安装器生成）；高级配置（Redis、S3/网盘存储、反代、联邦）直接参考 [环境变量](./ENVIRONMENT_VARIABLES.md) 在 `.env` 追加即可。绿联 UPK 应用中心形态与铁威马 TOS 7 官方应用包为二期路线（见各自仓库 `upk/`、`tos7/` 目录说明）。
+四平台壳内的编排与生态主仓 `docker-compose.yml` 同源裁剪（去 redis、绑 0.0.0.0、`.env` 由安装器生成）；高级配置（Redis、S3/网盘存储、反代、联邦）直接参考环境变量文档（`docs/ENVIRONMENT_VARIABLES.md`）在 `.env` 追加即可。绿联 UPK 应用中心形态与铁威马 TOS 7 官方应用包为二期路线（见各自仓库 `upk/`、`tos7/` 目录说明）。
