@@ -13,20 +13,31 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # hub 模式快照说明:静态模板(产物线导航),不引用 CHANGELOG——
+      # 旧做法 sed 抠 [Unreleased] 段,跨快照内容雷同且过期
       - name: 生成说明
         run: |
           {
-            echo "### 生态组件"
-            echo "- core / server：见各自仓 Release"
-            echo "- charts：helm repo add filescodebox https://filescodebox.github.io/charts"
-            echo "- 桌面客户端：desktop-v* Release（安装包已回挂本仓 Assets）"
-            echo "- fnOS 应用：fnos-v* Release（fpk 已回挂本仓 Assets）"
-            echo ""
-            echo "### 变更摘要"
-            sed -n '/^## \[Unreleased\]/,/^## \[0\./p' CHANGELOG.md | head -120 || true
+            echo '**FilesCodeBox 生态快照**。本仓是生态装配 hub:服务器本体经容器镜像与 Helm 分发(不贴文件),桌面 / NAS / 路由器等文件型产物由各组件 CI 以 desktop-v* / fnos-v* / openwrt-v* / p2p-v* tag 自动回挂到本 Release 页 —— **本页即全生态二进制产物的统一出口**。'
+            echo ''
+            echo '## 📦 本页产物线'
+            echo '- 🖥️ 桌面客户端: [desktop-v*](https://github.com/filescodebox/filescodebox/releases?q=desktop-v&expanded=false) (Windows/macOS/Linux 安装包)'
+            echo '- 🪣 飞牛 fnOS: [fnos-v*](https://github.com/filescodebox/filescodebox/releases?q=fnos-v&expanded=false) (fpk 应用包)'
+            echo '- 🌐 OpenWrt / iStoreOS: [openwrt-v*](https://github.com/filescodebox/filescodebox/releases?q=openwrt-v&expanded=false) (ipk + apk)'
+            echo '- 🔌 P2P 联邦: [p2p-v*](https://github.com/filescodebox/filescodebox/releases?q=p2p-v&expanded=false) (p2pc 二进制; 镜像 ghcr.io/filescodebox/p2p)'
+            echo ''
+            echo '## 🐳 服务器端'
+            echo '- 容器镜像: ghcr.io/filescodebox/server + ghcr.io/filescodebox/frontend (随 server v* tag 同步发布)'
+            echo '- Helm: helm repo add filescodebox https://filescodebox.github.io/charts (chart filecodebox; OCI: oci://ghcr.io/filescodebox/charts/filecodebox)'
+            echo '- 部署文档: [主 README](https://github.com/filescodebox/filescodebox#readme)'
+            echo ''
+            echo '## 🧩 源码与变更日志'
+            echo '- 全部源码仓: https://github.com/orgs/filescodebox/repositories'
+            echo '- 各组件详细变更进入上方对应 Release 线查看'
           } > notes.md
       - name: 创建 Release
         uses: softprops/action-gh-release@v2
         with:
           name: "FilesCodeBox ${{ github.ref_name }}"
           body_path: notes.md
+          make_latest: true
