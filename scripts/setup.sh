@@ -1,5 +1,5 @@
 #!/bin/bash
-# 拉齐/更新 FilesCodeBox 工作区的七个模块仓库(contracts/core/server/frontend/fnos/p2p/kit)。
+# 拉齐/更新 FilesCodeBox 工作区的八个模块仓库(contracts/core/server/frontend/fnos/openwrt/p2p/kit)。
 # 幂等:已存在则 git pull --ff-only。
 set -e
 cd "$(dirname "$0")/.."
@@ -25,6 +25,11 @@ clone_or_update frontend    frontend    main
 # 注: repo 2026-10-04 已由 filescodebox-fnos 改名 fnos(旧 URL 自动重定向),本地目录已同步为 fnos
 if [ "${SETUP_FNOS:-1}" = "1" ]; then
   clone_or_update fnos fnos master
+fi
+
+# OpenWrt/iStoreOS 原生 ipk 适配层(go.work 已引用,默认拉取;SETUP_OPENWRT=0 可跳过)
+if [ "${SETUP_OPENWRT:-1}" = "1" ]; then
+  clone_or_update openwrt openwrt main
 fi
 
 # P2P 联邦注册中心(go.work 已引用,默认拉取;SETUP_P2P=0 可跳过)
