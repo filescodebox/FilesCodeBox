@@ -16,7 +16,7 @@
 
 ```bash
 git clone git@github.com:filescodebox/filescodebox.git && cd filescodebox
-make setup     # 拉齐 8 个模块仓（幂等，重复执行=更新；SETUP_FNOS=0 / SETUP_OPENWRT=0 / SETUP_P2P=0 / SETUP_KIT=0 可跳过对应仓）
+make setup     # 拉齐 12 个模块仓（幂等，重复执行=更新；SETUP_FNOS=0 / SETUP_OPENWRT=0 / SETUP_P2P=0 / SETUP_KIT=0 / SETUP_SYNOLOGY=0 / SETUP_QNAP=0 / SETUP_UGREEN=0 / SETUP_TERRAMASTER=0 可跳过对应仓）
 make test      # 七 Go 模块测试（contracts/core/server/fnos/openwrt/p2p/kit） + 前端 typecheck
 make build     # go.work 联编 → bin/
 make smoke     # 起 server 冒烟（健康检查/admin 登录/文本分享）

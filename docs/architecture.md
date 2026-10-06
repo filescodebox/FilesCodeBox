@@ -21,19 +21,22 @@ graph TB
         KIT["🧰 kit<br/>共享 Go 工具库 v0.3.0<br/>retry/syncx/shutdown/workflow 等 28 包"]
         DESK["💻 desktop<br/>Tauri 桌面客户端 desktop-v1.3.1<br/>p2pc sidecar 设备直传"]
         CHT["☸️ charts<br/>Helm Chart 1.3.23<br/>Pages + OCI 双发布"]
+        NAS4["📦 NAS 打包四仓 v0.1.0<br/>synology SPK / qnap QPKG<br/>ugreen · terramaster 部署包"]
     end
 
     USER["👤 自托管用户"] -->|"compose / Helm"| SRV
     NAS["🏠 飞牛 NAS 用户"] -->|".fpk 单容器"| FNOS
     RT["📡 路由器 / iStoreOS 用户"] -->|".ipk 一键安装"| OWRT
+    NASU["🏠 群晖/威联通/绿联/铁威马用户"] -->|"SPK / QPKG / compose 导入"| NAS4
     DEV["👨‍💻 开发者"] -->|"git clone + make setup"| UMB
 
-    UMB -.->|"setup.sh 拉取"| CT & CORE & SRV & FE & FNOS & OWRT & P2P & KIT
+    UMB -.->|"setup.sh 拉取"| CT & CORE & SRV & FE & FNOS & OWRT & P2P & KIT & NAS4
     DESK -.->|"HTTP API 连接任意服务器"| SRV
     CHT -.->|"Helm 编排前后端分离栈"| SRV
+    NAS4 -.->|"打包官方镜像(零 Go 代码)"| SRV
 ```
 
-**职责边界**:装配仓不含业务代码,只提供工作区装配(`setup.sh`/`go.work`/`Makefile`/`docker-compose.yml`);八个模块仓库(经 setup.sh 拉取)与 desktop(桌面客户端,Rust 项目不入 go.work)、charts(Helm Chart)两个产物仓独立开发、独立 CI、独立发版。
+**职责边界**:装配仓不含业务代码,只提供工作区装配(`setup.sh`/`go.work`/`Makefile`/`docker-compose.yml`);十二个模块仓库(经 setup.sh 拉取, 含 NAS 打包四仓 synology/qnap/ugreen/terramaster)与 desktop(桌面客户端,Rust 项目不入 go.work)、charts(Helm Chart)两个产物仓独立开发、独立 CI、独立发版。
 
 ---
 
@@ -79,6 +82,7 @@ desktop 不进 go.work(Rust 项目),经 HTTP API 连接任意 FilesCodeBox 服�
 | server | v0.15.0 | **v0.15.x=单机内存模式列车(core v0.14.0)**;v0.14.x=多副本拆分列车(core v0.13.0,FCB_DEPLOY_MODE);纯后端镜像(默认 release 模式,alpine 钉 3.22);frontend 分离镜像由同一 `v*` tag 同步发布(`ghcr.io/filescodebox/server` / `frontend`) |
 | fnos | v1.2.4(内置 core v0.14.0) | 镜像 `ghcr.io/filescodebox/fnos`(旧镜像 `filescodebox-fnos` 冻结在 v0.2.6,更早 `filecodebox-fnos` 冻结在 v0.2.1) |
 | openwrt | v0.1.0(内置 core v0.13.0) | OpenWrt/iStoreOS 原生 ipk:procd 托管,UCI 配置(`/etc/config/filescodebox`)+drop-in config.yaml,双架构 x86_64/aarch64_generic;ipk 回挂 hub Release(`openwrt-v*`) |
+| NAS 打包四仓 | v0.1.0(钉 server/frontend 镜像 v0.15.0) | synology SPK(noarch,DSM 7.2+ Container Manager)/ qnap QPKG(x86_64+arm_64,QDK qbuild)/ ugreen·terramaster compose 部署包(UPK/TOS7 应用包送审二期);纯 shell 零 Go,编排=双容器免 Redis;包回挂 hub Release(各 `*-v*` tag) |
 | p2p | v0.4.1 | v0.3.x=M3 设备直传全量(p2pc)+六平台二进制;v0.4.0=wire AEAD/注册 token/中继限流安全加固;v0.4.1=p2pc 修复;镜像 `ghcr.io/filescodebox/p2p`(含 p2pc) |
 | kit | v0.3.0 | 共享 Go 工具库(28 包);已被 core(17 处)、p2p(ratelimit)、fnos/server(version) 消费;纯库仓无镜像,`go get github.com/filescodebox/kit/<包名>` |
 | desktop | desktop-v1.3.1 | Tauri 2 桌面客户端+**p2pc sidecar 设备直传**(p2pc 0.4 传输协议 v2,与旧版服务端/客户端互不兼容需双端同版);三平台安装包回挂本仓 Release(`desktop-v*` tag) |
@@ -265,6 +269,8 @@ graph LR
 | 数据 | docker volume | NAS 共享目录(用户可见可备份) | `/etc/filescodebox/`(卸载保留) | 服务端存储;直传端到端加密 |
 | 镜像/制品 | ghcr.io/filescodebox/server | ghcr.io/filescodebox/fnos | `openwrt-v*` ipk(x86_64/aarch64_generic,hub Release) | `desktop-v*` 安装包(hub Release) |
 
+**NAS 打包四仓**（synology/qnap/ugreen/terramaster，2026-10-07 起）覆盖群晖 DSM 7.2+（noarch SPK，Container Manager 编排）、威联通 QTS 5+（QPKG 双架构，Container Station 编排）、绿联 UGOS Pro 与铁威马 TOS 5/6/7（compose 项目导入部署包，UPK/官方应用包送审为二期）：统一打包 ghcr 官方镜像的 docker-compose 编排（双容器免 Redis 单机内存模式），零 Go 代码，数据落卷/共享目录，制品以 `synology-v*`/`qnap-v*`/`ugreen-v*`/`terramaster-v*` tag 回挂本仓 Release。
+
 Kubernetes 形态（charts 仓 `charts/filecodebox`）为**前后端分离两容器**：`frontend` Deployment（ghcr.io/filescodebox/frontend，nginx 静态资源 + API 反代，无状态）+ `server` Deployment（API/数据，携带 PVC），Ingress 指向 frontend Service、API 由其反代后端；两镜像由 server 仓 release 工作流以同一 `v*` tag 同步发布。chart 另提供可选内置组件：数据面（Redis 默认开，MySQL/PostgreSQL 可选）、内置 S3 对象存储（`s3.enabled=true`，SeaweedFS 单进程）、p2p 联邦注册中心（`p2p.enabled=true`，1.3.7 起含直传中继开关）——均默认关闭。
 
 **多副本拆分**（chart 1.3.22+ / server ≥ 0.14.0，`replicaCount > 1`）：同一镜像以 `FCB_DEPLOY_MODE` 切三种运行形态——`standalone`（默认，单进程全功能，即上表形态）/ `public`（公开面路由 ×N，管理路径物理 404，不跑迁移与后台任务）/ `admin`（管理面 + 后台任务 + DB 迁移 + 配置唯一写者，全局 1 实例）。管理端配置/存储变更经 Redis pubsub + revision 对账秒级同步到全部 public 副本；公网入口只指 public 面，admin 面走独立 Ingress（白名单）或 port-forward。硬约束：MySQL/PG + Redis 必配、存储 S3 或 RWX 卷、federation 自动降级（节点身份是进程级密钥）。设计详见 `docs/specs/2026-10-06-multi-replica-deployment-modes.md`。
@@ -283,7 +289,7 @@ flowchart LR
     end
     subgraph REL["打 tag / push main 发版"]
         IMG["server/fnos/p2p: v* → buildx 多架构<br/>推 ghcr.io/filescodebox/*(p2p 镜像含 p2pc)"]
-        BIN["desktop: desktop-v* → 三平台安装包(CI 按 triple 拉 p2pc sidecar)<br/>fnos: fnos-v* → fpk 包 · openwrt: openwrt-v* → ipk 包<br/>(均回挂本仓 Release)"]
+        BIN["desktop: desktop-v* → 三平台安装包(CI 按 triple 拉 p2pc sidecar)<br/>fnos: fnos-v* → fpk 包 · openwrt: openwrt-v* → ipk 包<br/>NAS 打包四仓: synology-v*/qnap-v*/ugreen-v*/terramaster-v* → SPK/QPKG/部署包<br/>(均回挂本仓 Release)"]
         PUB["hub: v* → 生态快照 Release<br/>charts: push main → Pages + OCI"]
     end
     COREDEV["core 发新版本"] -->|"各下游 go.mod 升级<br/>(require 正式版本)"| REL
