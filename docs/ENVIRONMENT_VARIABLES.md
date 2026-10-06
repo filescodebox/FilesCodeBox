@@ -115,6 +115,14 @@
 | `FCB_FEDERATION_NODE_KEY_PATH` | data/federation.key | Ed25519 节点私钥路径（缺失自动生成） |
 | `FCB_FEDERATION_MIN_ENTROPY` | 40 | 允许注册到联邦的口令最小熵（bit），低熵口令不上榜 |
 
+## 部署模式（deployment，多副本拆分）
+
+同一镜像三种运行模式：`standalone` 单进程全功能（默认，即历史形态）；`public` 公开面副本（可多实例横向扩容，只读配置 + 订阅管理端变更广播）；`admin` 管理面单实例（管理路由 + 后台任务 + DB 迁移 + 配置唯一写者）。public/admin 硬约束：`database.driver` 必须为 mysql/postgresql、Redis 必配（变更广播依赖）、federation 自动降级关闭。详见 `docs/specs/2026-10-06-multi-replica-deployment-modes.md`。
+
+| 变量 | 默认 | 说明 |
+|---|---|---|
+| `FCB_DEPLOY_MODE` | standalone | 部署模式：standalone / public / admin |
+
 ## 可观测性
 
 | 变量 | 默认 | 说明 |
