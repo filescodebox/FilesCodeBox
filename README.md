@@ -21,6 +21,10 @@
 | [desktop](https://github.com/filescodebox/desktop) | 桌面客户端:Tauri 2 托盘常驻,连接任意 FilesCodeBox 服务器,p2pc sidecar 设备直传 | desktop-v1.3.1 |
 | [fnos](https://github.com/filescodebox/fnos) | 飞牛 fnOS 应用适配(可选,`make setup` 默认拉取) | v1.2.3 |
 | [openwrt](https://github.com/filescodebox/openwrt) | OpenWrt/iStoreOS 原生 ipk 包:procd 托管+UCI 配置,单端口 12345 内置 Web 界面 | v0.1.0 |
+| [synology](https://github.com/filescodebox/synology) | 群晖 DSM 7.2+ 套件(SPK,noarch):Container Manager 编排,向导设端口/数据目录/管理员密码 | v0.1.0 |
+| [qnap](https://github.com/filescodebox/qnap) | 威联通 QTS 5+ 应用(QPKG,x86_64+arm_64):Container Station 编排,数据落卷根 | v0.1.0 |
+| [ugreen](https://github.com/filescodebox/ugreen) | 绿联 UGOS Pro 部署包:Docker→项目 compose 一键粘贴(含国内加速编排) | v0.1.0 |
+| [terramaster](https://github.com/filescodebox/terramaster) | 铁威马 TOS 5/6/7 部署包:Docker Manager 项目导入 | v0.1.0 |
 | [p2p](https://github.com/filescodebox/p2p) | P2P 联邦注册中心:节点租约注册 + 口令联邦路由 + 设备直传信令(可选,默认拉取) | v0.4.1 |
 | [kit](https://github.com/filescodebox/kit) | 共享 Go 工具库:28 个零生态依赖通用包(retry/syncx/singleflight/shutdown/workflow 等) | v0.3.0 |
 | [charts](https://github.com/filescodebox/charts) | Kubernetes Helm Chart:前后端分离双 Deployment | filecodebox-1.3.23 |
@@ -56,7 +60,8 @@ docker compose up -d          # ghcr 发布镜像;前端入口 http://localhost:
 ```
 filescodebox/           ← 本仓(装配层:脚本/联编/编排)
 ├── go.work             # contracts+core+server+fnos+p2p+kit 本地联编
-├── contracts/  core/  server/  frontend/  fnos/  p2p/  kit/   ← 独立 git 仓库(gitignore 掉)
+├── contracts/  core/  server/  frontend/  fnos/  p2p/  kit/          ← 独立 git 仓库(gitignore 掉)
+├── synology/  qnap/  ugreen/  terramaster/   ← NAS 打包四仓(纯 shell,同样 gitignore)
 └── data/               ← compose 数据卷
 ```
 
@@ -66,7 +71,7 @@ filescodebox/           ← 本仓(装配层:脚本/联编/编排)
 
 打 `v*` tag 即自动构建多架构镜像推 ghcr(见各仓 `release.yml`):
 `ghcr.io/filescodebox/server` · `ghcr.io/filescodebox/frontend`(与 server 同版本) · `ghcr.io/filescodebox/fnos` · `ghcr.io/filescodebox/p2p`。
-桌面安装包(desktop-v*)与飞牛应用包(fnos-v*)统一回挂[本仓 Releases](https://github.com/filescodebox/filescodebox/releases)。
+桌面安装包(desktop-v*)与 NAS 应用包(fnos-v*/openwrt-v*/synology-v*/qnap-v*/ugreen-v*/terramaster-v*)统一回挂[本仓 Releases](https://github.com/filescodebox/filescodebox/releases)。
 
 ## 原 README(产品功能/截图/API 说明)
 
