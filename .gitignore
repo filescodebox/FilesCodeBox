@@ -17,3 +17,7 @@ logs/
 
 # compose 本地环境配置(含密钥,勿提交)
 .env
+/synology/
+/qnap/
+/ugreen/
+/terramaster/

@@ -1,15 +1,16 @@
 .PHONY: setup update build test vet lint smoke docker compose-up compose-down clean
 
 # FilesCodeBox umbrella —— 一次 clone 拉齐全部模块并统一构建。
-# 模块仓库(contracts/core/server/frontend/fnos/openwrt/p2p/kit)由 scripts/setup.sh 拉入本目录,
-# go.work 联编本地改动;各模块亦可独立构建(go.mod 均为正式版本依赖)。
+# 模块仓库(contracts/core/server/frontend/fnos/openwrt/p2p/kit + NAS 打包四仓
+# synology/qnap/ugreen/terramaster)由 scripts/setup.sh 拉入本目录,
+# go.work 联编本地改动(打包四仓纯 shell 不参与);各模块亦可独立构建(go.mod 均为正式版本依赖)。
 
 SERVER_IMAGE ?= filecodebox-server:dev
 
 ## 全流程:拉模块 → 全仓测试 → 构建 server 二进制
 all: setup test build
 
-setup:            ## 拉齐/更新八个模块仓库(幂等)
+setup:            ## 拉齐/更新十二个模块仓库(幂等;SETUP_<名>=0 可跳过任一)
 	./scripts/setup.sh
 
 update: setup

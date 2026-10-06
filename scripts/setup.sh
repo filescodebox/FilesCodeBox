@@ -1,5 +1,6 @@
 #!/bin/bash
-# 拉齐/更新 FilesCodeBox 工作区的八个模块仓库(contracts/core/server/frontend/fnos/openwrt/p2p/kit)。
+# 拉齐/更新 FilesCodeBox 工作区的十二个模块仓库(contracts/core/server/frontend/fnos/openwrt/p2p/kit
+# + NAS 打包四仓 synology/qnap/ugreen/terramaster)。
 # 幂等:已存在则 git pull --ff-only。
 set -e
 cd "$(dirname "$0")/.."
@@ -40,6 +41,20 @@ fi
 # kit 共享 Go 工具库(go.work 已引用,默认拉取;SETUP_KIT=0 可跳过)
 if [ "${SETUP_KIT:-1}" = "1" ]; then
   clone_or_update kit kit main
+fi
+
+# NAS 打包四仓(纯打包无 Go,不进 go.work;SETUP_<名>=0 可跳过)
+if [ "${SETUP_SYNOLOGY:-1}" = "1" ]; then
+  clone_or_update synology synology main
+fi
+if [ "${SETUP_QNAP:-1}" = "1" ]; then
+  clone_or_update qnap qnap main
+fi
+if [ "${SETUP_UGREEN:-1}" = "1" ]; then
+  clone_or_update ugreen ugreen main
+fi
+if [ "${SETUP_TERRAMASTER:-1}" = "1" ]; then
+  clone_or_update terramaster terramaster main
 fi
 
 echo "✓ 工作区就绪:$(ls -d */ 2>/dev/null | tr -d '/' | tr '\n' ' ')"
