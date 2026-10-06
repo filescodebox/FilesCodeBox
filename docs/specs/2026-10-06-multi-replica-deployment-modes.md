@@ -22,7 +22,7 @@
 非 standalone 模式硬约束（fail-fast / 自动降级）：
 
 - `database.driver` 必须为 mysql/postgresql（SQLite 单写者，多进程共享必锁）。
-- Redis 未配置：允许启动但**配置广播失效**（管理端改动需重启 public 副本生效），打警告日志。
+- Redis 未配置：**public/admin 拒绝启动**（fail-fast——配置广播失效 + 取件码映射/presign 会话/限流计数跨实例分裂，静默运行的后果比启动失败严重；2026-10-06 起，此前为警告启动）。standalone 无此要求：进入单机内存模式（匿名取件/直传会话存进程内 TTL KV）。
 - `federation.enabled=true` 自动降级为 false 并告警（联邦节点身份是进程级 Ed25519 密钥，多副本语义未定义）。
 
 ## 3. 路由拆分实现

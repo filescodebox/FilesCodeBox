@@ -32,7 +32,7 @@
 | `FCB_DATABASE_HOST` / `DB_HOST` | — | MySQL/PG 主机 |
 | `FCB_DATABASE_PORT` / `DB_PORT` | — | MySQL/PG 端口 |
 | `FCB_DATABASE_USER` / `DB_USER` | — | MySQL/PG 用户名 |
-| `FCB_REDIS_HOST` / `REDIS_HOST` | 空 | **为空 = 禁用**；匿名取件/预签名/分布式限流/JWT 黑名单共享依赖 Redis，连不上自动降级并在启动日志告警 |
+| `FCB_REDIS_HOST` / `REDIS_HOST` | 空 | 单机置空 = **内存模式**：匿名取件/预签名直传存进程内 TTL KV，全功能可用（重启丢失未取件映射、不跨副本共享；多副本 public/admin 置空则拒绝启动）。配了但连不上：standalone 降级内存模式并告警，public/admin 拒绝启动。⚠️ 该行为随 core 内存模式列车发布，此前版本置空 = 匿名取件不可用 |
 | `FCB_REDIS_PORT` / `REDIS_PORT` | 6379 | |
 | `FCB_REDIS_DB` / `REDIS_DB` | 0 | Redis 库号 |
 | `FCB_PRODUCTION` / `PRODUCTION` | false | 等价 `app.production=true`：强制校验 admin 密码/JWT 密钥等敏感项（compose 默认注入 `FCB_PRODUCTION=1`） |

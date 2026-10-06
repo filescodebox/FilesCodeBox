@@ -48,7 +48,8 @@ services:
       - FCB_TRUSTED_PROXIES=${FCB_TRUSTED_PROXIES:-}
       # Redis:匿名取件码映射/预签名/分布式限流/JWT 黑名单依赖。
       # 默认指向本编排内的 redis 服务;要禁用设 FCB_REDIS_HOST= 为空
-      # (禁用后匿名取件/文件直传分享不可用,文本分享与账号体系不受影响)
+      # (core 内存模式列车起,置空=单机内存模式:匿名取件仍可用、重启丢失映射,
+      #  此前镜像置空=匿名取件不可用;多副本模式缺 Redis 一律拒绝启动)
       - FCB_REDIS_HOST=${FCB_REDIS_HOST:-redis}
       - FCB_REDIS_PORT=${FCB_REDIS_PORT:-6379}
       - FCB_REDIS_PASSWORD=${FCB_REDIS_PASSWORD:-}

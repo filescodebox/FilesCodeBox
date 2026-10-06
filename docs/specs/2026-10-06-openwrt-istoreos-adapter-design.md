@@ -29,7 +29,7 @@
 | 二进制 | `/usr/bin/filescodebox`，`bootstrap.BootstrapWithOptions` + `WithStaticDir` | core v0.13.0 tag 已含（已验证）；纯 Go sqlite（glebarez）→ `CGO_ENABLED=0` 静态交叉编译 |
 | JWT 密钥 | 移植 fnos `ensureJWTSecret`：未配置时自动生成强密钥持久化到数据目录（0600） | core 安全基线缺 secret 拒启；路由器用户不应被迫手工生成 |
 | 前端 | ipk 内置 dist（`/usr/share/filescodebox/www/`），CI 从 frontend 仓构建 | core SPA 回退同端口服务前端（文件优先+SPA 回退，bootstrap.go:1167）；frontend 仓无 dist Release 资产，故 CI 源码构建 |
-| Redis | ipk `Depends: redis-server`（OpenWrt packages 官方源） | 匿名取件强依赖 Redis（core bootstrap:667 降级但 anonymous 域直接报错）；原生形态无 Docker；官方源包带 procd init |
+| Redis | ipk `Depends: redis-server`（OpenWrt packages 官方源） | 匿名取件强依赖 Redis（core bootstrap:667 降级但 anonymous 域直接报错）；原生形态无 Docker；官方源包带 procd init。**勘误（2026-10-06）**：core main fa8636c 起单机内存模式（host 空=进程内 KV 全功能、重启丢映射），bump core 后 `Depends: redis-server` 可复议降级为持久化可选项（路由器小内存设备受益）；v0.1.0 钉 core v0.13.0 维持硬依赖 |
 | 配置面 | UCI 常用项 → init 脚本翻译成 `FCB_*` env（env 优先级高于 yaml）；`/etc/filescodebox/config.yaml` 存在则以 `--config` 传入（高级面） | core envBindings 全集已核实；OpenWrt 惯例 UCI 优先，同时保留 core 全量配置逃生口 |
 | 数据目录 | UCI `data_dir` 默认 `/etc/filescodebox/data` | overlay 可持久；README 建议大容量场景指到数据盘（如 `/mnt/sda1/filescodebox`） |
 | 打包 | 无 SDK ipk 组装：外层纯 tar.gz（内含 ./debian-binary + control.tar.gz + data.tar.gz） | OpenWrt 23.05 起 ipk 即纯 tar.gz（对官方 zlib ipk 实测核对）；且须强制 ustar/gnu 格式——macOS bsdtar 默认 pax 扩展头 opkg 不识别会整条跳过（实测踩坑） |
