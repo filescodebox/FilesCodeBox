@@ -20,11 +20,12 @@
 | [frontend](https://github.com/filescodebox/frontend) | Vue3 + TS + Vite + Element Plus(nginx 分离镜像,随 server 同版本发布) | 随 server 同 `v*` |
 | [desktop](https://github.com/filescodebox/desktop) | 桌面客户端:Tauri 2 托盘常驻,连接任意 FilesCodeBox 服务器,p2pc sidecar 设备直传 | desktop-v1.3.1 |
 | [fnos](https://github.com/filescodebox/fnos) | 飞牛 fnOS 应用适配(可选,`make setup` 默认拉取) | v1.2.3 |
+| [openwrt](https://github.com/filescodebox/openwrt) | OpenWrt/iStoreOS 原生 ipk 包:procd 托管+UCI 配置,单端口 12345 内置 Web 界面 | v0.1.0 |
 | [p2p](https://github.com/filescodebox/p2p) | P2P 联邦注册中心:节点租约注册 + 口令联邦路由 + 设备直传信令(可选,默认拉取) | v0.4.1 |
 | [kit](https://github.com/filescodebox/kit) | 共享 Go 工具库:28 个零生态依赖通用包(retry/syncx/singleflight/shutdown/workflow 等) | v0.3.0 |
 | [charts](https://github.com/filescodebox/charts) | Kubernetes Helm Chart:前后端分离双 Deployment | filecodebox-1.3.23 |
 
-依赖方向(单向,CI 守护):`server / fnos / frontend ──► core ──► contracts`;`core`、`p2p` 按需消费 `kit`(kit 为零生态依赖地基层);`p2p` 为业务链零依赖叶子仓(desktop 经 HTTP API 连接,无构建期依赖)
+依赖方向(单向,CI 守护):`server / fnos / openwrt / frontend ──► core ──► contracts`;`core`、`p2p` 按需消费 `kit`(kit 为零生态依赖地基层);`p2p` 为业务链零依赖叶子仓(desktop 经 HTTP API 连接,无构建期依赖)
 
 ## 快速开始
 

@@ -9,14 +9,15 @@
 | 部署壳 / 配置 / Docker | [server](https://github.com/filescodebox/server) |
 | Web 界面（Vue3 + TS） | [frontend](https://github.com/filescodebox/frontend) |
 | 飞牛 fnOS 适配 | [fnos](https://github.com/filescodebox/fnos) |
+| OpenWrt/iStoreOS 原生包 | [openwrt](https://github.com/filescodebox/openwrt) |
 | Helm Chart | [charts](https://github.com/filescodebox/charts) |
 
 ## 快速开始（本仓）
 
 ```bash
 git clone git@github.com:filescodebox/filescodebox.git && cd filescodebox
-make setup     # 拉齐 7 个模块仓（幂等，重复执行=更新；SETUP_FNOS=0 / SETUP_P2P=0 / SETUP_KIT=0 可跳过对应仓）
-make test      # 五 Go 模块测试（contracts/core/server/p2p/kit） + 前端 typecheck
+make setup     # 拉齐 8 个模块仓（幂等，重复执行=更新；SETUP_FNOS=0 / SETUP_OPENWRT=0 / SETUP_P2P=0 / SETUP_KIT=0 可跳过对应仓）
+make test      # 七 Go 模块测试（contracts/core/server/fnos/openwrt/p2p/kit） + 前端 typecheck
 make build     # go.work 联编 → bin/
 make smoke     # 起 server 冒烟（健康检查/admin 登录/文本分享）
 ```

@@ -1,8 +1,34 @@
 # Changelog
 
 各模块仓独立发版；本文件记录工作区级的重要变更（格式参考 Keep a Changelog）。
+组件列车的版本明细见 [AGENTS.md](../AGENTS.md) 生态表与 [architecture.md](docs/architecture.md) §2.3 版本矩阵。
 
 ## [Unreleased]
+
+### Added
+- **OpenWrt/iStoreOS 原生 ipk 适配层接入为第 8 模块**（[openwrt](https://github.com/filescodebox/openwrt) v0.1.0）：
+  单进程库式调 core + 前端 dist 内置（单端口 12345 同端口服务 Web+API），procd 托管/开机自启，
+  UCI 配置（`/etc/config/filescodebox`）+ drop-in config.yaml，`Depends: redis-server`（OpenWrt 官方源）；
+  双架构 x86_64 / aarch64_generic。ipk 回挂 hub `openwrt-v*` Release。
+  设计与 ipk 打包三坑（纯 tar.gz 非 ar / ustar 强制 / `/sbin/init` 引导）见
+  [docs/specs/2026-10-06-openwrt-istoreos-adapter-design.md](docs/specs/2026-10-06-openwrt-istoreos-adapter-design.md)。
+
+### Changed
+- **多副本拆分列车**（core v0.13.0 / server v0.14.0 / chart 1.3.22+）：`FCB_DEPLOY_MODE`
+  三模式 standalone（默认）/ public×N / admin×1——按模式注册路由组、public 管理面门卫 404、
+  迁移/后台任务归 admin、Redis pubsub 配置广播 + revision 对账；chart `replicaCount>1`
+  自动渲染 public×N + admin×1 双拓扑。core 新增回收站（软删/恢复/彻底删除）。
+  contracts v0.6.5 增 `CodePresignDisabled`（10015，匿名直传未开放时客户端回退普通通道）。
+  组件 tag 均已发布，待随下一 hub 生态快照。
+
+## [1.13.0] - 2026-10-05
+
+生态快照（组件列车至 core v0.12.5 / server v0.13.5 / chart 1.3.21 / p2p v0.4.1 /
+fnos v1.2.3 / desktop-v1.3.1）。0.2.0 之后的累计工作区级变更见下方归档节；
+更近的组件列车（core v0.8 kit 化 → v0.9 federation M4 → v0.10 安全审计 →
+v0.11/0.12 hz 链路治理+攻击面收缩+契约化）明细见 AGENTS.md 生态表版本注。
+
+## [归档] 0.2.0 → 1.12.0 生态快照累计变更（2026-10-03 → 2026-10-05 已发布）
 
 ### Added
 - **站点级全局存储配额**（core v0.7.0）：`storage.quota`（字节，0=不限，env `FCB_STORAGE_QUOTA`），
@@ -58,7 +84,7 @@
   （root 索引+白名单相对路径三层防穿越）。
 - **文档站**（hub）：docs-site VitePress（内容 @include 引 docs/ 真相源）。
 
-### Changed
+### Changed（技术修复）
 - `core/bootstrap`：StorageService 改为进程内单例（此前 3 处各建实例，在线切换无法生效）。
 - `core/app/admin`：`SystemConfig` 新增 `runtime_storage` 段（存储域经接口读写，本域只持久化）；
   `UpdateConfig` 对该段做防御性合并。

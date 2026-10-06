@@ -14,11 +14,12 @@ FilesCodeBox is the Go multirepo workspace of the [filescodebox](https://github.
 | [frontend](https://github.com/filescodebox/frontend) | Vue3 + TS + Vite + Element Plus (nginx image, released with server) | with server `v*` |
 | [desktop](https://github.com/filescodebox/desktop) | Desktop client: Tauri 2 tray app connecting to any FilesCodeBox server, p2pc sidecar direct transfer | desktop-v1.3.1 |
 | [fnos](https://github.com/filescodebox/fnos) | fnOS (fnNAS) adapter (optional) | v1.2.3 |
+| [openwrt](https://github.com/filescodebox/openwrt) | OpenWrt/iStoreOS native ipk package: procd-managed, UCI config, single port 12345 with embedded Web UI | v0.1.0 |
 | [p2p](https://github.com/filescodebox/p2p) | P2P federated registry: node leases + passcode federation routing + device transfer signaling (optional) | v0.4.1 |
 | [kit](https://github.com/filescodebox/kit) | Shared Go toolkit: 28 general-purpose packages with zero ecosystem deps | v0.3.0 |
 | [charts](https://github.com/filescodebox/charts) | Kubernetes Helm chart (frontend + server split deployments) | chart 1.3.23 |
 
-Dependency direction (CI-enforced): `server / fnos / frontend ──► core ──► contracts`; `core` and `p2p` consume `kit` on demand (kit is a zero-ecosystem-dep foundation); `p2p` is a leaf repo with a zero-dep business chain
+Dependency direction (CI-enforced): `server / fnos / openwrt / frontend ──► core ──► contracts`; `core` and `p2p` consume `kit` on demand (kit is a zero-ecosystem-dep foundation); `p2p` is a leaf repo with a zero-dep business chain
 
 ## Highlights
 

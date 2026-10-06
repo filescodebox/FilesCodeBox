@@ -16,6 +16,7 @@ graph TB
         SRV["🚀 server<br/>部署应用 v0.14.0<br/>main 薄壳 + Dockerfile"]
         FE["🖥️ frontend<br/>Vue3 + TS"]
         FNOS["🐂 fnos<br/>飞牛 fnOS 应用 v1.2.3<br/>SSO/共享目录/通知/穿透"]
+        OWRT["📡 openwrt<br/>OpenWrt/iStoreOS ipk v0.1.0<br/>procd 托管/UCI 配置"]
         P2P["🕸️ p2p<br/>联邦注册中心 v0.4.1<br/>租约注册/联邦路由/WS 信令/设备直传"]
         KIT["🧰 kit<br/>共享 Go 工具库 v0.3.0<br/>retry/syncx/shutdown/workflow 等 28 包"]
         DESK["💻 desktop<br/>Tauri 桌面客户端 desktop-v1.3.1<br/>p2pc sidecar 设备直传"]
@@ -24,14 +25,15 @@ graph TB
 
     USER["👤 自托管用户"] -->|"compose / Helm"| SRV
     NAS["🏠 飞牛 NAS 用户"] -->|".fpk 单容器"| FNOS
+    RT["📡 路由器 / iStoreOS 用户"] -->|".ipk 一键安装"| OWRT
     DEV["👨‍💻 开发者"] -->|"git clone + make setup"| UMB
 
-    UMB -.->|"setup.sh 拉取"| CT & CORE & SRV & FE & FNOS & P2P & KIT
+    UMB -.->|"setup.sh 拉取"| CT & CORE & SRV & FE & FNOS & OWRT & P2P & KIT
     DESK -.->|"HTTP API 连接任意服务器"| SRV
     CHT -.->|"Helm 编排前后端分离栈"| SRV
 ```
 
-**职责边界**:装配仓不含业务代码,只提供工作区装配(`setup.sh`/`go.work`/`Makefile`/`docker-compose.yml`);七个模块仓库(经 setup.sh 拉取)与 desktop(桌面客户端,Rust 项目不入 go.work)、charts(Helm Chart)两个产物仓独立开发、独立 CI、独立发版。
+**职责边界**:装配仓不含业务代码,只提供工作区装配(`setup.sh`/`go.work`/`Makefile`/`docker-compose.yml`);八个模块仓库(经 setup.sh 拉取)与 desktop(桌面客户端,Rust 项目不入 go.work)、charts(Helm Chart)两个产物仓独立开发、独立 CI、独立发版。
 
 ---
 
@@ -44,6 +46,7 @@ graph LR
     FE["frontend<br/>(Vue3)"] -->|"/openapi.json 运行时规范<br/>(swagger 页直连后端)"| SRV["server"]
     SRV -->|"require v0.13.0"| CORE["core"]
     FNOS["fnos"] -->|"require v0.11.0<br/>库式调用 bootstrap"| CORE
+    OWRT["openwrt"] -->|"require v0.13.0<br/>库式调用 bootstrap"| CORE
     CORE -->|"require v0.6.5"| CTX["contracts"]
     P2P["p2p<br/>(联邦注册中心)"]
     CORE -.->|"core v0.8.0 起 federation 域<br/>为 p2p 客户端"| P2P
@@ -52,7 +55,7 @@ graph LR
     P2P -->|"ratelimit 已接入"| KIT
 
     classDef plain fill:#eef,stroke:#88a
-    class CTX,CORE,SRV,FE,FNOS,P2P,KIT plain
+    class CTX,CORE,SRV,FE,FNOS,OWRT,P2P,KIT plain
 ```
 
 desktop 不进 go.work(Rust 项目),经 HTTP API 连接任意 FilesCodeBox 服务器,无构建期依赖。
@@ -75,6 +78,7 @@ desktop 不进 go.work(Rust 项目),经 HTTP API 连接任意 FilesCodeBox 服�
 | core | v0.13.0 | 16 域服务;**v0.13.0=FCB_DEPLOY_MODE 三模式部署拆分(standalone/public×N/admin×1,Redis 配置广播)+回收站**;v0.11.x=HttpOnly Cookie 会话(CSRF 头门禁)+审计清欠+攻击面收缩;v0.10.0=全面安全审计加固(管理面/chunk 链路/JWT 纪元·封禁改密即时失效/纵深防御);v0.9.0=federation M4(registry 多主备 failover+心跳短退避);v0.8.x=federation 接入+kit 化;v0.7.x=API Token/多文件+zip/OIDC/寄件码/运行时 OpenAPI |
 | server | v0.14.0 | **v0.14.x=多副本拆分列车(core v0.13.0,FCB_DEPLOY_MODE)**;纯后端镜像(默认 release 模式,alpine 钉 3.22);frontend 分离镜像由同一 `v*` tag 同步发布(`ghcr.io/filescodebox/server` / `frontend`) |
 | fnos | v1.2.3(内置 core v0.11.0) | 镜像 `ghcr.io/filescodebox/fnos`(旧镜像 `filescodebox-fnos` 冻结在 v0.2.6,更早 `filecodebox-fnos` 冻结在 v0.2.1) |
+| openwrt | v0.1.0(内置 core v0.13.0) | OpenWrt/iStoreOS 原生 ipk:procd 托管,UCI 配置(`/etc/config/filescodebox`)+drop-in config.yaml,双架构 x86_64/aarch64_generic;ipk 回挂 hub Release(`openwrt-v*`) |
 | p2p | v0.4.1 | v0.3.x=M3 设备直传全量(p2pc)+六平台二进制;v0.4.0=wire AEAD/注册 token/中继限流安全加固;v0.4.1=p2pc 修复;镜像 `ghcr.io/filescodebox/p2p`(含 p2pc) |
 | kit | v0.3.0 | 共享 Go 工具库(28 包);已被 core(17 处)、p2p(ratelimit)、fnos/server(version) 消费;纯库仓无镜像,`go get github.com/filescodebox/kit/<包名>` |
 | desktop | desktop-v1.3.1 | Tauri 2 桌面客户端+**p2pc sidecar 设备直传**(p2pc 0.4 传输协议 v2,与旧版服务端/客户端互不兼容需双端同版);三平台安装包回挂本仓 Release(`desktop-v*` tag) |
@@ -252,14 +256,14 @@ graph LR
 
 ## 6. 部署形态对比
 
-| | server(自托管) | fnos(飞牛) | desktop(桌面) |
-|---|---|---|---|
-| 进程 | 1 个二进制(main → core) | 1 个二进制(adapter → core) | Tauri 常驻托盘(+p2pc sidecar) |
-| 前端 | 无(0.9.0 起纯后端镜像;分离部署由 frontend 镜像承担静态+反代) | 同镜像复用 core 静态服务(StaticDir) | 连接任意服务器 URL,无本地前端服务 |
-| 配置 | config.yaml + FCB_* env | FNOS_* env + 飞牛向导变量 | 连接配置本地保存 |
-| JWT 密钥 | FCB_JWT_SECRET 必填(强校验) | 自动生成并持久化(装机即用) | 不持有(服务端事务) |
-| 数据 | docker volume | NAS 共享目录(用户可见可备份) | 服务端存储;直传端到端加密 |
-| 镜像/制品 | ghcr.io/filescodebox/server | ghcr.io/filescodebox/fnos | `desktop-v*` 安装包(hub Release) |
+| | server(自托管) | fnos(飞牛) | openwrt(路由器) | desktop(桌面) |
+|---|---|---|---|---|
+| 进程 | 1 个二进制(main → core) | 1 个二进制(adapter → core) | 1 个二进制(core,procd 托管+开机自启) | Tauri 常驻托盘(+p2pc sidecar) |
+| 前端 | 无(0.9.0 起纯后端镜像;分离部署由 frontend 镜像承担静态+反代) | 同镜像复用 core 静态服务(StaticDir) | 前端 dist 内置于 ipk,单端口 12345 同端口服务 | 连接任意服务器 URL,无本地前端服务 |
+| 配置 | config.yaml + FCB_* env | FNOS_* env + 飞牛向导变量 | UCI(`/etc/config/filescodebox`)+drop-in config.yaml | 连接配置本地保存 |
+| JWT 密钥 | FCB_JWT_SECRET 必填(强校验) | 自动生成并持久化(装机即用) | 自动生成并持久化(装机即用) | 不持有(服务端事务) |
+| 数据 | docker volume | NAS 共享目录(用户可见可备份) | `/etc/filescodebox/`(卸载保留) | 服务端存储;直传端到端加密 |
+| 镜像/制品 | ghcr.io/filescodebox/server | ghcr.io/filescodebox/fnos | `openwrt-v*` ipk(x86_64/aarch64_generic,hub Release) | `desktop-v*` 安装包(hub Release) |
 
 Kubernetes 形态（charts 仓 `charts/filecodebox`）为**前后端分离两容器**：`frontend` Deployment（ghcr.io/filescodebox/frontend，nginx 静态资源 + API 反代，无状态）+ `server` Deployment（API/数据，携带 PVC），Ingress 指向 frontend Service、API 由其反代后端；两镜像由 server 仓 release 工作流以同一 `v*` tag 同步发布。chart 另提供可选内置组件：数据面（Redis 默认开，MySQL/PostgreSQL 可选）、内置 S3 对象存储（`s3.enabled=true`，SeaweedFS 单进程）、p2p 联邦注册中心（`p2p.enabled=true`，1.3.7 起含直传中继开关）——均默认关闭。
 
@@ -272,14 +276,14 @@ Kubernetes 形态（charts 仓 `charts/filecodebox`）为**前后端分离两容
 ```mermaid
 flowchart LR
     subgraph PR["每次 push / PR"]
-        GO["Go 六仓(contracts/core/server/fnos/p2p/kit):<br/>build + vet + test(-race) + 依赖守护"]
+        GO["Go 七仓(contracts/core/server/fnos/openwrt/<br/>p2p/kit):build + vet + test(-race) + 依赖守护"]
         FECI["frontend:<br/>typecheck + build"]
         DSK["desktop:<br/>rust 构建 + 前端 build"]
         CHT["charts:<br/>lint + template + kind 安装冒烟"]
     end
     subgraph REL["打 tag / push main 发版"]
         IMG["server/fnos/p2p: v* → buildx 多架构<br/>推 ghcr.io/filescodebox/*(p2p 镜像含 p2pc)"]
-        BIN["desktop: desktop-v* → 三平台安装包(CI 按 triple 拉 p2pc sidecar)<br/>fnos: fnos-v* → fpk 包(均回挂本仓 Release)"]
+        BIN["desktop: desktop-v* → 三平台安装包(CI 按 triple 拉 p2pc sidecar)<br/>fnos: fnos-v* → fpk 包 · openwrt: openwrt-v* → ipk 包<br/>(均回挂本仓 Release)"]
         PUB["hub: v* → 生态快照 Release<br/>charts: push main → Pages + OCI"]
     end
     COREDEV["core 发新版本"] -->|"各下游 go.mod 升级<br/>(require 正式版本)"| REL

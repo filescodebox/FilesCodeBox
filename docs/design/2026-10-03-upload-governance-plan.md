@@ -4,7 +4,7 @@
 > 步骤用 checkbox 跟踪。Spec: `docs/design/2026-10-03-upload-governance-design.md`（本计划从
 > spec 论证，两者需一起读）。
 
-**Goal:** 为 FileCodeBox 建立"上传准入闸门 → 分享状态机 → 管理端治理工具 → 审核钩子 → 留痕对账"的完整管控体系。
+**Goal:** 为 FilesCodeBox 建立"上传准入闸门 → 分享状态机 → 管理端治理工具 → 审核钩子 → 留痕对账"的完整管控体系。
 
 **Architecture:** 校验逻辑收口到 `pkg/utils` + 新 `pkg/gate`（上传闸门）+ 新 `app/moderation`（审核钩子），服务端 enforce 假开关；`file_codes` 增加 status 列构成状态机；管理端新端点延续 bootstrap 手写增强路由先例（挂 AdminMiddleware 组）；配额/计数复用 rate_limit 的 Redis 基建并带内存退化。
 
