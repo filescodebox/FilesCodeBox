@@ -8,16 +8,16 @@ PigeonBox is the Go multirepo workspace of the [pigeonbox](https://github.com/or
 
 | Repo | Role | Version |
 |------|------|---------|
-| [contracts](https://github.com/pigeonbox/contracts) | Contract layer: error codes + Thrift-generated types (zero business deps) | v0.6.5 |
+| [contracts](https://github.com/pigeonbox/contracts) | Contract layer: error codes + Thrift-generated types (zero business deps) | v0.8.0 |
 | [core](https://github.com/pigeonbox/core) | Business core library: 16 domain services + repo/storage + `bootstrap.Bootstrap()` | v0.13.0 |
-| [server](https://github.com/pigeonbox/server) | Deployable app: thin main + configs + Dockerfile (pure backend since 0.9.0) | v0.14.0 |
+| [server](https://github.com/pigeonbox/server) | Deployable app: thin main + configs + Dockerfile (pure backend since 0.9.0) | v0.15.3 |
 | [frontend](https://github.com/pigeonbox/frontend) | Vue3 + TS + Vite + Element Plus (nginx image, released with server) | with server `v*` |
-| [desktop](https://github.com/pigeonbox/desktop) | Desktop client: Tauri 2 tray app connecting to any PigeonBox server, p2pc sidecar direct transfer | desktop-v1.3.1 |
-| [fnos](https://github.com/pigeonbox/fnos) | fnOS (fnNAS) adapter (optional) | v1.2.3 |
+| [desktop](https://github.com/pigeonbox/desktop) | Desktop client: Tauri 2 tray app connecting to any PigeonBox server, p2pc sidecar direct transfer | desktop-v1.4.0 |
+| [fnos](https://github.com/pigeonbox/fnos) | fnOS (fnNAS) adapter (optional) | v1.2.7 |
 | [openwrt](https://github.com/pigeonbox/openwrt) | OpenWrt/iStoreOS native ipk package: procd-managed, UCI config, single port 12345 with embedded Web UI | v0.1.0 |
-| [p2p](https://github.com/pigeonbox/p2p) | P2P federated registry: node leases + passcode federation routing + device transfer signaling (optional) | v0.4.1 |
-| [kit](https://github.com/pigeonbox/kit) | Shared Go toolkit: 28 general-purpose packages with zero ecosystem deps | v0.3.0 |
-| [charts](https://github.com/pigeonbox/charts) | Kubernetes Helm chart (frontend + server split deployments) | chart 1.3.23 |
+| [p2p](https://github.com/pigeonbox/p2p) | P2P federated registry: node leases + passcode federation routing + device transfer signaling (optional) | v0.4.3 |
+| [kit](https://github.com/pigeonbox/kit) | Shared Go toolkit: 28 general-purpose packages with zero ecosystem deps | v0.3.1 |
+| [charts](https://github.com/pigeonbox/charts) | Kubernetes Helm chart (frontend + server split deployments) | pigeonbox-2.0.1 |
 
 Dependency direction (CI-enforced): `server / fnos / openwrt / frontend ──► core ──► contracts`; `core` and `p2p` consume `kit` on demand (kit is a zero-ecosystem-dep foundation); `p2p` is a leaf repo with a zero-dep business chain
 

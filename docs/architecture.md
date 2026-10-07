@@ -11,17 +11,17 @@
 graph TB
     subgraph ORG["pigeonbox 组织"]
         UMB["📁 pigeonbox<br/>(装配仓·本仓库)<br/>make setup 拉齐工作区"]
-        CT["📦 contracts<br/>契约层 v0.6.5<br/>errcode + Thrift 类型"]
-        CORE["🧩 core<br/>业务核心库 v0.13.0<br/>16 域服务 + bootstrap"]
-        SRV["🚀 server<br/>部署应用 v0.14.0<br/>main 薄壳 + Dockerfile"]
+        CT["📦 contracts<br/>契约层 v0.8.0<br/>errcode + Thrift 类型"]
+        CORE["🧩 core<br/>业务核心库 v0.14.4<br/>16 域服务 + bootstrap"]
+        SRV["🚀 server<br/>部署应用 v0.15.3<br/>main 薄壳 + Dockerfile"]
         FE["🖥️ frontend<br/>Vue3 + TS"]
-        FNOS["🐂 fnos<br/>飞牛 fnOS 应用 v1.2.3<br/>SSO/共享目录/通知/穿透"]
-        OWRT["📡 openwrt<br/>OpenWrt/iStoreOS ipk v0.1.0<br/>procd 托管/UCI 配置"]
-        P2P["🕸️ p2p<br/>联邦注册中心 v0.4.1<br/>租约注册/联邦路由/WS 信令/设备直传"]
-        KIT["🧰 kit<br/>共享 Go 工具库 v0.3.0<br/>retry/syncx/shutdown/workflow 等 28 包"]
-        DESK["💻 desktop<br/>Tauri 桌面客户端 desktop-v1.3.1<br/>p2pc sidecar 设备直传"]
+        FNOS["🐂 fnos<br/>飞牛 fnOS 应用 v1.2.7<br/>SSO/共享目录/通知/穿透"]
+        OWRT["📡 openwrt<br/>OpenWrt/iStoreOS ipk+apk v1.14.0<br/>procd 托管/UCI 配置"]
+        P2P["🕸️ p2p<br/>联邦注册中心 v0.4.3<br/>租约注册/联邦路由/WS 信令/设备直传"]
+        KIT["🧰 kit<br/>共享 Go 工具库 v0.3.1<br/>retry/syncx/shutdown/workflow 等 28 包"]
+        DESK["💻 desktop<br/>Tauri 桌面客户端 desktop-v1.4.0<br/>p2pc sidecar 设备直传"]
         CHT["☸️ charts<br/>Helm Chart 1.3.23<br/>Pages + OCI 双发布"]
-        NAS4["📦 NAS 打包四仓 v0.1.0<br/>synology SPK / qnap QPKG<br/>ugreen · terramaster 部署包"]
+        NAS4["📦 NAS 打包四仓 v0.1.1<br/>synology SPK / qnap QPKG<br/>ugreen · terramaster 部署包"]
     end
 
     USER["👤 自托管用户"] -->|"compose / Helm"| SRV
@@ -47,10 +47,10 @@ graph TB
 ```mermaid
 graph LR
     FE["frontend<br/>(Vue3)"] -->|"/openapi.json 运行时规范<br/>(swagger 页直连后端)"| SRV["server"]
-    SRV -->|"require v0.13.0"| CORE["core"]
-    FNOS["fnos"] -->|"require v0.11.0<br/>库式调用 bootstrap"| CORE
-    OWRT["openwrt"] -->|"require v0.13.0<br/>库式调用 bootstrap"| CORE
-    CORE -->|"require v0.6.5"| CTX["contracts"]
+    SRV -->|"require v0.14.4"| CORE["core"]
+    FNOS["fnos"] -->|"require v0.14.4<br/>库式调用 bootstrap"| CORE
+    OWRT["openwrt"] -->|"require v0.14.4<br/>库式调用 bootstrap"| CORE
+    CORE -->|"require v0.8.0"| CTX["contracts"]
     P2P["p2p<br/>(联邦注册中心)"]
     CORE -.->|"core v0.8.0 起 federation 域<br/>为 p2p 客户端"| P2P
     KIT["kit<br/>(共享 Go 工具库)"]

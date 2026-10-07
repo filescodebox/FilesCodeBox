@@ -50,13 +50,13 @@ helm upgrade --install pigeonbox pigeonbox/pigeonbox \
 - 管理密码 `secret.adminPassword` 留空即自动随机生成（存 Secret、跨升级复用，弱默认 `admin123` 已废弃）；需要固定值时才显式指定。
 - `--set secret.production=true` 开启 secret 强校验；`FCB_JWT_SECRET` 全环境强制且要求 ≥32 位强随机（chart 自动生成的随机值已满足，显式传入短值会拒绝启动）。
 - **反代 / Ingress 部署必须设置 `trustedProxies`**（如 `--set trustedProxies[0]=10.0.0.0/8`），否则应用不采信 `X-Forwarded-For`，限流/登录失败锁定会按代理地址计数、误伤所有用户。原理见[部署 Docker Compose](./deploy-docker) 的 trusted_proxies 一节。
-- SQLite + 本地存储保持 `replicaCount: 1`；切到外部 MySQL/Postgres + S3/WebDAV 后才考虑多副本，多副本建议启用 Redis 并设 `config.rate_limit.use_redis: true` 让限流计数跨实例共享（chart 1.3.22+ 拆分模式下自动注入）。
+- SQLite + 本地存储保持 `replicaCount: 1`；切到外部 MySQL/Postgres + S3/WebDAV 后才考虑多副本，多副本建议启用 Redis 并设 `config.rate_limit.use_redis: true` 让限流计数跨实例共享（chart 2.0+ 拆分模式下自动注入）。
 - Ingress 挂 TLS 时设置 `config.server.base_url` 为对外完整地址（分享链接生成用）；启用 S3 直传/直下需给存储桶配置 CORS。
 - 自接内网 MinIO/WebDAV 场景需设置 `config.security.ssrf.allow_private_networks: true`（或 env `FCB_SSRF_ALLOW_PRIVATE=true`）放行私网端点；启用内置 SeaweedFS 时 chart 已自动注入，无需手动设置。
 
 ## 多副本拆分（replicaCount > 1）
 
-`replicaCount > 1` 时 chart（1.3.22+，需 server 镜像 ≥ 0.14.0）自动从单实例切换为**双平面拓扑**，同一镜像以 `FCB_DEPLOY_MODE` 区分运行形态：
+`replicaCount > 1` 时 chart（2.0+；1.3.22 起支持，需 server 镜像 ≥ 0.14.0）自动从单实例切换为**双平面拓扑**，同一镜像以 `FCB_DEPLOY_MODE` 区分运行形态：
 
 - **public 面**（`<release>-pigeonbox`，N 副本）：只提供分享/上传/下载/用户等公开路由，公网入口只指向它；管理路径在其上物理 404，不跑后台任务与 DB 迁移。
 - **admin 面**（`<release>-admin`，全局 1 实例）：管理路由（admin/MCP/setup）、后台任务、DB 迁移、配置唯一写者——管理端改配置经 Redis 广播秒级同步到 public 副本（在线切换存储后端同样即时生效）。

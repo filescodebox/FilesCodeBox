@@ -20,20 +20,20 @@
 
 | 仓库 | 角色 | 版本 |
 |------|------|------|
-| [contracts](https://github.com/pigeonbox/contracts) | 契约层:错误码 + Thrift 生成类型(纯类型,零业务依赖) | v0.6.5 |
-| [core](https://github.com/pigeonbox/core) | 业务核心库:16 个域服务 + repo/storage + `bootstrap.Bootstrap()` 库入口 | v0.13.0 |
-| [server](https://github.com/pigeonbox/server) | 独立部署应用:main 薄壳 + 配置模板 + Dockerfile(0.9.0 起纯后端) | v0.14.0 |
+| [contracts](https://github.com/pigeonbox/contracts) | 契约层:错误码 + Thrift 生成类型(纯类型,零业务依赖) | v0.8.0 |
+| [core](https://github.com/pigeonbox/core) | 业务核心库:16 个域服务 + repo/storage + `bootstrap.Bootstrap()` 库入口 | v0.14.4 |
+| [server](https://github.com/pigeonbox/server) | 独立部署应用:main 薄壳 + 配置模板 + Dockerfile(0.9.0 起纯后端) | v0.15.3 |
 | [frontend](https://github.com/pigeonbox/frontend) | Vue3 + TS + Vite + Element Plus(nginx 分离镜像,随 server 同版本发布) | 随 server 同 `v*` |
-| [desktop](https://github.com/pigeonbox/desktop) | 桌面客户端:Tauri 2 托盘常驻,连接任意 PigeonBox 服务器,p2pc sidecar 设备直传 | desktop-v1.3.1 |
-| [fnos](https://github.com/pigeonbox/fnos) | 飞牛 fnOS 应用适配(可选,`make setup` 默认拉取) | v1.2.3 |
-| [openwrt](https://github.com/pigeonbox/openwrt) | OpenWrt/iStoreOS 原生 ipk 包:procd 托管+UCI 配置,单端口 12345 内置 Web 界面 | v0.1.0 |
+| [desktop](https://github.com/pigeonbox/desktop) | 桌面客户端:Tauri 2 托盘常驻,连接任意 PigeonBox 服务器,p2pc sidecar 设备直传 | desktop-v1.4.0 |
+| [fnos](https://github.com/pigeonbox/fnos) | 飞牛 fnOS 应用适配(可选,`make setup` 默认拉取) | v1.2.7 |
+| [openwrt](https://github.com/pigeonbox/openwrt) | OpenWrt/iStoreOS 原生包(ipk+apk 双格式):procd 托管+UCI 配置+LuCI 集成,单端口 12345 内置 Web 界面 | v1.14.0 |
 | [synology](https://github.com/pigeonbox/synology) | 群晖 DSM 7.2+ 套件(SPK,noarch):Container Manager 编排,向导设端口/数据目录/管理员密码 | v0.1.0 |
 | [qnap](https://github.com/pigeonbox/qnap) | 威联通 QTS 5+ 应用(QPKG,x86_64+arm_64):Container Station 编排,数据落卷根 | v0.1.0 |
 | [ugreen](https://github.com/pigeonbox/ugreen) | 绿联 UGOS Pro 部署包:Docker→项目 compose 一键粘贴(含国内加速编排) | v0.1.0 |
 | [terramaster](https://github.com/pigeonbox/terramaster) | 铁威马 TOS 5/6/7 部署包:Docker Manager 项目导入 | v0.1.0 |
-| [p2p](https://github.com/pigeonbox/p2p) | P2P 联邦注册中心:节点租约注册 + 口令联邦路由 + 设备直传信令(可选,默认拉取) | v0.4.1 |
-| [kit](https://github.com/pigeonbox/kit) | 共享 Go 工具库:28 个零生态依赖通用包(retry/syncx/singleflight/shutdown/workflow 等) | v0.3.0 |
-| [charts](https://github.com/pigeonbox/charts) | Kubernetes Helm Chart:前后端分离双 Deployment | pigeonbox-1.3.23 |
+| [p2p](https://github.com/pigeonbox/p2p) | P2P 联邦注册中心:节点租约注册 + 口令联邦路由 + 设备直传信令(可选,默认拉取) | v0.4.3 |
+| [kit](https://github.com/pigeonbox/kit) | 共享 Go 工具库:28 个零生态依赖通用包(retry/syncx/singleflight/shutdown/workflow 等) | v0.3.1 |
+| [charts](https://github.com/pigeonbox/charts) | Kubernetes Helm Chart:前后端分离双 Deployment | pigeonbox-2.0.1 |
 
 依赖方向(单向,CI 守护):`server / fnos / openwrt / frontend ──► core ──► contracts`;`core`、`p2p` 按需消费 `kit`(kit 为零生态依赖地基层);`p2p` 为业务链零依赖叶子仓(desktop 经 HTTP API 连接,无构建期依赖)
 
