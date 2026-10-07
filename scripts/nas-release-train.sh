@@ -34,8 +34,13 @@ run() {
     fi
 }
 
-echo "==> [1/4] 前置检查(工作树干净 + 镜像 tag 存在性提示)"
-for d in . $PLATFORMS; do
+echo "==> [1/4] 前置检查(列车要动的路径干净;ghcr 匿名 API 恒 401 不能探测,发布前自行确认 server 仓已出 ${IMAGE_TAG})"
+# hub 只查列车将提交的 deploy/nas/(工作区内其他并行改动不拦列车)
+if [ -n "$(git status --porcelain -- deploy/nas)" ]; then
+    echo "hub deploy/nas/ 有未提交改动,先清理再跑列车" >&2
+    exit 1
+fi
+for d in $PLATFORMS; do
     [ -d "$d/.git" ] || { echo "缺 $d 检出(先 make setup)" >&2; exit 1; }
     if [ -n "$(git -C "$d" status --porcelain)" ]; then
         echo "$d 有未提交改动,先清理再跑列车" >&2
@@ -43,25 +48,25 @@ for d in . $PLATFORMS; do
     fi
 done
 echo "  ✓ 四仓+hub 工作树干净"
-if ! curl -fsSL --retry 2 -o /dev/null \
-    "https://ghcr.io/v2/filescodebox/server/manifests/${IMAGE_TAG}"; then
-    echo "  ⚠ ghcr 上暂探不到 server:${IMAGE_TAG}(可能未发布或 ghcr 匿名 API 401——确认 server 仓已发版)"
-fi
 
 echo "==> [2/4] 改 hub 模板钉版 → ${IMAGE_TAG}"
-sed -i.bak "s/FCB_IMAGE_TAG:-v[0-9]*\.[0-9]*\.[0-9]*/FCB_IMAGE_TAG:-${IMAGE_TAG}/" deploy/nas/compose.yml && rm -f deploy/nas/compose.yml.bak
-sed -i.bak "s/^FCB_IMAGE_TAG=v[0-9]*\.[0-9]*\.[0-9]*/FCB_IMAGE_TAG=${IMAGE_TAG}/" deploy/nas/env.example && rm -f deploy/nas/env.example.bak
-grep -h "FCB_IMAGE_TAG" deploy/nas/compose.yml deploy/nas/env.example | head -2
-run git add deploy/nas
-run git commit -m "chore(nas): 模板镜像钉版 ${IMAGE_TAG}(发版列车)"
+if [ "$PUSH" = "1" ]; then
+    sed -i.bak "s/FCB_IMAGE_TAG:-v[0-9]*\.[0-9]*\.[0-9]*/FCB_IMAGE_TAG:-${IMAGE_TAG}/" deploy/nas/compose.yml && rm -f deploy/nas/compose.yml.bak
+    sed -i.bak "s/^FCB_IMAGE_TAG=v[0-9]*\.[0-9]*\.[0-9]*/FCB_IMAGE_TAG=${IMAGE_TAG}/" deploy/nas/env.example && rm -f deploy/nas/env.example.bak
+    grep -h "FCB_IMAGE_TAG" deploy/nas/compose.yml deploy/nas/env.example | head -2
+    git add deploy/nas
+    git commit -m "chore(nas): 模板镜像钉版 ${IMAGE_TAG}(发版列车)"
+else
+    echo "  [dry-run] 将把 deploy/nas/{compose.yml,env.example} 的镜像默认值改为 ${IMAGE_TAG} 并提交"
+fi
 
 echo "==> [3/4] 同步四仓 + 各仓提交打 tag"
 for p in $PLATFORMS; do
-    bash deploy/nas/sync.sh sync --platform "$p" --dir "$p" >/dev/null
-    # synology README 的字面版本号(配置表默认值 + ghcr 拉取示例)随列车改写
-    sed -i.bak "s/FCB_IMAGE_TAG\` | \`v[0-9.]*\`/FCB_IMAGE_TAG\` | \`${IMAGE_TAG}\`/; s/server:${IMAGE_TAG%.*}\.[0-9]*/server:${IMAGE_TAG}/g; s/frontend:${IMAGE_TAG%.*}\.[0-9]*/frontend:${IMAGE_TAG}/g" \
-        "$p/README.md" 2>/dev/null && rm -f "$p/README.md.bak" || true
+    [ "$PUSH" = "1" ] && bash deploy/nas/sync.sh sync --platform "$p" --dir "$p" >/dev/null
     if [ "$PUSH" = "1" ]; then
+        # synology README 的字面版本号(配置表默认值 + ghcr 拉取示例)随列车改写
+        sed -i.bak "s/FCB_IMAGE_TAG\` | \`v[0-9.]*\`/FCB_IMAGE_TAG\` | \`${IMAGE_TAG}\`/; s/server:${IMAGE_TAG%.*}\.[0-9]*/server:${IMAGE_TAG}/g; s/frontend:${IMAGE_TAG%.*}\.[0-9]*/frontend:${IMAGE_TAG}/g" \
+            "$p/README.md" 2>/dev/null && rm -f "$p/README.md.bak" || true
         VER=${ADAPTER:-$(git -C "$p" describe --tags --abbrev=0 | awk -F. '{print $1"."$2"."$3+1}')}
         git -C "$p" add -A
         git -C "$p" commit -qm "chore: 同步 hub 模板,钉镜像 ${IMAGE_TAG}"
@@ -69,7 +74,7 @@ for p in $PLATFORMS; do
         git -C "$p" push -q origin main "$VER"
         echo "  ✓ $p → ${VER}(Actions: https://github.com/filescodebox/$p/actions)"
     else
-        echo "  [dry-run] $p: sync ✓;将提交并打 tag(当前 $(git -C "$p" describe --tags --abbrev=0) → patch+1)"
+        echo "  [dry-run] $p: 将 sync 模板、提交并打 tag(当前 $(git -C "$p" describe --tags --abbrev=0) → patch+1)"
     fi
 done
 
