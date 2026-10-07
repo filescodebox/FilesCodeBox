@@ -95,21 +95,37 @@ cmd_verify() {
     C_P2P=$(tget lib.p2p); C_P2PC=$(tget terminal.desktop.p2pc)
     CHART=$(tget charts.chart); CHART_APP=$(tget charts.app)
 
+    # 列车进行中探测: 任一仓存在未合并的 train/<TRAIN> bump PR → 主分支版本面必然
+    # 落后于 train.yaml 声明(中间态),主分支对账项降级为告警;PR 全合并后自动恢复严格。
+    local IN_FLIGHT="" repo_i
+    for repo_i in pigeonbox fnos openwrt desktop synology qnap ugreen terramaster; do
+        [ "$(gh pr list -R ${GH_ORG}/$repo_i --head "train/$TRAIN" --state open --json number --jq 'length' 2>/dev/null)" != "0" ] && { IN_FLIGHT=1; break; }
+    done
+
     fail()   { echo "  ✗ $*"; fails=$((fails+1)); }
     warn()   { echo "  ⚠ $*"; warns=$((warns+1)); }
     ok()     { echo "  ✓ $*"; }
+    # 主分支对账项专用: 列车进行中 → 告警(等 bump PR 合并),否则硬失败
+    soft_fail() {
+        if [ -n "$IN_FLIGHT" ]; then warn "列车进行中·$*(等 bump PR 合并)"; else fail "$*"; fi
+    }
     # draft 列车 tag 尚未打全属正常 → 缺 tag 只告警;shipping/shipped 缺 tag 即失败
     tagchk() { # <repo> <tag> <说明>
         if tag_exists "$1" "$2"; then ok "$3 $2"
         elif [ "$STATE" = draft ]; then warn "$3 缺 tag $2(draft 期)"
         else fail "$3 缺 tag $2"; fi
     }
-    pinchk() { # <go.mod 内容> <module> <期望版本> <说明>
-        echo "$1" | grep -Eq "github\.com/pigeonbox/$2 v$(echo "$3" | sed 's/^v//')([[:space:]$]|$)" \
-            && ok "$4 = $3" || fail "$4 期望 $3"
+    pinchk() { # <go.mod 内容> <module> <期望版本> <说明> [soft]
+        if echo "$1" | grep -Eq "github\.com/pigeonbox/$2 v$(echo "$3" | sed 's/^v//')([[:space:]$]|$)"; then
+            ok "$4 = $3"
+        elif [ "${5:-}" = soft ] && [ -n "$IN_FLIGHT" ]; then
+            warn "列车进行中·$4 期望 $3"
+        else
+            fail "$4 期望 $3"
+        fi
     }
 
-    echo "══ PigeonBox 发布列车对账 train=$TRAIN state=$STATE $([ $ci = 1 ] && echo '(ci)')"
+    echo "══ PigeonBox 发布列车对账 train=$TRAIN state=$STATE $([ $ci = 1 ] && echo '(ci)')${IN_FLIGHT:+ [列车进行中:主分支对账降级为告警]}"
 
     echo "── 1. 库线/服务线 tag"
     tagchk contracts "$C_CONTRACTS" "contracts"
@@ -161,11 +177,11 @@ cmd_verify() {
     echo "── 5. go.mod 钉版(main)"
     local GM
     GM=$(raw server/main/go.mod 2>/dev/null) || GM=""
-    [ -n "$GM" ] && { pinchk "$GM" core "$C_CORE" "server→core"; pinchk "$GM" contracts "$C_CONTRACTS" "server→contracts"; pinchk "$GM" kit "$C_KIT" "server→kit"; } || warn "server go.mod 拉取失败"
+    [ -n "$GM" ] && { pinchk "$GM" core "$C_CORE" "server→core" soft; pinchk "$GM" contracts "$C_CONTRACTS" "server→contracts" soft; pinchk "$GM" kit "$C_KIT" "server→kit" soft; } || warn "server go.mod 拉取失败"
     GM=$(raw core/main/go.mod 2>/dev/null) || GM=""
-    [ -n "$GM" ] && { pinchk "$GM" contracts "$C_CONTRACTS" "core→contracts"; pinchk "$GM" kit "$C_KIT" "core→kit"; } || warn "core go.mod 拉取失败"
+    [ -n "$GM" ] && { pinchk "$GM" contracts "$C_CONTRACTS" "core→contracts" soft; pinchk "$GM" kit "$C_KIT" "core→kit" soft; } || warn "core go.mod 拉取失败"
     GM=$(raw p2p/main/go.mod 2>/dev/null) || GM=""
-    [ -n "$GM" ] && pinchk "$GM" kit "$C_KIT" "p2p→kit" || warn "p2p go.mod 拉取失败"
+    [ -n "$GM" ] && pinchk "$GM" kit "$C_KIT" "p2p→kit" soft || warn "p2p go.mod 拉取失败"
 
     echo "── 6. 终端仓钉版与双写面"
     local t v corep
@@ -174,7 +190,7 @@ cmd_verify() {
         local BR; BR=$(def_branch "$t")
         tagchk "$t" "$(tget "terminal.$t.tag")" "$t"
         GM=$(raw "$t/$BR/go.mod" 2>/dev/null) || GM=""
-        [ -n "$GM" ] && { pinchk "$GM" core "$corep" "${t}→core"; pinchk "$GM" kit "$C_KIT" "${t}→kit"; } || warn "$t go.mod 拉取失败"
+        [ -n "$GM" ] && { pinchk "$GM" core "$corep" "${t}→core" soft; pinchk "$GM" kit "$C_KIT" "${t}→kit" soft; } || warn "$t go.mod 拉取失败"
         if tag_exists "$t" "$(tget "terminal.$t.tag")"; then
             GM=$(raw "$t/$(tget "terminal.$t.tag")/go.mod" 2>/dev/null) || GM=""
             [ -n "$GM" ] && pinchk "$GM" core "$corep" "${t}@tag→core(fnos v1.2.7 悬空钉版守卫)" || warn "$t tag 上 go.mod 拉取失败"
@@ -182,14 +198,14 @@ cmd_verify() {
     done
     v=$(tget terminal.fnos.version)
     [ "$(raw "fnos/master/fnos/manifest" 2>/dev/null | awk -F= '$1=="version"{print $2}')" = "$v" ] \
-        && ok "fnos manifest = $v" || fail "fnos manifest ≠ $v"
+        && ok "fnos manifest = $v" || soft_fail "fnos manifest ≠ $v"
     v=$(tget terminal.openwrt.version)
     tag_exists openwrt "v$v" && ok "openwrt tag v$v" || { [ "$STATE" = draft ] && warn "openwrt tag v$v 缺" || fail "openwrt tag v$v 缺"; }
 
     v=$(tget terminal.desktop.version)
     tagchk desktop "$(tget terminal.desktop.tag)" "desktop"
     local DT; DT=$(raw desktop/main/src-tauri/tauri.conf.json 2>/dev/null) || DT=""
-    [ -n "$DT" ] && { grep -q "\"version\": \"$v\"" <<<"$DT" && ok "desktop tauri.conf.json = $v" || fail "desktop tauri.conf.json ≠ $v"; } || warn "desktop tauri.conf.json 拉取失败"
+    [ -n "$DT" ] && { grep -q "\"version\": \"$v\"" <<<"$DT" && ok "desktop tauri.conf.json = $v" || soft_fail "desktop tauri.conf.json ≠ $v"; } || warn "desktop tauri.conf.json 拉取失败"
     local DYML; DYML=$(raw desktop/main/release.yml 2>/dev/null || raw desktop/main/.github/workflows/release.yml 2>/dev/null) || DYML=""
     [ -n "$DYML" ] && { grep -q "P2PC_REF" <<<"$DYML" && ok "desktop sidecar 已钉版(P2PC_REF)" || fail "desktop release.yml 未钉 p2pc(取 latest 不可复现)"; } || warn "desktop release.yml 拉取失败"
 
@@ -198,18 +214,18 @@ cmd_verify() {
         for t in fnos openwrt desktop synology qnap ugreen terramaster; do
             v=$(tget "terminal.$t.version")
             [ "$(raw "$t/$(def_branch "$t")/VERSION" 2>/dev/null | tr -d '[:space:]')" = "$v" ] \
-                && ok "$t VERSION = $v" || fail "$t VERSION ≠ $v(发版走 train bump,勿手改)"
+                && ok "$t VERSION = $v" || soft_fail "$t VERSION ≠ $v(发版走 train bump,勿手改)"
         done
         for t in fnos openwrt; do
             local DE; DE=$(raw "$t/$(def_branch "$t")/DEPS.env" 2>/dev/null) || DE=""
             [ "$(grep -E '^CORE_PIN=' <<<"$DE" | cut -d= -f2)" = "$(tget "terminal.$t.core_pin")" ] \
-                && ok "$t DEPS CORE_PIN" || fail "$t DEPS CORE_PIN ≠ train.yaml"
+                && ok "$t DEPS CORE_PIN" || soft_fail "$t DEPS CORE_PIN ≠ train.yaml"
             [ "$(grep -E '^FRONTEND_REF=' <<<"$DE" | cut -d= -f2)" = "$(tget "terminal.$t.frontend_ref")" ] \
-                && ok "$t DEPS FRONTEND_REF" || fail "$t DEPS FRONTEND_REF ≠ train.yaml"
+                && ok "$t DEPS FRONTEND_REF" || soft_fail "$t DEPS FRONTEND_REF ≠ train.yaml"
         done
         local DD; DD=$(raw desktop/main/DEPS.env 2>/dev/null) || DD=""
         [ "$(grep -E '^P2PC_REF=' <<<"$DD" | cut -d= -f2)" = "$C_P2PC" ] \
-            && ok "desktop DEPS P2PC_REF = $C_P2PC" || fail "desktop DEPS P2PC_REF ≠ $C_P2PC"
+            && ok "desktop DEPS P2PC_REF = $C_P2PC" || soft_fail "desktop DEPS P2PC_REF ≠ $C_P2PC"
     else
         warn "features.version_files=false:各仓 VERSION/DEPS.env 尚未启用(首次列车 bump 自动开启)"
     fi
@@ -227,7 +243,7 @@ cmd_verify() {
         want=${row#*:}
         awk -F'|' -v r="^\\| ${row%%:*} \\|" 'NR==FNR{next}' /dev/null 2>/dev/null
         grep -E "^\| ${row%%:*} \|" docs/architecture.md | head -1 | grep -qF "$want" \
-            && ok "architecture.md ${row%%:*} 含 $want" || fail "architecture.md ${row%%:*} 版本滞后(期望含 $want)"
+            && ok "architecture.md ${row%%:*} 含 $want" || soft_fail "architecture.md ${row%%:*} 版本滞后(期望含 $want)"
     done
 
     echo "── 10. hub Latest(仅 shipped 态强校验)"
