@@ -1,4 +1,4 @@
-.PHONY: setup update build test vet lint smoke docker compose-up compose-down clean
+.PHONY: setup update build test vet lint smoke smoke-full docker compose-up compose-down nas-check nas-sync clean
 
 # FilesCodeBox umbrella —— 一次 clone 拉齐全部模块并统一构建。
 # 模块仓库(contracts/core/server/frontend/fnos/openwrt/p2p/kit + NAS 打包四仓
@@ -52,6 +52,12 @@ compose-up:       ## docker compose 起前后端分离栈(默认拉 ghcr 镜像;
 
 compose-down:
 	docker compose --profile nginx down
+
+nas-check:         ## NAS 打包四仓共享资产漂移校验(对 deploy/nas/ 模板)
+	bash deploy/nas/sync.sh check --all
+
+nas-sync:          ## hub 模板物化到 NAS 打包四仓(改模板后跑;CI 有漂移门禁兜底)
+	bash deploy/nas/sync.sh sync --all
 
 clean:
 	rm -rf bin/
