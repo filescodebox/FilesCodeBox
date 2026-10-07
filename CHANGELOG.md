@@ -18,12 +18,12 @@
   - 修复：`CreateShare` 路径（文件/多文件/本地导入/MCP）此前不生成 `full_share_url`，
     统一下沉到 `modelToResp` 三通道生成。
   - `docs/MCP-README.md` 重写为完整对接指南（仍为 docs-site `reference/mcp` 页真相源），
-    新增 `skills/filescodebox-mcp/` agent skill（SKILL.md + 自动登录/401 重试的
+    新增 `skills/pigeonbox-mcp/` agent skill（SKILL.md + 自动登录/401 重试的
     `scripts/mcp.sh`，curl+python3 零额外依赖）；临时实例+真机 p2pd 联邦全链路验证
     （13 工具/上传下载回环比对/联邦状态与路由/错误路径）全绿。
-- **OpenWrt/iStoreOS 原生 ipk 适配层接入为第 8 模块**（[openwrt](https://github.com/filescodebox/openwrt) v0.1.0）：
+- **OpenWrt/iStoreOS 原生 ipk 适配层接入为第 8 模块**（[openwrt](https://github.com/pigeonbox/openwrt) v0.1.0）：
   单进程库式调 core + 前端 dist 内置（单端口 12345 同端口服务 Web+API），procd 托管/开机自启，
-  UCI 配置（`/etc/config/filescodebox`）+ drop-in config.yaml，`Depends: redis-server`（OpenWrt 官方源）；
+  UCI 配置（`/etc/config/pigeonbox`）+ drop-in config.yaml，`Depends: redis-server`（OpenWrt 官方源）；
   双架构 x86_64 / aarch64_generic。ipk 回挂 hub `openwrt-v*` Release。
   设计与 ipk 打包三坑（纯 tar.gz 非 ar / ustar 强制 / `/sbin/init` 引导）见
   [docs/specs/2026-10-06-openwrt-istoreos-adapter-design.md](docs/specs/2026-10-06-openwrt-istoreos-adapter-design.md)。
@@ -129,10 +129,10 @@ v0.11/0.12 hz 链路治理+攻击面收缩+契约化）明细见 AGENTS.md 生�
 
 ## [0.2.0] - 2026-10-02
 
-- 单体拆分为 contracts / core / server / frontend / filecodebox-fnos / charts 多仓。
+- 单体拆分为 contracts / core / server / frontend / pigeonbox-fnos / charts 多仓。
 - 安全基线：分享密码修复、失败锁定、下载令牌、SSRF 校验、魔数检测、文件名消毒、审计接线。
 - 管理端站点配置 DB 持久化（`system_configs` 单行写穿）。
 
 ## [0.1.0] - 2026-07
 
-- Go 重写版首发布（对照 Python 原版 vastsa/FileCodeBox 的功能面）。
+- Go 重写版首发布（对照 Python 原版 vastsa/PigeonBox 的功能面）。

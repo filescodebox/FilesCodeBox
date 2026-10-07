@@ -1,6 +1,6 @@
 #__NAS_PLATFORM_HEADER__
 #
-# 架构: 对外端口 → frontend(nginx 静态+API 反代) → filecodebox(纯后端, 不发布端口)
+# 架构: 对外端口 → frontend(nginx 静态+API 反代) → pigeonbox(纯后端, 不发布端口)
 # 数据: FCB_DATA_DIR 指向的目录(SQLite 库 + 上传文件 + JWT 密钥), 挂后端容器
 #       —— 备份这个目录 = 备份全部数据
 # Redis: 默认不启用。core v0.14.0 起单机内存模式全功能免 Redis(匿名取件可用,
@@ -8,12 +8,12 @@
 #        并在 .env 设 FCB_REDIS_HOST=redis 后 docker compose up -d
 #
 # 同目录 .env 由平台安装包自动生成(或按各仓 README 手工准备),
-# 改后 docker compose -p filescodebox up -d 生效。
+# 改后 docker compose -p pigeonbox up -d 生效。
 
 services:
-  filecodebox:
-    image: ghcr.io/filescodebox/server:${FCB_IMAGE_TAG:-v0.15.0}
-    container_name: filescodebox-server
+  pigeonbox:
+    image: ghcr.io/pigeonbox/server:${FCB_IMAGE_TAG:-v0.15.0}
+    container_name: pigeonbox-server
     environment:
       - TZ=${TZ:-Asia/Shanghai}
       - FCB_SERVER_MODE=release
@@ -66,17 +66,17 @@ services:
         max-file: "3"
 
   frontend:
-    image: ghcr.io/filescodebox/frontend:${FCB_IMAGE_TAG:-v0.15.0}
-    container_name: filescodebox-frontend
+    image: ghcr.io/pigeonbox/frontend:${FCB_IMAGE_TAG:-v0.15.0}
+    container_name: pigeonbox-frontend
     ports:
       - "${FCB_API_BIND:-0.0.0.0}:${FCB_API_PORT:-12345}:8080"
     environment:
-      - BACKEND_HOST=filecodebox
+      - BACKEND_HOST=pigeonbox
       - BACKEND_PORT=12345
       # nginx 反代体积上限(分片上传不受影响; 多文件 zip 流式下载/大请求体会被 nginx 先拒)
       - CLIENT_MAX_BODY_SIZE=${FCB_MAX_BODY_SIZE:-1024m}
     depends_on:
-      filecodebox:
+      pigeonbox:
         condition: service_healthy
     restart: unless-stopped
     # localhost 会先解析 ::1, nginx 仅 IPv4 → 永远 refused, 必须用 127.0.0.1
@@ -97,7 +97,7 @@ services:
   # 取件码映射/预签名/分布式限流改走 Redis, AOF 持久化重启不丢。
   # redis:
   #   image: redis:7-alpine
-  #   container_name: filescodebox-redis
+  #   container_name: pigeonbox-redis
   #   command: ["redis-server", "--appendonly", "yes"]
   #   volumes:
   #     - redisdata:/data

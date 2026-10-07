@@ -1,11 +1,11 @@
 .PHONY: setup update build test vet lint smoke smoke-full docker compose-up compose-down nas-check nas-sync clean
 
-# FilesCodeBox umbrella —— 一次 clone 拉齐全部模块并统一构建。
+# PigeonBox umbrella —— 一次 clone 拉齐全部模块并统一构建。
 # 模块仓库(contracts/core/server/frontend/fnos/openwrt/p2p/kit + NAS 打包四仓
 # synology/qnap/ugreen/terramaster)由 scripts/setup.sh 拉入本目录,
 # go.work 联编本地改动(打包四仓纯 shell 不参与);各模块亦可独立构建(go.mod 均为正式版本依赖)。
 
-SERVER_IMAGE ?= filecodebox-server:dev
+SERVER_IMAGE ?= pigeonbox-server:dev
 
 ## 全流程:拉模块 → 全仓测试 → 构建 server 二进制
 all: setup test build
@@ -45,7 +45,7 @@ smoke-full:       ## 全能力真机冒烟(39 项断言;独立端口/临时数�
 
 docker:           ## 本地构建双镜像: server(纯后端) + frontend(nginx 静态+反代)
 	docker build -f server/Dockerfile -t $(SERVER_IMAGE) .
-	docker build -f frontend/Dockerfile -t ghcr.io/filescodebox/frontend:latest frontend/
+	docker build -f frontend/Dockerfile -t ghcr.io/pigeonbox/frontend:latest frontend/
 
 compose-up:       ## docker compose 起前后端分离栈(默认拉 ghcr 镜像;BUILD=1 本地构建;NGINX=1 加反代)
 	docker compose up -d $${BUILD:+--build} $${NGINX:+--profile nginx}

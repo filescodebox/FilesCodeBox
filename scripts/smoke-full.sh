@@ -1,5 +1,5 @@
 #!/bin/bash
-# FilesCodeBox 全能力真机冒烟（39+ 项断言）：健康面/openapi 运行时生成/api config/admin 登录/
+# PigeonBox 全能力真机冒烟（39+ 项断言）：健康面/openapi 运行时生成/api config/admin 登录/
 # 文本+密码分享/元数据不泄露/select 不扣次数/文件分享+Range/多文件+zip/chunk 完成+秒传/
 # 本地文件管理(穿越防护，目标需启用 local_import)/寄件码全链路/MCP/二维码/匿名码(需 Redis)/robots。
 #
@@ -27,7 +27,7 @@ except Exception as e:
 
 mkdir -p "$SMOKE"/{data,uploads,import,src}
 echo "smoke-local-content-$(date +%s)" > "$SMOKE/import/local-nas.txt"
-printf 'hello-filescodebox-range' > "$SMOKE/src/smoke-range.txt"
+printf 'hello-pigeonbox-range' > "$SMOKE/src/smoke-range.txt"
 head -c 300000 /dev/zero | tr '\0' 'A' > "$SMOKE/src/big-a.txt"
 echo "multi-file-one" > "$SMOKE/src/m1.txt"
 echo "multi-file-two" > "$SMOKE/src/m2.txt"
@@ -49,7 +49,7 @@ database:
   driver: "sqlite"
   db_name: "$SMOKE/data/fcb.db"
 app:
-  name: "FilesCodeBox-Smoke"
+  name: "PigeonBox-Smoke"
   datapath: "$SMOKE/data"
 upload:
   open_upload: true

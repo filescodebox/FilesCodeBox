@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: filecodebox-config
-  namespace: filecodebox
+  name: pigeonbox-config
+  namespace: pigeonbox
   labels:
-    app: filecodebox
+    app: pigeonbox
 data:
   # 非敏感配置（敏感配置走 Secret / 环境变量注入）
   FCB_SERVER_HOST: "0.0.0.0"

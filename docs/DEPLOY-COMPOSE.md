@@ -6,7 +6,7 @@
 |---|---|---|
 | 直连体验 | `docker compose up -d` | 本机快速试用,`http://localhost:12345`(入口=frontend 容器);**默认仅本机可访问**,局域网访问在 .env 设 `FCB_API_BIND=0.0.0.0` |
 | nginx 反代 | `docker compose --profile nginx up -d` | 正式对外:统一 80/443 入口、TLS、缓存与超时治理 |
-| Kubernetes | `charts/` 仓库 `filecodebox` chart | 多副本、Ingress、监控接入(见 charts 仓库 README) |
+| Kubernetes | `charts/` 仓库 `pigeonbox` chart | 多副本、Ingress、监控接入(见 charts 仓库 README) |
 
 ## 快速开始
 
@@ -74,6 +74,6 @@ HTTPS / 子路径部署:模板 `deploy/nginx/nginx.conf` 内置了 443 server �
 | 限流"误伤"(一人超限全员受限)/ 登录错误锁定所有人 | 反代部署未配 `FCB_TRUSTED_PROXIES`,见上节 |
 | ghcr 镜像拉取 `unauthorized` | `docker login ghcr.io`,或换可用 `FCB_IMAGE_TAG` |
 | 80/12345 端口被占 | `.env` 改 `FCB_HTTP_PORT` / `FCB_API_PORT` |
-| 想临时关掉反代 | `docker compose --profile nginx up -d` 只重排 filecodebox;彻底停 nginx:`docker compose stop nginx` |
+| 想临时关掉反代 | `docker compose --profile nginx up -d` 只重排 pigeonbox;彻底停 nginx:`docker compose stop nginx` |
 
 完整环境变量(存储后端/Redis/限流/审核/MCP 等)见 [ENVIRONMENT_VARIABLES.md](ENVIRONMENT_VARIABLES.md)。

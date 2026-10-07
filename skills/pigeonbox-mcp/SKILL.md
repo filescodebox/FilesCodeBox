@@ -1,11 +1,11 @@
 ---
-name: filescodebox-mcp
-description: Upload and download files through a FilesCodeBox (文件快递柜) server via its built-in MCP endpoint — create text/file shares, read share content, download share files, look up / list / delete shares, check system/storage/federation status, clean up expired shares. Use whenever the user asks to share or fetch text/files via FilesCodeBox, administer a FilesCodeBox instance from an AI assistant, or mentions 取件码 / 分享 / 快递柜 / P2P 联邦 — even if they never say "MCP".
+name: pigeonbox-mcp
+description: Upload and download files through a PigeonBox (文件快递柜) server via its built-in MCP endpoint — create text/file shares, read share content, download share files, look up / list / delete shares, check system/storage/federation status, clean up expired shares. Use whenever the user asks to share or fetch text/files via PigeonBox, administer a PigeonBox instance from an AI assistant, or mentions 取件码 / 分享 / 快递柜 / P2P 联邦 — even if they never say "MCP".
 ---
 
-# FilesCodeBox MCP
+# PigeonBox MCP
 
-FilesCodeBox 服务器内置 MCP server：单端点 Streamable HTTP（`POST /api/v1/mcp`），
+PigeonBox 服务器内置 MCP server：单端点 Streamable HTTP（`POST /api/v1/mcp`），
 JSON-RPC 2.0，管理员 JWT 认证。通过它可以替用户管理文件快递柜：创建分享、查/删分享、
 看系统与存储状态、列用户、清过期。工具结果均为中文文本块。
 

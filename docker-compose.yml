@@ -1,4 +1,4 @@
-# FilesCodeBox 快速体验 / 自托管编排（前后端分离两容器）
+# PigeonBox 快速体验 / 自托管编排（前后端分离两容器）
 #
 #   cp .env.example .env          # 按需修改(最少 0 必改项,开箱即用)
 #   docker compose up -d          # 用 ghcr 发布镜像(两包均已 public 可匿名拉取)
@@ -8,8 +8,8 @@
 #                                 # 须在 .env 设 FCB_TRUSTED_PROXIES,见下)
 #
 # 架构(0.9.0 起,"server 镜像内嵌前端"模式已剔除):
-#   对外端口 → filecodebox-frontend(nginx: 静态资源 + API 反代)
-#                → filecodebox(server, 纯后端 API/数据, 不发布端口)
+#   对外端口 → pigeonbox-frontend(nginx: 静态资源 + API 反代)
+#                → pigeonbox(server, 纯后端 API/数据, 不发布端口)
 #   .env 的 FCB_API_BIND/FCB_API_PORT 语义不变,作用对象变为 frontend 容器。
 #
 # 数据持久化:./data(SQLite 库 + 上传文件 + .jwt_secret),挂在后端容器。
@@ -27,12 +27,12 @@
 services:
   # ── 后端(server 镜像, 纯后端): 仅被 frontend 反代,不对外发布端口 ──
   # 需临时直连 API 调试时,自行给本服务加 "127.0.0.1:12345:12345" 端口映射。
-  filecodebox:
-    image: ghcr.io/filescodebox/server:${FCB_IMAGE_TAG:-latest}
+  pigeonbox:
+    image: ghcr.io/pigeonbox/server:${FCB_IMAGE_TAG:-latest}
     build:
       context: .
       dockerfile: server/Dockerfile
-    container_name: filecodebox
+    container_name: pigeonbox
     environment:
       - TZ=${TZ:-Asia/Shanghai}
       - FCB_SERVER_MODE=${FCB_SERVER_MODE:-release}
@@ -94,24 +94,24 @@ services:
 
   # ── 前端(frontend 镜像, nginx 静态+反代): 对外唯一入口 ──
   # 端口语义与旧单容器版一致:FCB_API_BIND/FCB_API_PORT 作用于本容器(镜像监听 8080)。
-  filecodebox-frontend:
-    image: ghcr.io/filescodebox/frontend:${FCB_IMAGE_TAG:-latest}
+  pigeonbox-frontend:
+    image: ghcr.io/pigeonbox/frontend:${FCB_IMAGE_TAG:-latest}
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: filecodebox-frontend
+    container_name: pigeonbox-frontend
     ports:
       # 默认仅本机回环(反代/本机使用);局域网访问在 .env 设 FCB_API_BIND=0.0.0.0
       - "${FCB_API_BIND:-127.0.0.1}:${FCB_API_PORT:-12345}:8080"
     environment:
       # 反代上游 = 本编排的后端服务(与镜像 envsubst 默认值一致,显式写出便于理解)
-      - BACKEND_HOST=filecodebox
+      - BACKEND_HOST=pigeonbox
       - BACKEND_PORT=12345
       # nginx 反代体积上限(镜像默认 20m 是隐性瓶颈: 分片上传不受影响,但多文件 zip
       # 流式下载/大请求体会被 nginx 先拒;后端仍有 upload.upload_size 强校验)
       - CLIENT_MAX_BODY_SIZE=${FCB_MAX_BODY_SIZE:-1024m}
     depends_on:
-      filecodebox:
+      pigeonbox:
         condition: service_healthy
     restart: unless-stopped
     healthcheck: # 镜像内置同款;显式声明便于 compose 事件/depends_on 语义清晰
@@ -131,7 +131,7 @@ services:
   # 数据在命名卷 redisdata 中,不与 ./data(SQLite/上传文件)混放。
   redis:
     image: redis:7-alpine
-    container_name: filecodebox-redis
+    container_name: pigeonbox-redis
     # 密码接线（2026-10-05 审计遗留）：.env 设 FCB_REDIS_PASSWORD 即两端生效
     # （server 侧 FCB_REDIS_PASSWORD 已接同名变量）；未设时保持无密码——端口
     # 未对宿主发布，仅编排内网可达，但建议生产设置。
@@ -165,13 +165,13 @@ services:
   nginx:
     image: nginx:alpine
     profiles: ["nginx"]
-    container_name: filecodebox-nginx
+    container_name: pigeonbox-nginx
     ports:
       - "${FCB_HTTP_PORT:-80}:8080"   # frontend 镜像(nginx-unprivileged)监听 8080
     volumes:
       - ./deploy/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
-      filecodebox-frontend:
+      pigeonbox-frontend:
         condition: service_healthy
     restart: unless-stopped
     healthcheck: # 用 127.0.0.1:nginx 仅绑 IPv4,localhost 在 alpine 先解析 ::1 会被拒

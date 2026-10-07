@@ -1,7 +1,8 @@
 go 1.26.5
 
 // 本地多模块联编:make setup 拉取的模块仓库生效
-// (各模块 go.mod 均为正式版本依赖,无 workspace 时也可独立构建)
+// 版本化 replace 仅覆盖 require 指向的新版本——品牌迁移窗口期新 tag 未发,
+// 列车发版后可移除这三行恢复纯 use 映射
 use (
 	./contracts
 	./core
@@ -11,3 +12,7 @@ use (
 	./p2p
 	./kit
 )
+
+replace github.com/pigeonbox/contracts v0.7.0 => ./contracts
+replace github.com/pigeonbox/core v0.14.3 => ./core
+replace github.com/pigeonbox/kit v0.3.1 => ./kit

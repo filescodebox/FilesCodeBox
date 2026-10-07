@@ -1,6 +1,6 @@
 # NAS 打包模板真相源（deploy/nas/）
 
-[filescodebox/synology](https://github.com/filescodebox/synology) · [qnap](https://github.com/filescodebox/qnap) · [ugreen](https://github.com/filescodebox/ugreen) · [terramaster](https://github.com/filescodebox/terramaster) 四仓 **90% 内容同源**（编排/env/图标/回挂模式各四份），且永绑同一发版列车。本目录是共享资产的**唯一真相源**，四仓只是物化结果——不合并仓库（各仓独立 CI/发版/用户入口不变），用「模板 + 同步 + 漂移门禁」消除四处手改。
+[pigeonbox/synology](https://github.com/pigeonbox/synology) · [qnap](https://github.com/pigeonbox/qnap) · [ugreen](https://github.com/pigeonbox/ugreen) · [terramaster](https://github.com/pigeonbox/terramaster) 四仓 **90% 内容同源**（编排/env/图标/回挂模式各四份），且永绑同一发版列车。本目录是共享资产的**唯一真相源**，四仓只是物化结果——不合并仓库（各仓独立 CI/发版/用户入口不变），用「模板 + 同步 + 漂移门禁」消除四处手改。
 
 ## 文件
 
@@ -21,7 +21,7 @@ bash deploy/nas/sync.sh sync  --all            # 模板 → 四仓物化
 bash deploy/nas/sync.sh check --platform ugreen --dir ../ugreen   # 单仓(ugreen 额外校验 ghcr 加速版=compose 的镜像源替换)
 ```
 
-模板来源：优先脚本同目录（hub 检出内），否则抓 `raw.githubusercontent.com/filescodebox/filescodebox/main/deploy/nas/`——**适配器 CI 因此可以只带自身仓库跑漂移门禁**：
+模板来源：优先脚本同目录（hub 检出内），否则抓 `raw.githubusercontent.com/pigeonbox/pigeonbox/main/deploy/nas/`——**适配器 CI 因此可以只带自身仓库跑漂移门禁**：
 
 - 四仓 `ci.yml` 的 lint job 各有一步「共享资产与 hub 模板对齐」：拉取本脚本对自身仓 `check`，模板一动、未同步的仓全部变红，杜绝"改了三处漏一处"。
 - 同步统一用本脚本，禁止手改四仓的 compose/env.example（改了 CI 会红）。

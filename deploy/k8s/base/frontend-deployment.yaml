@@ -1,32 +1,32 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: filecodebox-frontend
-  namespace: filecodebox
+  name: pigeonbox-frontend
+  namespace: pigeonbox
   labels:
-    app: filecodebox
+    app: pigeonbox
     component: frontend
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: filecodebox
+      app: pigeonbox
       component: frontend
   template:
     metadata:
       labels:
-        app: filecodebox
+        app: pigeonbox
         component: frontend
     spec:
       automountServiceAccountToken: false
       containers:
         - name: frontend
-          image: ghcr.io/filescodebox/frontend:latest
+          image: ghcr.io/pigeonbox/frontend:latest
           imagePullPolicy: IfNotPresent
           # 反代上游 = 后端 Service(镜像内 envsubst 渲染进 nginx 配置)
           env:
             - name: BACKEND_HOST
-              value: filecodebox
+              value: pigeonbox
             - name: BACKEND_PORT
               value: "12345"
           ports:

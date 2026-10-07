@@ -15,7 +15,7 @@
 - 零新 runtime 依赖；devDep 也不加。
 - 零行为变化。**两处已批准的微修复**除外（commit message 注明）：①`toLocaleDateTime` 统一携带 Safari 空格日期 T 归一修复（admin/Dashboard 等页面此前 Safari 下显示 Invalid Date）；②非法日期串回退 fallback 而非显示 "Invalid Date"。
 - 每任务一 commit；commit 前必须 `npm run typecheck && npm run test` 绿。
-- commit 前置：`git -C FilesCodeBox/frontend status --short` 确认无并行会话未预期改动（工作区有并行会话惯例）。
+- commit 前置：`git -C PigeonBox/frontend status --short` 确认无并行会话未预期改动（工作区有并行会话惯例）。
 - commit 风格对齐仓内惯例：`refactor(scope): 中文描述`。
 - i18n：新文案必须 key 化，zh-CN 与 en-US 同 commit 补齐。
 - 自有组件显式 import（unplugin 只解析 Element Plus，维持）。

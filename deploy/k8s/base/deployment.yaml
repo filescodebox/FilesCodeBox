@@ -1,33 +1,33 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: filecodebox
-  namespace: filecodebox
+  name: pigeonbox
+  namespace: pigeonbox
   labels:
-    app: filecodebox
+    app: pigeonbox
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: filecodebox
+      app: pigeonbox
   template:
     metadata:
       labels:
-        app: filecodebox
+        app: pigeonbox
     spec:
       automountServiceAccountToken: false
       containers:
-        - name: filecodebox
-          image: ghcr.io/filescodebox/server:latest
+        - name: pigeonbox
+          image: ghcr.io/pigeonbox/server:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 12345
               name: http
           envFrom:
             - configMapRef:
-                name: filecodebox-config
+                name: pigeonbox-config
             - secretRef:
-                name: filecodebox-secret
+                name: pigeonbox-secret
           # 存活探针：进程是否运行（轻量，不检查依赖）
           livenessProbe:
             httpGet:
@@ -76,4 +76,4 @@ spec:
       volumes:
         - name: data
           persistentVolumeClaim:
-            claimName: filecodebox-data
+            claimName: pigeonbox-data

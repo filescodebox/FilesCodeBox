@@ -11,7 +11,7 @@
 
 **请不要在公开 Issue/PR/Discussion 中披露安全漏洞。**
 
-1. 使用 GitHub [Private Vulnerability Reporting](https://github.com/filescodebox/filescodebox/security/advisories/new)（首选），或邮件联系仓库 Owners。
+1. 使用 GitHub [Private Vulnerability Reporting](https://github.com/pigeonbox/pigeonbox/security/advisories/new)（首选），或邮件联系仓库 Owners。
 2. 请包含：影响范围、复现步骤/POC、涉及的模块仓与版本、可能的修复思路。
 3. 我们承诺 72 小时内确认收到，7 天内给出评估与修复计划。
 

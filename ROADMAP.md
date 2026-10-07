@@ -1,4 +1,4 @@
-# FilesCodeBox RoadMap
+# PigeonBox RoadMap
 
 > 最后更新：2026-10-04。路线按「现在（进行中）/ 下一步 / 更远」组织，完成即勾选。
 > 功能请求请到各仓 Issues；重大设计变更会先在 `docs/design/` 落设计文档。
@@ -6,7 +6,7 @@
 ## 定位
 
 **匿名口令文件快递柜**：像取快递一样收发文本与文件。坚持轻量、开箱即用，
-不做网盘、不做重存储平台——这是对上游社区共识（[#434](https://github.com/vastsa/FileCodeBox/issues/434)）
+不做网盘、不做重存储平台——这是对上游社区共识（[#434](https://github.com/vastsa/PigeonBox/issues/434)）
 的继承，也是我们与 Gokapi / copyparty / Nextcloud 的边界。
 
 ## 已完成（2026-10 突击批次）

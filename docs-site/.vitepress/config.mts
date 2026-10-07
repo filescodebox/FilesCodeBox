@@ -1,15 +1,15 @@
 import { defineConfig } from 'vitepress'
 
-// FilesCodeBox 文档站。
+// PigeonBox 文档站。
 // 内容真相源: hub 仓库 docs/ 目录(本目录的 ../docs)。内容页通过 VitePress 的
 // <!--@include: --> 指令原样引入 hub 文档, hub 侧更新后站点内容自动同步;
 // 本目录只维护站点壳(首页/导航/侧边栏)与少量手写页, 详见 docs-site/README.md。
 
 export default defineConfig({
   lang: 'zh-CN',
-  title: 'FilesCodeBox 文档',
+  title: 'PigeonBox 文档',
   description:
-    'FilesCodeBox(文件快递柜) — 匿名口令分享文本/文件的开源自托管平台: 多用户、API Token、多存储后端(S3/WebDAV/云厂商)、Kubernetes/Helm、MCP AI 集成。',
+    'PigeonBox(文件快递柜) — 匿名口令分享文本/文件的开源自托管平台: 多用户、API Token、多存储后端(S3/WebDAV/云厂商)、Kubernetes/Helm、MCP AI 集成。',
 
   // 本目录的 README.md 是贡献者文档, 不是站点内容, 排除出路由
   srcExclude: ['README.md'],
@@ -25,7 +25,7 @@ export default defineConfig({
   ],
 
   themeConfig: {
-    siteTitle: 'FilesCodeBox',
+    siteTitle: 'PigeonBox',
 
     nav: [
       {
@@ -82,7 +82,7 @@ export default defineConfig({
       }
     ],
 
-    socialLinks: [{ icon: 'github', link: 'https://github.com/filescodebox' }],
+    socialLinks: [{ icon: 'github', link: 'https://github.com/pigeonbox' }],
 
     search: {
       provider: 'local',
@@ -114,8 +114,8 @@ export default defineConfig({
     sidebarMenuLabel: '菜单',
     returnToTopLabel: '回到顶部',
     footer: {
-      message: 'FilesCodeBox — 文件快递柜, 开源匿名口令分享平台',
-      copyright: '© 2026 filescodebox org'
+      message: 'PigeonBox — 文件快递柜, 开源匿名口令分享平台',
+      copyright: '© 2026 pigeonbox org'
     }
   }
 })

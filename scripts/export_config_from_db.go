@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	dbPath := flag.String("db", "data/filecodebox.db", "path to sqlite db")
+	dbPath := flag.String("db", "data/pigeonbox.db", "path to sqlite db")
 	out := flag.String("out", "config.generated.yaml", "output yaml file")
 	flag.Parse()
 

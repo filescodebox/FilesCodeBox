@@ -1,14 +1,14 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: filecodebox-frontend
-  namespace: filecodebox
+  name: pigeonbox-frontend
+  namespace: pigeonbox
   labels:
-    app: filecodebox
+    app: pigeonbox
     component: frontend
 spec:
   selector:
-    app: filecodebox
+    app: pigeonbox
     component: frontend
   ports:
     - name: http

@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- 所有工作在 `FilesCodeBox/core/` 仓（main 分支）；设计文档修订在 hub 仓。
+- 所有工作在 `PigeonBox/core/` 仓（main 分支）；设计文档修订在 hub 仓。
 - core 仓有并行会话：`transport/http/handler/share_user.go` 有未提交改动，**本计划不碰该文件**；提交一律用 `git commit -- <精确路径>`。
 - 提交信息风格沿用仓库惯例：`feat(scope): 中文描述`（参考 `e3f16f2`）。
 - 测试用 sqlite `:memory:` 必须 `SetMaxOpenConns(1)`（多连接各见独立库，异步必现 flake）。
@@ -51,10 +51,10 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/cloudwego/hertz/pkg/common/ut"
-	"github.com/filescodebox/core/pkg/auth"
-	"github.com/filescodebox/core/repo/db"
-	"github.com/filescodebox/core/repo/db/dao"
-	"github.com/filescodebox/core/repo/db/model"
+	"github.com/pigeonbox/core/pkg/auth"
+	"github.com/pigeonbox/core/repo/db"
+	"github.com/pigeonbox/core/repo/db/dao"
+	"github.com/pigeonbox/core/repo/db/model"
 	"github.com/glebarez/sqlite"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -371,8 +371,8 @@ import (
 	"time"
 
 	"github.com/cloudwego/hertz/pkg/app"
-	"github.com/filescodebox/contracts/errcode"
-	"github.com/filescodebox/core/repo/db/dao"
+	"github.com/pigeonbox/contracts/errcode"
+	"github.com/pigeonbox/core/repo/db/dao"
 )
 
 // apiKeyPlainPrefix API Key 明文前缀（与 app/user 签发端一致）。
@@ -710,7 +710,7 @@ Expected: 全绿 + 3 个新 commit（Task 1/2/3）。
 - [x] **Step 3: 提交文档（hub 仓，只提交该文件）**
 
 ```bash
-cd FilesCodeBox && git add docs/design/2026-10-03-api-token-design.md && git commit -m "docs: API Token 波次1落地勘误（认证核心落位 pkg/middleware/apikey.go）" -- docs/design/2026-10-03-api-token-design.md
+cd PigeonBox && git add docs/design/2026-10-03-api-token-design.md && git commit -m "docs: API Token 波次1落地勘误（认证核心落位 pkg/middleware/apikey.go）" -- docs/design/2026-10-03-api-token-design.md
 ```
 
 ---

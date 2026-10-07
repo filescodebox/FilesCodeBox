@@ -4,7 +4,7 @@
 > 步骤用 checkbox 跟踪。Spec: `docs/design/2026-10-03-upload-governance-design.md`（本计划从
 > spec 论证，两者需一起读）。
 
-**Goal:** 为 FilesCodeBox 建立"上传准入闸门 → 分享状态机 → 管理端治理工具 → 审核钩子 → 留痕对账"的完整管控体系。
+**Goal:** 为 PigeonBox 建立"上传准入闸门 → 分享状态机 → 管理端治理工具 → 审核钩子 → 留痕对账"的完整管控体系。
 
 **Architecture:** 校验逻辑收口到 `pkg/utils` + 新 `pkg/gate`（上传闸门）+ 新 `app/moderation`（审核钩子），服务端 enforce 假开关；`file_codes` 增加 status 列构成状态机；管理端新端点延续 bootstrap 手写增强路由先例（挂 AdminMiddleware 组）；配额/计数复用 rate_limit 的 Redis 基建并带内存退化。
 
@@ -109,7 +109,7 @@ func CheckDownloadLogin(userID *uint) error          // download.require_login �
 
 - `server/configs/config*.yaml`：`download.max_concurrent_downloads`、`transfer.max_count`、`upload.max_save_seconds`（旧名）注释标 `# deprecated(未实现)`；`max_save_seconds_cap`、`blocked_extensions`、`anonymous_daily_*`（P1 键位可先占位注释）加示例。
 - `docs/ENVIRONMENT_VARIABLES.md` 增 `FCB_UPLOAD_BLOCKED_EXTENSIONS`。
-- `cd FilesCodeBox && make test && make vet`（contracts 变更后 core go.mod 需指向可解析版本：开发期 go.work 直接用本地模块即可；发布步骤见文末）。
+- `cd PigeonBox && make test && make vet`（contracts 变更后 core go.mod 需指向可解析版本：开发期 go.work 直接用本地模块即可；发布步骤见文末）。
 
 ## P1 管控核心（contracts + core + frontend）
 
@@ -203,7 +203,7 @@ Create `frontend/src/views/admin/Moderation.vue`（pending_review 列表 + 通�
 ## 发布步骤（代码外，需用户操作）
 
 1. contracts：commit → tag（建议 v0.2.1，语义为新增错误码非破坏性）→ push。
-2. core：`go get github.com/filescodebox/contracts@v0.2.1 && go mod tidy` → commit。
+2. core：`go get github.com/pigeonbox/contracts@v0.2.1 && go mod tidy` → commit。
 3. frontend / hub 配置模板各自 commit。
 4. `make test && make smoke` 通过后按各仓惯例 push + 打 core/frontend tag。
 

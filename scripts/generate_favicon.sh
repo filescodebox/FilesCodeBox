@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# 为 FilesCodeBox 生成 favicon 全套资源
+# 为 PigeonBox 生成 favicon 全套资源
 # 真相源: frontend/public/favicon.svg(512 画布, 圆角快递柜图标)
 # 产物(写入 frontend/public/):
 #   favicon.ico(16/32/48)  favicon-16x16.png  favicon-32x32.png
@@ -18,7 +18,7 @@ OUT="$ROOT/frontend/public"
 [ -f "$SRC" ] || { echo "✗ 找不到真相源 $SRC"; exit 1; }
 python3 -c 'import cairosvg' 2>/dev/null || { echo "✗ 缺少 cairosvg: pip install cairosvg"; exit 1; }
 
-echo "正在为 FilesCodeBox 生成 favicon..."
+echo "正在为 PigeonBox 生成 favicon..."
 
 python3 - "$SRC" "$OUT" <<'PYEOF'
 import io, struct, sys

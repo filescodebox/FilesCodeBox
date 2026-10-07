@@ -72,7 +72,7 @@ for p in $PLATFORMS; do
         git -C "$p" commit -qm "chore: 同步 hub 模板,钉镜像 ${IMAGE_TAG}"
         git -C "$p" tag "$VER"
         git -C "$p" push -q origin main "$VER"
-        echo "  ✓ $p → ${VER}(Actions: https://github.com/filescodebox/$p/actions)"
+        echo "  ✓ $p → ${VER}(Actions: https://github.com/pigeonbox/$p/actions)"
     else
         echo "  [dry-run] $p: 将 sync 模板、提交并打 tag(当前 $(git -C "$p" describe --tags --abbrev=0) → patch+1)"
     fi

@@ -1,6 +1,6 @@
-# filescodebox-docs
+# pigeonbox-docs
 
-FilesCodeBox 文档站（VitePress 1.x，中文站点）。
+PigeonBox 文档站（VitePress 1.x，中文站点）。
 
 **内容真相源是 hub 仓库的 `../docs/` 目录。** 本站大多数内容页通过 VitePress 的 `<!--@include: -->` 指令原样引入 `../docs/*.md`：hub 文档更新后，站点内容自动同步，本目录不需要跟改；本目录只维护站点壳（首页 / 导航 / 侧边栏 / 少量手写页）。
 

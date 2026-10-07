@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
 Simple export script: read key_values table from sqlite DB and create config.generated.yaml
-Usage: python3 scripts/export_config_from_db.py [path/to/filecodebox.db] [output.yaml]
+Usage: python3 scripts/export_config_from_db.py [path/to/pigeonbox.db] [output.yaml]
 """
 import sqlite3
 import sys
 import yaml
 from pathlib import Path
 
-DB_PATH = sys.argv[1] if len(sys.argv) > 1 else 'data/filecodebox.db'
+DB_PATH = sys.argv[1] if len(sys.argv) > 1 else 'data/pigeonbox.db'
 OUT_PATH = sys.argv[2] if len(sys.argv) > 2 else 'config.generated.yaml'
 
 conn = sqlite3.connect(DB_PATH)

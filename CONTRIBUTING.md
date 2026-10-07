@@ -1,21 +1,21 @@
 # CONTRIBUTING
 
-感谢关注 FilesCodeBox！本仓是**装配仓库**（hub）：不含业务代码，负责把各模块仓拉齐成工作区。业务贡献请到对应模块仓提 Issue/PR：
+感谢关注 PigeonBox！本仓是**装配仓库**（hub）：不含业务代码，负责把各模块仓拉齐成工作区。业务贡献请到对应模块仓提 Issue/PR：
 
 | 想改什么 | 去哪个仓 |
 |---|---|
-| API 契约 / 错误码 / Thrift 类型 | [contracts](https://github.com/filescodebox/contracts) |
-| 业务逻辑 / 存储 / 引导（Go） | [core](https://github.com/filescodebox/core) |
-| 部署壳 / 配置 / Docker | [server](https://github.com/filescodebox/server) |
-| Web 界面（Vue3 + TS） | [frontend](https://github.com/filescodebox/frontend) |
-| 飞牛 fnOS 适配 | [fnos](https://github.com/filescodebox/fnos) |
-| OpenWrt/iStoreOS 原生包 | [openwrt](https://github.com/filescodebox/openwrt) |
-| Helm Chart | [charts](https://github.com/filescodebox/charts) |
+| API 契约 / 错误码 / Thrift 类型 | [contracts](https://github.com/pigeonbox/contracts) |
+| 业务逻辑 / 存储 / 引导（Go） | [core](https://github.com/pigeonbox/core) |
+| 部署壳 / 配置 / Docker | [server](https://github.com/pigeonbox/server) |
+| Web 界面（Vue3 + TS） | [frontend](https://github.com/pigeonbox/frontend) |
+| 飞牛 fnOS 适配 | [fnos](https://github.com/pigeonbox/fnos) |
+| OpenWrt/iStoreOS 原生包 | [openwrt](https://github.com/pigeonbox/openwrt) |
+| Helm Chart | [charts](https://github.com/pigeonbox/charts) |
 
 ## 快速开始（本仓）
 
 ```bash
-git clone git@github.com:filescodebox/filescodebox.git && cd filescodebox
+git clone git@github.com:pigeonbox/pigeonbox.git && cd pigeonbox
 make setup     # 拉齐 12 个模块仓（幂等，重复执行=更新；SETUP_FNOS=0 / SETUP_OPENWRT=0 / SETUP_P2P=0 / SETUP_KIT=0 / SETUP_SYNOLOGY=0 / SETUP_QNAP=0 / SETUP_UGREEN=0 / SETUP_TERRAMASTER=0 可跳过对应仓）
 make test      # 七 Go 模块测试（contracts/core/server/fnos/openwrt/p2p/kit） + 前端 typecheck
 make build     # go.work 联编 → bin/

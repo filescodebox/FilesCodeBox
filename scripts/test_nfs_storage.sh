@@ -1,16 +1,16 @@
 #!/bin/bash
 
 # NFS存储配置和测试脚本
-# 用于测试FileCodeBox的NFS存储功能
+# 用于测试PigeonBox的NFS存储功能
 
-echo "=== FileCodeBox NFS 存储测试脚本 ==="
+echo "=== PigeonBox NFS 存储测试脚本 ==="
 echo "日期: $(date)"
 echo
 
 # 配置参数
 export NFS_SERVER="192.168.1.100"
 export NFS_PATH="/nfs/storage"
-export NFS_MOUNT_POINT="/mnt/filecodebox_nfs"
+export NFS_MOUNT_POINT="/mnt/pigeonbox_nfs"
 export NFS_VERSION="4"
 export NFS_OPTIONS="rw,sync,hard,intr"
 export NFS_TIMEOUT="30"
@@ -145,8 +145,8 @@ test_nfs_mount() {
         # 测试读写
         log_info "测试NFS读写功能..."
         local test_file="${sub_dir}/test_$(date +%s).txt"
-        if echo "FileCodeBox NFS Test" | sudo tee "$test_file" > /dev/null; then
-            if [ -f "$test_file" ] && grep -q "FileCodeBox NFS Test" "$test_file"; then
+        if echo "PigeonBox NFS Test" | sudo tee "$test_file" > /dev/null; then
+            if [ -f "$test_file" ] && grep -q "PigeonBox NFS Test" "$test_file"; then
                 log_success "NFS读写测试成功"
                 sudo rm -f "$test_file"
                 return 0
@@ -186,14 +186,14 @@ EOF
     log_success "配置文件已生成: $config_file"
 }
 
-# 函数：测试FileCodeBox NFS集成
-test_filecodebox_nfs() {
-    log_info "测试FileCodeBox NFS集成..."
+# 函数：测试PigeonBox NFS集成
+test_pigeonbox_nfs() {
+    log_info "测试PigeonBox NFS集成..."
     
     # 检查是否有可执行文件
-    if [ ! -f "./filecodebox" ]; then
-        log_info "构建FileCodeBox..."
-        if ! go build -o filecodebox .; then
+    if [ ! -f "./pigeonbox" ]; then
+        log_info "构建PigeonBox..."
+        if ! go build -o pigeonbox .; then
             log_error "构建失败"
             return 1
         fi
@@ -210,9 +210,9 @@ test_filecodebox_nfs() {
     export NFS_RETRY_COUNT="$NFS_RETRY_COUNT"
     export NFS_SUB_PATH="$NFS_SUB_PATH"
     
-    # 启动FileCodeBox测试
-    log_info "启动FileCodeBox进行NFS存储测试..."
-    timeout 10s ./filecodebox &
+    # 启动PigeonBox测试
+    log_info "启动PigeonBox进行NFS存储测试..."
+    timeout 10s ./pigeonbox &
     local pid=$!
     
     sleep 3
@@ -224,7 +224,7 @@ test_filecodebox_nfs() {
         # 获取管理员token
         local token=$(curl -s -X POST http://localhost:12345/admin/login \
             -H "Content-Type: application/json" \
-            -d '{"password": "FileCodeBox2025"}' | \
+            -d '{"password": "PigeonBox2025"}' | \
             grep -o '"token":"[^"]*"' | cut -d'"' -f4)
         
         if [ -n "$token" ]; then
@@ -303,8 +303,8 @@ main() {
     # 生成配置
     generate_config
     
-    # 测试FileCodeBox集成
-    test_filecodebox_nfs
+    # 测试PigeonBox集成
+    test_pigeonbox_nfs
     
     # 清理（可选）
     read -p "是否清理测试环境？(y/N): " cleanup_choice

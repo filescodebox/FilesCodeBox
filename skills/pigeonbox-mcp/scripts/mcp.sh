@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# FilesCodeBox MCP 助手脚本（skill: filescodebox-mcp）
+# PigeonBox MCP 助手脚本（skill: pigeonbox-mcp）
 # 依赖: curl + python3（无 jq 依赖）
 #
 # 用法:

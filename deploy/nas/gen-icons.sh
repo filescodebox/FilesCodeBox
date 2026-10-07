@@ -16,7 +16,7 @@ trap 'rm -rf "$TMP"' EXIT
 
 if [ "$SRC" = "--fetch" ]; then
     SRC="$TMP/favicon.svg"
-    curl -fsSL --retry 3 "https://raw.githubusercontent.com/filescodebox/frontend/main/public/favicon.svg" -o "$SRC"
+    curl -fsSL --retry 3 "https://raw.githubusercontent.com/pigeonbox/frontend/main/public/favicon.svg" -o "$SRC"
 fi
 if ! command -v qlmanage >/dev/null || ! command -v sips >/dev/null; then
     echo "需要 macOS 的 qlmanage 与 sips(无跨平台渲染依赖,刻意不引 ImageMagick)" >&2

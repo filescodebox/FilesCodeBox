@@ -1,5 +1,5 @@
 #!/bin/bash
-# 拉齐/更新 FilesCodeBox 工作区的十二个模块仓库(contracts/core/server/frontend/fnos/openwrt/p2p/kit
+# 拉齐/更新 PigeonBox 工作区的十二个模块仓库(contracts/core/server/frontend/fnos/openwrt/p2p/kit
 # + NAS 打包四仓 synology/qnap/ugreen/terramaster)。
 # 幂等:已存在则 git pull --ff-only。
 set -e
@@ -12,7 +12,7 @@ clone_or_update() {
     git -C "$dir" pull --ff-only
   else
     echo "↓ 克隆 $repo → $dir"
-    git clone -b "$branch" "https://github.com/filescodebox/$repo.git" "$dir"
+    git clone -b "$branch" "https://github.com/pigeonbox/$repo.git" "$dir"
   fi
 }
 
@@ -23,7 +23,7 @@ clone_or_update frontend    frontend    main
 
 # 飞牛 fnOS 应用适配层(go.work 已引用,默认拉取;SETUP_FNOS=0 可跳过,
 # 但跳过后工作区内 go build 会因 go.work 缺目录而报错)
-# 注: repo 2026-10-04 已由 filescodebox-fnos 改名 fnos(旧 URL 自动重定向),本地目录已同步为 fnos
+# 注: repo 2026-10-04 已由 pigeonbox-fnos 改名 fnos(旧 URL 自动重定向),本地目录已同步为 fnos
 if [ "${SETUP_FNOS:-1}" = "1" ]; then
   clone_or_update fnos fnos master
 fi

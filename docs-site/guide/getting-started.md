@@ -4,7 +4,7 @@ title: 快速开始
 
 # 快速开始
 
-用 Docker Compose 三步把 FilesCodeBox 跑起来：前后端分离双容器部署（frontend 静态入口 + server API，外加 Redis），全部状态落在本机 `./data` 目录。
+用 Docker Compose 三步把 PigeonBox 跑起来：前后端分离双容器部署（frontend 静态入口 + server API，外加 Redis），全部状态落在本机 `./data` 目录。
 
 ## 前置要求
 
@@ -15,13 +15,13 @@ title: 快速开始
 
 ```bash
 # 1. 克隆 hub 装配仓（compose 编排与 .env 模板都在这里）
-git clone https://github.com/filescodebox/filescodebox.git
-cd filescodebox
+git clone https://github.com/pigeonbox/pigeonbox.git
+cd pigeonbox
 
 # 2. 生成环境配置（全部项有安全默认，可留空；生产至少设 FCB_ADMIN_PASSWORD）
 cp .env.example .env
 
-# 3. 启动（拉取 ghcr.io/filescodebox 的 server + frontend 双镜像，版本由 FCB_IMAGE_TAG 同钉）
+# 3. 启动（拉取 ghcr.io/pigeonbox 的 server + frontend 双镜像，版本由 FCB_IMAGE_TAG 同钉）
 docker compose up -d
 ```
 

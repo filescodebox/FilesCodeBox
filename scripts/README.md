@@ -13,4 +13,4 @@
 | `generate_favicon.sh` | 由 SVG 生成多尺寸 favicon | 前端/静态资源维护用 |
 | `test_nfs_storage.sh` | NFS 存储后端连通性与读写测试 | 存储运维用 |
 
-> 来源说明：`export_config_from_db.*`、`generate_favicon.sh`、`test_nfs_storage.sh` 收编自旧单体仓库（legacy/FileCodeBox），2026-10 迁入；`e2e-*` 与 `smoke-full.sh` 为本项目 2026-10-03 新写。
+> 来源说明：`export_config_from_db.*`、`generate_favicon.sh`、`test_nfs_storage.sh` 收编自旧单体仓库（legacy/PigeonBox），2026-10 迁入；`e2e-*` 与 `smoke-full.sh` 为本项目 2026-10-03 新写。

@@ -3,18 +3,18 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: filecodebox
-  namespace: filecodebox
+  name: pigeonbox
+  namespace: pigeonbox
   labels:
-    app: filecodebox
+    app: pigeonbox
     release: prometheus  # 按实际 prometheus release 名调整，匹配 prometheus 服务发现
 spec:
   selector:
     matchLabels:
-      app: filecodebox
+      app: pigeonbox
   namespaceSelector:
     matchNames:
-      - filecodebox
+      - pigeonbox
   endpoints:
     - port: http
       path: /metrics

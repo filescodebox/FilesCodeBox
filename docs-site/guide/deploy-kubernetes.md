@@ -4,23 +4,23 @@ title: 部署 Kubernetes (Helm)
 
 # 部署 Kubernetes（Helm）
 
-官方 Helm Chart 位于 [filescodebox/charts](https://github.com/filescodebox/charts) 仓库，chart 名 `filecodebox`：前后端分离两 Deployment（frontend nginx 静态+反代 → server API，Ingress 指向 frontend），可选内置数据面（1.2.x 起 Redis 默认开，MySQL/PostgreSQL 可选；1.3.x 起可一键启用内置 S3 对象存储 SeaweedFS；1.3.4 起可一键部署 P2P 联邦注册中心，1.3.7 起含直传中继开关）、Ingress / PVC / Prometheus ServiceMonitor。
+官方 Helm Chart 位于 [pigeonbox/charts](https://github.com/pigeonbox/charts) 仓库，chart 名 `pigeonbox`：前后端分离两 Deployment（frontend nginx 静态+反代 → server API，Ingress 指向 frontend），可选内置数据面（1.2.x 起 Redis 默认开，MySQL/PostgreSQL 可选；1.3.x 起可一键启用内置 S3 对象存储 SeaweedFS；1.3.4 起可一键部署 P2P 联邦注册中心，1.3.7 起含直传中继开关）、Ingress / PVC / Prometheus ServiceMonitor。
 
 ## 安装
 
 方式一：Helm 仓库（GitHub Pages，由 chart-releaser 自动发布）：
 
 ```bash
-helm repo add filescodebox https://filescodebox.github.io/charts
+helm repo add pigeonbox https://pigeonbox.github.io/charts
 helm repo update
-helm install filecodebox filescodebox/filecodebox \
-  --namespace filecodebox --create-namespace
+helm install pigeonbox pigeonbox/pigeonbox \
+  --namespace pigeonbox --create-namespace
 ```
 
 方式二：OCI 制品（ghcr.io，与 Pages 同步发布）：
 
 ```bash
-helm install filecodebox oci://ghcr.io/filescodebox/charts/filecodebox
+helm install pigeonbox oci://ghcr.io/pigeonbox/charts/pigeonbox
 ```
 
 ## 内置数据面（可选组件）
@@ -39,8 +39,8 @@ chart 可一键部署有状态依赖，全部为单副本 StatefulSet（密码�
 
 ```bash
 # 示例：全内置数据面（对象存储 + 默认 Redis），数据库仍用 SQLite
-helm upgrade --install filecodebox filescodebox/filecodebox \
-  --namespace filecodebox --create-namespace \
+helm upgrade --install pigeonbox pigeonbox/pigeonbox \
+  --namespace pigeonbox --create-namespace \
   --set s3.enabled=true \
   --set secret.adminPassword='<强密码>'
 ```
@@ -58,7 +58,7 @@ helm upgrade --install filecodebox filescodebox/filecodebox \
 
 `replicaCount > 1` 时 chart（1.3.22+，需 server 镜像 ≥ 0.14.0）自动从单实例切换为**双平面拓扑**，同一镜像以 `FCB_DEPLOY_MODE` 区分运行形态：
 
-- **public 面**（`<release>-filecodebox`，N 副本）：只提供分享/上传/下载/用户等公开路由，公网入口只指向它；管理路径在其上物理 404，不跑后台任务与 DB 迁移。
+- **public 面**（`<release>-pigeonbox`，N 副本）：只提供分享/上传/下载/用户等公开路由，公网入口只指向它；管理路径在其上物理 404，不跑后台任务与 DB 迁移。
 - **admin 面**（`<release>-admin`，全局 1 实例）：管理路由（admin/MCP/setup）、后台任务、DB 迁移、配置唯一写者——管理端改配置经 Redis 广播秒级同步到 public 副本（在线切换存储后端同样即时生效）。
 - **admin 控制台**（可选，`serverAdmin.ingress.enabled`）：渲染一个反代到 admin 面的 nginx 副本 + 独立 Ingress（建议注解挂 IP 白名单）；不开 Ingress 时可 `kubectl port-forward svc/<release>-admin 12345` 直连 API。
 
@@ -66,7 +66,7 @@ helm upgrade --install filecodebox filescodebox/filecodebox \
 
 ## 参数速查
 
-完整参数表（全局 / 网络 / 存储 / 配置注入 / 探针）见 charts 仓库的 [chart README](https://github.com/filescodebox/charts/blob/main/charts/filecodebox/README.md)。常用项：
+完整参数表（全局 / 网络 / 存储 / 配置注入 / 探针）见 charts 仓库的 [chart README](https://github.com/pigeonbox/charts/blob/main/charts/pigeonbox/README.md)。常用项：
 
 | 参数 | 说明 | 默认值 |
 | --- | --- | --- |

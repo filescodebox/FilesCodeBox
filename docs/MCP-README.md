@@ -1,6 +1,6 @@
-# FilesCodeBox MCP Server（AI 客户端对接指南）
+# PigeonBox MCP Server（AI 客户端对接指南）
 
-FilesCodeBox 内置 **Model Context Protocol (MCP) server**：AI 客户端（Claude Desktop / Claude Code / Cursor / 任意标准 MCP 客户端）可以直接以管理员身份管理文件分享——这是上游 vastsa/FileCodeBox 没有的差异化能力。
+PigeonBox 内置 **Model Context Protocol (MCP) server**：AI 客户端（Claude Desktop / Claude Code / Cursor / 任意标准 MCP 客户端）可以直接以管理员身份管理文件分享——这是上游 vastsa/PigeonBox 没有的差异化能力。
 
 | 项 | 值 |
 |---|---|
@@ -84,7 +84,7 @@ curl -s -X POST http://localhost:12345/api/v1/mcp \
 ```json
 {
   "mcpServers": {
-    "filecodebox": {
+    "pigeonbox": {
       "type": "http",
       "url": "http://your-server:12345/api/v1/mcp",
       "headers": { "Authorization": "Bearer <admin-token>" }
@@ -96,7 +96,7 @@ curl -s -X POST http://localhost:12345/api/v1/mcp \
 **Claude Code**（命令行一键注册）：
 
 ```bash
-claude mcp add --transport http filecodebox http://your-server:12345/api/v1/mcp \
+claude mcp add --transport http pigeonbox http://your-server:12345/api/v1/mcp \
   --header "Authorization: Bearer <admin-token>"
 ```
 
@@ -106,16 +106,16 @@ claude mcp add --transport http filecodebox http://your-server:12345/api/v1/mcp 
 ### 4. （推荐）安装 Agent Skill
 
 本仓附带开箱即用的 agent skill
-（[skills/filescodebox-mcp](https://github.com/filescodebox/filescodebox/tree/main/skills/filescodebox-mcp)），
+（[skills/pigeonbox-mcp](https://github.com/pigeonbox/pigeonbox/tree/main/skills/pigeonbox-mcp)），
 教 AI 助手正确使用上述协议与全部工具（含自动登录/401 重试的 `scripts/mcp.sh` 助手脚本）：
 
 ```bash
 # Claude Code / ZCode 等支持 skill 的客户端，复制到项目或用户级 skill 目录即可
-git clone https://github.com/filescodebox/filescodebox.git
-cp -r filescodebox/skills/filescodebox-mcp ~/.agents/skills/   # 或 <project>/.agents/skills/、~/.claude/skills/
+git clone https://github.com/pigeonbox/pigeonbox.git
+cp -r pigeonbox/skills/pigeonbox-mcp ~/.agents/skills/   # 或 <project>/.agents/skills/、~/.claude/skills/
 ```
 
-安装后对 AI 说「帮我在 FilesCodeBox 上分享一段文本 / 看看存储还剩多少 / 清理过期分享」即可触发。
+安装后对 AI 说「帮我在 PigeonBox 上分享一段文本 / 看看存储还剩多少 / 清理过期分享」即可触发。
 
 ## 安全注意事项
 
@@ -129,7 +129,7 @@ cp -r filescodebox/skills/filescodebox-mcp ~/.agents/skills/   # 或 <project>/.
 
 ## 协议细节
 
-- `initialize` 应答：`protocolVersion: "2025-03-26"`，capabilities 只声明 `tools`，`serverInfo.name = "filecodebox"`。
+- `initialize` 应答：`protocolVersion: "2025-03-26"`，capabilities 只声明 `tools`，`serverInfo.name = "pigeonbox"`。
 - 通知类请求（无 `id`）→ HTTP 202 无响应体（MCP 规范）。
 - 工具业务失败 → HTTP 200 + `result.isError: true` + 文本说明；协议层错误才用 JSON-RPC error
   （未知方法 `-32601`，非法参数 `-32602`，非法 JSON `-32700`）。

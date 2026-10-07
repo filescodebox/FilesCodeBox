@@ -28,7 +28,7 @@
 | 变量 | 默认 | 说明 |
 |---|---|---|
 | `FCB_DATABASE_DRIVER` / `DB_TYPE` | sqlite | sqlite / mysql / postgres |
-| `FCB_DATABASE_DB_NAME` / `DB_NAME` | ./data/filecodebox.db | SQLite 文件路径或库名；**镜像内置 config.yaml 实际写死 `./data/fileCodeBox.db`（驼峰），compose 部署以镜像配置为准** |
+| `FCB_DATABASE_DB_NAME` / `DB_NAME` | ./data/pigeonbox.db | SQLite 文件路径或库名；**镜像内置 config.yaml 实际写死 `./data/fileCodeBox.db`（驼峰），compose 部署以镜像配置为准** |
 | `FCB_DATABASE_HOST` / `DB_HOST` | — | MySQL/PG 主机 |
 | `FCB_DATABASE_PORT` / `DB_PORT` | — | MySQL/PG 端口 |
 | `FCB_DATABASE_USER` / `DB_USER` | — | MySQL/PG 用户名 |
@@ -106,7 +106,7 @@
 
 ## P2P 联邦（federation，core v0.8.0 起）
 
-接入 [p2p](https://github.com/filescodebox/p2p) 联邦注册中心：本实例注册为联邦节点，口令分享可被联邦内其他节点路由解析。默认关闭；启用须同时提供 `FCB_FEDERATION_REGISTRY_URL` 与 `FCB_FEDERATION_PUBLIC_URL`。
+接入 [p2p](https://github.com/pigeonbox/p2p) 联邦注册中心：本实例注册为联邦节点，口令分享可被联邦内其他节点路由解析。默认关闭；启用须同时提供 `FCB_FEDERATION_REGISTRY_URL` 与 `FCB_FEDERATION_PUBLIC_URL`。
 
 | 变量 | 默认 | 说明 |
 |---|---|---|

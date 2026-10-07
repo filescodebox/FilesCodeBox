@@ -1,23 +1,23 @@
-# FilesCodeBox
+# PigeonBox
 
 **Anonymous code-based file & text sharing — like picking up a parcel.** Upload, get a pickup code, share the code; the recipient enters the code and downloads. No registration required.
 
-FilesCodeBox is the Go multirepo workspace of the [filescodebox](https://github.com/orgs/filescodebox/repositories) organization. This repository is the **umbrella (hub)**: no business code, only tooling to assemble the module repos into a buildable workspace.
+PigeonBox is the Go multirepo workspace of the [pigeonbox](https://github.com/orgs/pigeonbox/repositories) organization. This repository is the **umbrella (hub)**: no business code, only tooling to assemble the module repos into a buildable workspace.
 
 ## Repositories
 
 | Repo | Role | Version |
 |------|------|---------|
-| [contracts](https://github.com/filescodebox/contracts) | Contract layer: error codes + Thrift-generated types (zero business deps) | v0.6.5 |
-| [core](https://github.com/filescodebox/core) | Business core library: 16 domain services + repo/storage + `bootstrap.Bootstrap()` | v0.13.0 |
-| [server](https://github.com/filescodebox/server) | Deployable app: thin main + configs + Dockerfile (pure backend since 0.9.0) | v0.14.0 |
-| [frontend](https://github.com/filescodebox/frontend) | Vue3 + TS + Vite + Element Plus (nginx image, released with server) | with server `v*` |
-| [desktop](https://github.com/filescodebox/desktop) | Desktop client: Tauri 2 tray app connecting to any FilesCodeBox server, p2pc sidecar direct transfer | desktop-v1.3.1 |
-| [fnos](https://github.com/filescodebox/fnos) | fnOS (fnNAS) adapter (optional) | v1.2.3 |
-| [openwrt](https://github.com/filescodebox/openwrt) | OpenWrt/iStoreOS native ipk package: procd-managed, UCI config, single port 12345 with embedded Web UI | v0.1.0 |
-| [p2p](https://github.com/filescodebox/p2p) | P2P federated registry: node leases + passcode federation routing + device transfer signaling (optional) | v0.4.1 |
-| [kit](https://github.com/filescodebox/kit) | Shared Go toolkit: 28 general-purpose packages with zero ecosystem deps | v0.3.0 |
-| [charts](https://github.com/filescodebox/charts) | Kubernetes Helm chart (frontend + server split deployments) | chart 1.3.23 |
+| [contracts](https://github.com/pigeonbox/contracts) | Contract layer: error codes + Thrift-generated types (zero business deps) | v0.6.5 |
+| [core](https://github.com/pigeonbox/core) | Business core library: 16 domain services + repo/storage + `bootstrap.Bootstrap()` | v0.13.0 |
+| [server](https://github.com/pigeonbox/server) | Deployable app: thin main + configs + Dockerfile (pure backend since 0.9.0) | v0.14.0 |
+| [frontend](https://github.com/pigeonbox/frontend) | Vue3 + TS + Vite + Element Plus (nginx image, released with server) | with server `v*` |
+| [desktop](https://github.com/pigeonbox/desktop) | Desktop client: Tauri 2 tray app connecting to any PigeonBox server, p2pc sidecar direct transfer | desktop-v1.3.1 |
+| [fnos](https://github.com/pigeonbox/fnos) | fnOS (fnNAS) adapter (optional) | v1.2.3 |
+| [openwrt](https://github.com/pigeonbox/openwrt) | OpenWrt/iStoreOS native ipk package: procd-managed, UCI config, single port 12345 with embedded Web UI | v0.1.0 |
+| [p2p](https://github.com/pigeonbox/p2p) | P2P federated registry: node leases + passcode federation routing + device transfer signaling (optional) | v0.4.1 |
+| [kit](https://github.com/pigeonbox/kit) | Shared Go toolkit: 28 general-purpose packages with zero ecosystem deps | v0.3.0 |
+| [charts](https://github.com/pigeonbox/charts) | Kubernetes Helm chart (frontend + server split deployments) | chart 1.3.23 |
 
 Dependency direction (CI-enforced): `server / fnos / openwrt / frontend ──► core ──► contracts`; `core` and `p2p` consume `kit` on demand (kit is a zero-ecosystem-dep foundation); `p2p` is a leaf repo with a zero-dep business chain
 
@@ -43,7 +43,7 @@ Frontend entry `http://localhost:12345` (`FCB_API_PORT`, default 12345) — the 
 Build from source:
 
 ```bash
-git clone https://github.com/filescodebox/filescodebox.git && cd filescodebox
+git clone https://github.com/pigeonbox/pigeonbox.git && cd pigeonbox
 make setup     # fetch module repos (idempotent)
 make test      # Go tests + frontend typecheck
 make build     # workspace build → bin/
@@ -59,4 +59,4 @@ make smoke     # boot server & smoke-test
 
 ## License
 
-[Apache-2.0](LICENSE) © FilesCodeBox
+[Apache-2.0](LICENSE) © PigeonBox

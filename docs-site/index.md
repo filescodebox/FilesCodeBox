@@ -2,7 +2,7 @@
 layout: home
 
 hero:
-  name: FilesCodeBox
+  name: PigeonBox
   text: 文件快递柜
   tagline: 匿名口令分享文本/文件的开源自托管平台 —— 多用户、多存储后端、Kubernetes 友好、内置 MCP AI 集成
   actions:
@@ -11,7 +11,7 @@ hero:
       link: /guide/getting-started
     - theme: alt
       text: GitHub
-      link: https://github.com/filescodebox
+      link: https://github.com/pigeonbox
 
 features:
   - icon: 🔗

@@ -1,8 +1,8 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: filecodebox-data
-  namespace: filecodebox
+  name: pigeonbox-data
+  namespace: pigeonbox
 spec:
   accessModes: ["ReadWriteOnce"]
   resources:

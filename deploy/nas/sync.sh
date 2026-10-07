@@ -17,7 +17,7 @@
 # (适配器 CI 无工作区,走网络拉取)。
 set -euo pipefail
 
-BASE_RAW="https://raw.githubusercontent.com/filescodebox/filescodebox/main/deploy/nas"
+BASE_RAW="https://raw.githubusercontent.com/pigeonbox/pigeonbox/main/deploy/nas"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 platforms() { echo "synology qnap ugreen terramaster"; }
@@ -42,10 +42,10 @@ env_path() {
 }
 compose_header() {
     case "$1" in
-        synology) echo "# FilesCodeBox 群晖 DSM 部署编排(SPK 内置;.env 在 @appdata/包 var 目录)" ;;
-        qnap) echo "# FilesCodeBox 威联通 QTS 部署编排(QPKG 内置;.env 在卷根 filescodebox/ 目录)" ;;
-        ugreen) echo "# FilesCodeBox 绿联 NAS(UGOS Pro)部署编排(Docker → 项目 → 创建 → 粘贴本文件)" ;;
-        terramaster) echo "# FilesCodeBox 铁威马 TOS 部署编排(Docker Manager → 项目 → 添加 → 上传/粘贴本文件)" ;;
+        synology) echo "# PigeonBox 群晖 DSM 部署编排(SPK 内置;.env 在 @appdata/包 var 目录)" ;;
+        qnap) echo "# PigeonBox 威联通 QTS 部署编排(QPKG 内置;.env 在卷根 pigeonbox/ 目录)" ;;
+        ugreen) echo "# PigeonBox 绿联 NAS(UGOS Pro)部署编排(Docker → 项目 → 创建 → 粘贴本文件)" ;;
+        terramaster) echo "# PigeonBox 铁威马 TOS 部署编排(Docker Manager → 项目 → 添加 → 上传/粘贴本文件)" ;;
         *) return 1 ;;
     esac
 }
