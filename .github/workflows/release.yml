@@ -1,6 +1,8 @@
 name: Release
 
-# 生态版本快照发布：tag v* → 自动生成 Release（变更摘要取自 CHANGELOG）
+# 生态列车快照发布：tag v* → Release(说明 = release/train.yaml 组件矩阵 + 产物线导航;
+# train.yaml 缺失时——如历史 tag 重跑——退回静态模板)。Latest 恒属于本线,
+# 组件回挂(desktop-v*/fnos-v*/openwrt-v*/p2p-v*/synology-v*/qnap-v*/ugreen-v*/terramaster-v*)一律 --latest=false。
 on:
   push:
     tags: ["v*"]
@@ -13,28 +15,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      # hub 模式快照说明:静态模板(产物线导航),不引用 CHANGELOG——
-      # 旧做法 sed 抠 [Unreleased] 段,跨快照内容雷同且过期
-      - name: 生成说明
-        run: |
-          {
-            echo '**PigeonBox 生态快照**。本仓是生态装配 hub:服务器本体经容器镜像与 Helm 分发(不贴文件),桌面 / NAS / 路由器等文件型产物由各组件 CI 以 desktop-v* / fnos-v* / openwrt-v* / p2p-v* tag 自动回挂到本 Release 页 —— **本页即全生态二进制产物的统一出口**。'
-            echo ''
-            echo '## 📦 本页产物线'
-            echo '- 🖥️ 桌面客户端: [desktop-v*](https://github.com/pigeonbox/pigeonbox/releases?q=desktop-v&expanded=false) (Windows/macOS/Linux 安装包)'
-            echo '- 🪣 飞牛 fnOS: [fnos-v*](https://github.com/pigeonbox/pigeonbox/releases?q=fnos-v&expanded=false) (fpk 应用包)'
-            echo '- 🌐 OpenWrt / iStoreOS: [openwrt-v*](https://github.com/pigeonbox/pigeonbox/releases?q=openwrt-v&expanded=false) (ipk + apk)'
-            echo '- 🔌 P2P 联邦: [p2p-v*](https://github.com/pigeonbox/pigeonbox/releases?q=p2p-v&expanded=false) (p2pc 二进制; 镜像 ghcr.io/pigeonbox/p2p)'
-            echo ''
-            echo '## 🐳 服务器端'
-            echo '- 容器镜像: ghcr.io/pigeonbox/server + ghcr.io/pigeonbox/frontend (随 server v* tag 同步发布)'
-            echo '- Helm: helm repo add pigeonbox https://pigeonbox.github.io/charts (chart pigeonbox; OCI: oci://ghcr.io/pigeonbox/charts/pigeonbox)'
-            echo '- 部署文档: [主 README](https://github.com/pigeonbox/pigeonbox#readme)'
-            echo ''
-            echo '## 🧩 源码与变更日志'
-            echo '- 全部源码仓: https://github.com/orgs/pigeonbox/repositories'
-            echo '- 各组件详细变更进入上方对应 Release 线查看'
-          } > notes.md
+      # 说明由列车真相源渲染(scripts/release-train.sh notes),与 verify/finalize 同一实现
+      - name: 生成说明(列车组件矩阵)
+        run: bash scripts/release-train.sh notes "${{ github.ref_name }}" > notes.md
       - name: 创建 Release
         uses: softprops/action-gh-release@v2
         with:

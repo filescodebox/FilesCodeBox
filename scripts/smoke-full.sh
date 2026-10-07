@@ -138,7 +138,7 @@ curl -s "$BASE/share/select/?code=$CODE_P" | grep -q "密码\|password" && ok "S
 curl -s "$BASE/share/select/?code=$CODE_P&password=pw123" | grep -q "download_url" && ok "S8c 带密码查询通过" || bad "S8c 带密码查询" "-"
 
 # S9 文件上传 + metadata + Range
-CODE_F=$(curl -s -X POST "$BASE/share/file/" -F "file=@$SMOKE/src/smoke-range.txt" -F "expire_value=1" -F "expire_style=day" | J "d['data']['code']")
+CODE_F=$(curl -s -X POST "$BASE/share/file/" -F "file=@$SMOKE/src/smoke-range.txt" -F "expire_value=1" -F "expire_style=day" -F "require_auth=false" | J "d['data']['code']")
 [ -n "$CODE_F" ] && [ "${CODE_F:0:4}" != "JERR" ] && ok "S9a 文件分享 code=$CODE_F" || bad "S9a 文件分享" "$CODE_F"
 [ "$(curl -s "$BASE/share/metadata/$CODE_F" | J "d['data']['name']")" = "smoke-range.txt" ] && ok "S9b metadata 文件名" || bad "S9b metadata name" "-"
 DLF=$(curl -s "$BASE/share/select/?code=$CODE_F" | J "d['data']['download_url']"); case "$DLF" in /*) DLF="$BASE$DLF";; esac

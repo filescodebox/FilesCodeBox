@@ -9,7 +9,12 @@
   5. complete（require_auth + password）→ 返回真实分享码（回归 P0：曾返回 uploadID）
   6. select 无密码 401 / 正确密码 200 拿下载令牌
   7. 下载内容 SHA-256 与原文件一致
-  8. 分片通道秒传：同哈希二次 init → is_quick_upload=true 且复用分享码
+  8. 秒传安全语义：complete 带密码 → 同哈希二次 init 必须 is_quick_upload=false
+     （密码分享不做秒传源；无密码正向秒传由 smoke-full.sh S11b 覆盖）
+
+注意：6 并发必须客户端节流（全局 ~8 req/s）——服务端默认 per-IP 限流
+UploadQPS=10/Burst=20（middleware.DefaultRateLimitConfig），无节流的并发
+会在第 ~20 片起吃 429（10005），那是限流器正确工作而非缺陷。
 """
 import concurrent.futures
 import hashlib
@@ -17,6 +22,8 @@ import io
 import json
 import os
 import sys
+import threading
+import time
 import urllib.request
 import uuid
 
@@ -26,6 +33,19 @@ SIZE = 48 * 1024 * 1024
 TOTAL = SIZE // CHUNK
 
 failures = []
+
+# 客户端节流：请求间隔 ≥0.11s（≈9 req/s < UploadQPS=10），跨 worker 生效
+_pace_lock = threading.Lock()
+_next_slot = [0.0]
+
+
+def _pace():
+    with _pace_lock:
+        now = time.time()
+        slot = max(_next_slot[0], now)
+        if slot > now:
+            time.sleep(slot - now)
+        _next_slot[0] = slot + 0.11
 
 
 def check(name, ok, detail=""):
@@ -80,9 +100,14 @@ skip = {5, 17}
 idxs = [i for i in range(TOTAL) if i not in skip]
 
 def put_chunk(i):
+    _pace()
     st, res = post_form(f"/chunk/upload/chunk/{upload_id}/{i}",
                         {}, {"chunk": (f"c{i}", data[i*CHUNK:(i+1)*CHUNK])})
-    return i, st == 200 and res["code"] == 200
+    okk = st == 200 and res["code"] == 200
+    if not okk:
+        # 单片失败详情必须可见（429=限流命中/400=契约不符，静默聚合会让根因不可诊断）
+        print(f"    chunk {i} FAIL http={st} body={json.dumps(res, ensure_ascii=False)[:160]}")
+    return i, okk
 
 with concurrent.futures.ThreadPoolExecutor(max_workers=6) as ex:
     results = list(ex.map(put_chunk, idxs))
@@ -91,7 +116,11 @@ check(f"并发 22 片成功（实际 {ok_cnt}）", ok_cnt == 22)
 
 print("== 3. status 断点续传 ==")
 st, body = get(f"/chunk/upload/status/{upload_id}")
-st_data = json.loads(body)["data"]
+st_data = json.loads(body).get("data") or {}
+if not st_data:
+    # 429/错误体直接可见，勿裸 KeyError（status 也可能吃限流）
+    check("status 响应含 data", False, f"http={st} body={body[:160]}")
+    sys.exit(1)
 check("uploaded=22", st_data["uploaded_chunks"] == 22, str(st_data)[:120])
 have = set(st_data["uploaded_indexes"])
 check("缺失恰为 #5 #17", have == set(idxs), str(have ^ set(idxs)))
@@ -131,14 +160,16 @@ check("下载 200", st == 200, str(st))
 dl_sha = hashlib.sha256(content).hexdigest()
 check(f"SHA-256 一致（{len(content)} 字节）", dl_sha == sha, f"{dl_sha[:16]} vs {sha[:16]}")
 
-print("== 8. 分片通道秒传 ==")
+print("== 8. 秒传安全语义（密码分享不做秒传源）==")
+# GetByHashAndSize 恒过滤 require_auth=false（dao 回归 2026-10-03：防持同哈希者
+# 借秒传令牌穿透原分享的密码校验）。本脚本 complete 带密码 → 秒传必须不命中；
+# 无密码流的正向秒传由 scripts/smoke-full.sh S11b 覆盖。
 st, res = post_form("/chunk/upload/init/", {
     "file_name": "e2e-big-copy.bin", "file_size": str(SIZE),
     "file_hash": sha, "chunk_size": str(CHUNK), "total_chunks": str(TOTAL),
 })
 qd = res["data"]
-check("is_quick_upload=true", qd.get("is_quick_upload") is True, str(qd)[:150])
-check("复用分享码", qd.get("share_code") == share_code, f"{qd.get('share_code')} vs {share_code}")
+check("密码分享不做秒传源(is_quick_upload=false)", qd.get("is_quick_upload") is False, str(qd)[:150])
 
 print()
 if failures:

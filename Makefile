@@ -1,4 +1,4 @@
-.PHONY: setup update build test vet lint smoke smoke-full docker compose-up compose-down nas-check nas-sync clean
+.PHONY: setup update build test vet lint smoke smoke-full docker compose-up compose-down nas-check nas-sync train-verify train-bump train-finalize clean
 
 # PigeonBox umbrella —— 一次 clone 拉齐全部模块并统一构建。
 # 模块仓库(contracts/core/server/frontend/fnos/openwrt/p2p/kit + NAS 打包四仓
@@ -58,6 +58,15 @@ nas-check:         ## NAS 打包四仓共享资产漂移校验(对 deploy/nas/ �
 
 nas-sync:          ## hub 模板物化到 NAS 打包四仓(改模板后跑;CI 有漂移门禁兜底)
 	bash deploy/nas/sync.sh sync --all
+
+train-verify:      ## 发布列车对账:train.yaml ↔ 全生态真实状态(漂移即失败;CI 同款 train-verify 工作流)
+	bash scripts/release-train.sh verify
+
+train-bump:        ## 开新列车: make train-bump TRAIN=1.15.0 [--set core=v0.15.0 ...](默认 dry-run,加 ARGS=--push 实际执行)
+	bash scripts/release-train.sh bump TRAIN=$(TRAIN) $(ARGS)
+
+train-finalize:    ## 列车终验并出 hub v<train> Latest 快照(verify 全绿前置)
+	bash scripts/release-train.sh finalize
 
 clean:
 	rm -rf bin/

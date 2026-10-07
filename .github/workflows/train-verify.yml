@@ -1,0 +1,65 @@
+name: Train Verify
+
+# 发布列车常驻守卫:train.yaml ↔ 全生态真实状态对账(本地同款: scripts/release-train.sh verify)。
+# 漂移即失败并更新常驻 issue「🎯 train-drift」——版本不统一从人眼发现改为 CI 发现。
+# 设计稿: docs/specs/2026-10-08-release-train-design.md
+on:
+  schedule:
+    - cron: "30 2 * * *" # 每日 02:30 UTC
+  push:
+    branches: [main]
+    paths:
+      - "release/train.yaml"
+      - "scripts/release-train.sh"
+      - "deploy/nas/**"
+      - "deploy/k8s/**"
+      - "docs/architecture.md"
+  pull_request:
+    paths:
+      - "release/train.yaml"
+      - "scripts/release-train.sh"
+      - "deploy/nas/**"
+      - "deploy/k8s/**"
+      - "docs/architecture.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: train-verify
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 对账(全部公开仓,只读;GITHUB_TOKEN 足够)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -o pipefail
+          bash scripts/release-train.sh verify --ci 2>&1 | tee verify.log
+      - name: 漂移开/更新常驻 issue(单 issue 追加,防刷屏)
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh label create train-drift -R "$GITHUB_REPOSITORY" --color E99695 --description "发布列车版本漂移" --force 2>/dev/null || true
+          {
+            echo "检测到版本漂移($(date -u '+%F %T') UTC · [run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}))"
+            echo ""
+            echo '```'
+            tail -60 verify.log
+            echo '```'
+          } > body.md
+          NUM=$(gh issue list -R "$GITHUB_REPOSITORY" --state open --search "train-drift in:title" --json number --jq '.[0].number' 2>/dev/null || echo "")
+          if [ -n "$NUM" ]; then
+            gh issue comment "$NUM" -R "$GITHUB_REPOSITORY" --body-file body.md
+            echo "已更新常驻 issue #$NUM"
+          else
+            gh issue create -R "$GITHUB_REPOSITORY" --label train-drift \
+              --title "🎯 train-drift: 发布列车版本漂移" --body-file body.md
+          fi

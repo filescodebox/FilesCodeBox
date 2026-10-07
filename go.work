@@ -1,8 +1,9 @@
 go 1.26.5
 
-// 本地多模块联编:make setup 拉取的模块仓库生效
-// 版本化 replace 仅覆盖 require 指向的新版本——品牌迁移窗口期新 tag 未发,
-// 列车发版后可移除这三行恢复纯 use 映射
+// 本地多模块联编:make setup 拉取的模块仓库生效。
+// use 映射下本地模块恒优先于 go.mod 钉版;各仓 CI 无 go.work 环境,钉版过期由
+// 各仓 CI + hub train-verify 对账兜住(docs/specs/2026-10-08-release-train-design.md)。
+// 历史 replace 行已清除(品牌迁移窗口期遗留,列车发版后失效,纯噪音)。
 use (
 	./contracts
 	./core
@@ -12,7 +13,3 @@ use (
 	./p2p
 	./kit
 )
-
-replace github.com/pigeonbox/contracts v0.7.0 => ./contracts
-replace github.com/pigeonbox/core v0.14.3 => ./core
-replace github.com/pigeonbox/kit v0.3.1 => ./kit
