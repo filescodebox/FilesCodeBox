@@ -7,7 +7,9 @@
 # 用法:
 #   release-train.sh verify [--ci]              对账: train.yaml ↔ 各仓真实状态(漂移即非零退出)
 #   release-train.sh bump TRAIN=x.y.z [opts]    开新列车: 改 15+ 版本写入点 → 各仓 train/<v> 分支+PR(默认 dry-run)
-#       [--set core=v0.15.0 server=v0.16.0 p2p=v0.5.0 contracts=v0.9.0 kit=v0.4.0 p2pc=v0.5.0]
+#       [--set core=v0.15.0 contracts=v0.9.0 kit=v0.4.0 p2p=v0.5.0]   库线消费记录(仅记录,不触发下游)
+#       [--set core_pin=v0.15.0]      终端仓 go.mod 钉版(默认保持现状——升钉需显式指定,fnos v1.2.7 教训)
+#       [--set server=v0.16.0 p2pc=v0.5.0]                            镜像版本 / desktop sidecar 钉版
 #       [--hotfix]      子集列车(仅变更受影响组件,train.yaml 记 hotfix=true)
 #       [--push]        实际执行(建分支/提交/push/gh pr create);缺省只打印计划
 #   release-train.sh finalize [--train x.y.z]   终验(verify 全绿)→ state=shipped → hub 打 v<train> 快照
@@ -248,6 +250,36 @@ run() { if [ "$DRY_RUN" = 0 ]; then "$@"; else echo "  [dry-run] $*"; fi; }
 
 usage_bump() { sed -n '/^# 用法:/,/^set -euo/p' "$0" | sed 's/^# \{0,2\}//' >&2; exit 1; }
 
+# 只 stage 列车文件(天然隔离并行会话的无关改动);staged 无 diff 即跳过该仓。
+commit_if_changed() { # <dir> <repo> <msg> <files...>
+    local dir=$1 repo=$2 msg=$3; shift 3
+    if [ "$DRY_RUN" = 1 ]; then
+        if git -C "$dir" diff --quiet -- "$@"; then
+            echo "  ✓ $dir 无列车变更,跳过"
+        else
+            echo "  [dry-run] $dir 将变更 → 分支 train/$TRAIN + PR($(echo "$@" | tr '\n' ' '))"
+        fi
+        return 0
+    fi
+    git -C "$dir" add -- "$@"
+    if git -C "$dir" diff --cached --quiet; then
+        echo "  ✓ $dir 无列车变更,跳过"
+        return 0
+    fi
+    if git -C "$dir" rev-parse -q --verify "refs/heads/train/$TRAIN" >/dev/null; then
+        git -C "$dir" checkout -q "train/$TRAIN"
+    else
+        git -C "$dir" checkout -q -b "train/$TRAIN"
+    fi
+    git -C "$dir" commit -qm "$msg"
+    git -C "$dir" push -q -u origin "train/$TRAIN"
+    gh pr create -R "${GH_ORG}/${repo}" --base "$(def_branch "$repo")" --head "train/$TRAIN" \
+        --title "train: bump to $TRAIN" \
+        --body "发布列车 $TRAIN 自动 bump(hub scripts/release-train.sh 生成,仅含列车文件)。合并后 version-tagger 自动打 tag 并触发 Release 流水线;全部回挂后跑 train-release verify。" \
+        2>/dev/null || echo "  (PR 已存在,跳过创建)"
+    echo "  ✓ $dir → PR(pigeonbox/$repo train/$TRAIN)"
+}
+
 cmd_bump() {
     local TRAIN="" HOTFIX=0 SETS=()
     while [ $# -gt 0 ]; do
@@ -263,17 +295,19 @@ cmd_bump() {
     [ -n "$TRAIN" ] || usage_bump
     case "$TRAIN" in *[!0-9.]*|"") echo "✗ TRAIN 须形如 1.15.0" >&2; exit 1;; esac
 
-    # 解析 --set
-    local N_CONTRACTS N_CORE N_KIT N_P2P N_P2PC N_SERVER
+    # 解析 --set(core/contracts/kit/p2p 只改库线消费记录;终端 go.mod 钉版由 core_pin
+    # 独立控制且默认保持现状——库线发新版≠终端必须跟随,升钉是显式列车动作)
+    local N_CONTRACTS N_CORE N_KIT N_P2P N_P2PC N_SERVER N_CORE_PIN
     N_CONTRACTS=$(tget lib.contracts); N_CORE=$(tget lib.core); N_KIT=$(tget lib.kit)
-    N_P2P=$(tget lib.p2p); N_P2PC=$(tget terminal.desktop.p2pc); N_SERVER=$(tget images.server)
+    N_P2P=$(tget lib.p2p); N_P2PC=$(tget terminal.desktop.p2pc)
+    N_SERVER=$(tget images.server); N_CORE_PIN=$(tget terminal.fnos.core_pin)
     local s k val
     for s in "${SETS[@]:-}"; do
         [ -n "$s" ] || continue
         k=${s%%=*}; val=${s#*=}
         case "$k" in
             contracts) N_CONTRACTS=$val ;; core) N_CORE=$val ;; kit) N_KIT=$val ;;
-            p2p) N_P2P=$val ;; p2pc) N_P2PC=$val ;;
+            p2p) N_P2P=$val ;; p2pc) N_P2PC=$val ;; core_pin) N_CORE_PIN=$val ;;
             server) N_SERVER=${val#v} ;;
             *) echo "✗ 未知 --set 键: $k" >&2; exit 1 ;;
         esac
@@ -281,29 +315,20 @@ cmd_bump() {
     local FE_REF="v$N_SERVER"   # D2: frontend 与 server 同号
 
     echo "══ 列车 bump → $TRAIN (hotfix=$HOTFIX, dry-run=$DRY_RUN)"
-    echo "   contracts=$N_CONTRACTS core=$N_CORE kit=$N_KIT p2p=$N_P2P server=$N_SERVER p2pc=$N_P2PC frontend=$FE_REF"
+    echo "   库线: contracts=$N_CONTRACTS core=$N_CORE kit=$N_KIT p2p=$N_P2P | 镜像: server=$N_SERVER(前端同号) | 终端: core 钉=$N_CORE_PIN p2pc=$N_P2PC"
 
-    # 前置: 工作树干净
+    # 前置: 仓存在 + fetch(清洁度不在此拦——由 commit_if_changed 按"列车文件有无 diff"判定)
+    # desktop 检出在工作区根(../desktop),其余模块在 hub 目录内
+    local DESKTOP_DIR="$PWD/../desktop"
     local d
-    for d in . frontend fnos openwrt desktop $PLATFORMS; do
+    for d in . frontend fnos openwrt $PLATFORMS; do
         [ -d "$d/.git" ] || { echo "✗ 缺 $d 检出(先 make setup)" >&2; exit 1; }
-        [ -z "$(git -C "$d" status --porcelain)" ] || { echo "✗ $d 工作树不干净,先提交/清理" >&2; exit 1; }
         git -C "$d" fetch -q origin
     done
+    [ -d "$DESKTOP_DIR/.git" ] || { echo "✗ 缺 desktop 检出(工作区根)" >&2; exit 1; }
+    git -C "$DESKTOP_DIR" fetch -q origin
 
-    # ── 各仓编辑(分支 train/<TRAIN>) ──
-    branch_repo() { # <dir> <commit msg>
-        run git -C "$1" checkout -q -b "train/$TRAIN"
-        run git -C "$1" add -A
-        run git -C "$1" commit -qm "$2"
-        run git -C "$1" push -q -u origin "train/$TRAIN"
-        run gh pr create -R "${GH_ORG}/$1" --base "$([ "$1" = fnos ] && echo master || echo main)" --head "train/$TRAIN" \
-            --title "train: bump to $TRAIN" --label "" \
-            --body "发布列车 $TRAIN 自动 bump(由 hub scripts/release-train.sh 生成)。合并后 version-tagger 自动打 tag 并触发 Release 流水线。"
-    }
-
-    echo "── [1/8] hub"
-    run git checkout -q -b "train/$TRAIN"
+    echo "── [1/7] hub"
     sed -i.bak "s/FCB_IMAGE_TAG:-v[0-9]*\.[0-9]*\.[0-9]*/FCB_IMAGE_TAG:-v$N_SERVER/" deploy/nas/compose.yml && rm -f deploy/nas/compose.yml.bak
     sed -i.bak "s/^FCB_IMAGE_TAG=v[0-9]*\.[0-9]*\.[0-9]*/FCB_IMAGE_TAG=v$N_SERVER/" deploy/nas/env.example && rm -f deploy/nas/env.example.bak
     sed -i.bak "s/newTag: [0-9.]*/newTag: $N_SERVER/g" deploy/k8s/overlays/prod/kustomization.yaml && rm -f deploy/k8s/overlays/prod/kustomization.yaml.bak
@@ -317,7 +342,7 @@ cmd_bump() {
         echo "schema: \"1\""
         echo "train: $TRAIN"
         echo "state: draft"
-        echo "hotfix: \"$HOTFIX\""
+        echo "hotfix: $([ $HOTFIX = 1 ] && echo true || echo false)"
         echo ""
         echo "lib.contracts: $N_CONTRACTS"
         echo "lib.core: $N_CORE"
@@ -335,11 +360,11 @@ cmd_bump() {
         echo "terminal.desktop.p2pc: $N_P2PC"
         echo "terminal.fnos.tag: v$TRAIN"
         echo "terminal.fnos.version: $TRAIN"
-        echo "terminal.fnos.core_pin: $N_CORE"
+        echo "terminal.fnos.core_pin: $N_CORE_PIN"
         echo "terminal.fnos.frontend_ref: $FE_REF"
         echo "terminal.openwrt.tag: v$TRAIN"
         echo "terminal.openwrt.version: $TRAIN"
-        echo "terminal.openwrt.core_pin: $N_CORE"
+        echo "terminal.openwrt.core_pin: $N_CORE_PIN"
         echo "terminal.openwrt.frontend_ref: $FE_REF"
         local p
         for p in $PLATFORMS; do
@@ -350,28 +375,29 @@ cmd_bump() {
         echo "features.version_files: \"true\""
     } > "$TRAIN_FILE.tmp"
     [ -s "$TRAIN_FILE.tmp" ] && mv "$TRAIN_FILE.tmp" "$TRAIN_FILE"
-    # 文档矩阵(architecture.md 单元格 + AGENTS.md 末列,工作区文件)
+    # 文档矩阵(architecture.md 单元格 + AGENTS.md 末列,工作区文件不入库)
     local AV="v$N_SERVER"
-    set_table_cell3 docs/architecture.md '^\| contracts \|' "v$N_CONTRACTS" || true
-    set_table_cell3 docs/architecture.md '^\| core \|' "v$N_CORE" || true
+    set_table_cell3 docs/architecture.md '^\| contracts \|' "$N_CONTRACTS" || true
+    set_table_cell3 docs/architecture.md '^\| core \|' "$N_CORE" || true
     set_table_cell3 docs/architecture.md '^\| server \|' "$AV" || true
-    set_table_cell3 docs/architecture.md '^\| fnos \|' "v$TRAIN(内置 core $N_CORE)" || true
-    set_table_cell3 docs/architecture.md '^\| openwrt \|' "v$TRAIN(内置 core $N_CORE)" || true
+    set_table_cell3 docs/architecture.md '^\| fnos \|' "v$TRAIN(内置 core $N_CORE_PIN)" || true
+    set_table_cell3 docs/architecture.md '^\| openwrt \|' "v$TRAIN(内置 core $N_CORE_PIN)" || true
     set_table_cell3 docs/architecture.md '^\| NAS 打包四仓 \|' "v$TRAIN(钉 server/frontend 镜像 $AV)" || true
-    set_table_cell3 docs/architecture.md '^\| p2p \|' "v$N_P2P" || true
-    set_table_cell3 docs/architecture.md '^\| kit \|' "v$N_KIT" || true
+    set_table_cell3 docs/architecture.md '^\| p2p \|' "$N_P2P" || true
+    set_table_cell3 docs/architecture.md '^\| kit \|' "$N_KIT" || true
     set_table_cell3 docs/architecture.md '^\| desktop \|' "desktop-v$TRAIN" || true
     set_table_cell3 docs/architecture.md '^\| charts \|' "chart $CHART_NEW(app $AV)" || true
     local AGENTS="$PWD/../AGENTS.md"
     if [ -f "$AGENTS" ]; then
         set_table_last_cell "$AGENTS" '`PigeonBox/` |' "v$TRAIN" || true
-        set_table_last_cell "$AGENTS" '`PigeonBox/contracts/`' "v$N_CONTRACTS" || true
-        set_table_last_cell "$AGENTS" '`PigeonBox/core/`' "v$N_CORE" || true
+        set_table_last_cell "$AGENTS" '`PigeonBox/contracts/`' "$N_CONTRACTS" || true
+        set_table_last_cell "$AGENTS" '`PigeonBox/core/`' "$N_CORE" || true
         set_table_last_cell "$AGENTS" '`PigeonBox/server/`' "$AV / core $N_CORE" || true
-        set_table_last_cell "$AGENTS" '`PigeonBox/fnos/`' "v$TRAIN / core $N_CORE" || true
-        set_table_last_cell "$AGENTS" '`PigeonBox/openwrt/`' "v$TRAIN / core $N_CORE" || true
-        set_table_last_cell "$AGENTS" '`PigeonBox/p2p/`' "v$N_P2P" || true
-        set_table_last_cell "$AGENTS" '`PigeonBox/kit/`' "v$N_KIT" || true
+        set_table_last_cell "$AGENTS" '`PigeonBox/frontend/`' "$FE_REF(VERSION 真相源,tag 随列车)" || true
+        set_table_last_cell "$AGENTS" '`PigeonBox/fnos/`' "v$TRAIN / core $N_CORE_PIN" || true
+        set_table_last_cell "$AGENTS" '`PigeonBox/openwrt/`' "v$TRAIN / core $N_CORE_PIN" || true
+        set_table_last_cell "$AGENTS" '`PigeonBox/p2p/`' "$N_P2P" || true
+        set_table_last_cell "$AGENTS" '`PigeonBox/kit/`' "$N_KIT" || true
         set_table_last_cell "$AGENTS" '`desktop/`' "desktop-v$TRAIN" || true
         set_table_last_cell "$AGENTS" '`charts/`' "chart $CHART_NEW / app $AV" || true
         local np
@@ -379,59 +405,76 @@ cmd_bump() {
             set_table_last_cell "$AGENTS" "\`PigeonBox/$np/\`" "v$TRAIN / images $AV" || true
         done
     fi
-    run git add -A
-    run git commit -qm "train: bump to $TRAIN"
+    commit_if_changed . pigeonbox "train: bump to $TRAIN" \
+        release/train.yaml deploy/nas/compose.yml deploy/nas/env.example \
+        deploy/k8s/overlays/prod/kustomization.yaml docs/architecture.md
 
-    echo "── [2/8] frontend"
-    run perl -pi -e 's/"version": "[^"]*"/"version": "'"$(echo "$FE_REF" | sed 's/^v//')"'"/ if !$done; $done=1 if /"version"/' frontend/package.json
-    echo "$TRAIN" > /dev/null # no-op 保持缩进稳定
-    run bash -c "echo '$(echo "$FE_REF" | sed 's/^v//')' > frontend/VERSION"
-    run git -C frontend add -A && run git -C frontend commit -qm "train: bump to $TRAIN"
-    run git -C frontend push -q -u origin "train/$TRAIN"
-    run gh pr create -R ${GH_ORG}/frontend --base main --head "train/$TRAIN" \
-        --title "train: bump to $TRAIN" --body "发布列车 $TRAIN 自动 bump(VERSION+package.json;合并后 version-tagger 打同号 tag,server/fnos/openwrt 构建随之钉 tag)。"
+    echo "── [2/7] frontend"
+    if [ "$N_SERVER" != "$OLD_SERVER" ]; then
+        perl -pi -e 's/"version": "[^"]*"/"version": "'"${FE_REF#v}"'"/ if !$done; $done=1 if /"version"/' frontend/package.json
+        echo "${FE_REF#v}" > frontend/VERSION
+        commit_if_changed frontend frontend "train: bump to $TRAIN" package.json VERSION
+    else
+        echo "  ✓ server 未变($AV),frontend 跳过"
+    fi
 
-    echo "── [3/8] fnos"
-    run bash -c "echo '$TRAIN' > fnos/VERSION"
-    run bash -c "printf '# 发布列车依赖钉版(真相源=hub release/train.yaml,由 release-train.sh bump 写入;勿手改)\nCORE_PIN=%s\nFRONTEND_REF=%s\n' '$N_CORE' '$FE_REF' > fnos/DEPS.env"
-    ( cd fnos && GOWORK=off go mod edit -require="github.com/pigeonbox/core@$N_CORE" && GOWORK=off go mod tidy >/dev/null 2>&1 ) || echo "  ⚠ fnos go mod 整理失败,人工检查 go.mod/go.sum"
-    run sed -i.bak "s/^version=.*/version=$TRAIN/" fnos/fnos/manifest && rm -f fnos/fnos/manifest.bak
-    run sed -i.bak "/^desc=/a\\
-changelog=$TRAIN: 发布列车 $TRAIN(底层 core $N_CORE;前端 $FE_REF;详见 Release notes)。" fnos/fnos/manifest && rm -f fnos/fnos/manifest.bak
-    branch_repo fnos "train: bump to $TRAIN"
+    echo "── [3/7] fnos"
+    local FNOS_OLD; FNOS_OLD=$(awk -F= '$1=="version"{print $2}' fnos/fnos/manifest)
+    echo "$TRAIN" > fnos/VERSION
+    printf '# 发布列车依赖钉版(真相源=hub release/train.yaml,由 release-train.sh bump 写入;勿手改)\nCORE_PIN=%s\nFRONTEND_REF=%s\n' "$N_CORE_PIN" "$FE_REF" > fnos/DEPS.env
+    local FNOS_FILES="VERSION DEPS.env"
+    if [ "$FNOS_OLD" != "$TRAIN" ]; then
+        ( cd fnos && GOWORK=off go mod edit -require="github.com/pigeonbox/core@$N_CORE_PIN" && GOWORK=off go mod tidy >/dev/null 2>&1 ) \
+            || echo "  ⚠ fnos go mod 整理失败,人工检查 go.mod/go.sum"
+        sed -i.bak "s/^version=.*/version=$TRAIN/" fnos/fnos/manifest && rm -f fnos/fnos/manifest.bak
+        sed -i.bak "/^desc=/a\\
+changelog=$TRAIN: 发布列车 $TRAIN(底层 core $N_CORE_PIN;前端 $FE_REF;详见 Release notes)。" fnos/fnos/manifest && rm -f fnos/fnos/manifest.bak
+        FNOS_FILES="$FNOS_FILES fnos/manifest go.mod go.sum"
+    fi
+    # shellcheck disable=SC2086
+    commit_if_changed fnos fnos "train: bump to $TRAIN" $FNOS_FILES
 
-    echo "── [4/8] openwrt"
-    run bash -c "echo '$TRAIN' > openwrt/VERSION"
-    run bash -c "printf '# 发布列车依赖钉版(真相源=hub release/train.yaml,由 release-train.sh bump 写入;勿手改)\nCORE_PIN=%s\nFRONTEND_REF=%s\n' '$N_CORE' '$FE_REF' > openwrt/DEPS.env"
-    ( cd openwrt && GOWORK=off go mod edit -require="github.com/pigeonbox/core@$N_CORE" && GOWORK=off go mod tidy >/dev/null 2>&1 ) || echo "  ⚠ openwrt go mod 整理失败,人工检查"
-    branch_repo openwrt "train: bump to $TRAIN"
+    echo "── [4/7] openwrt"
+    local OW_OLD; OW_OLD=$(cat openwrt/VERSION)
+    echo "$TRAIN" > openwrt/VERSION
+    printf '# 发布列车依赖钉版(真相源=hub release/train.yaml,由 release-train.sh bump 写入;勿手改)\nCORE_PIN=%s\nFRONTEND_REF=%s\n' "$N_CORE_PIN" "$FE_REF" > openwrt/DEPS.env
+    local OW_FILES="VERSION DEPS.env"
+    if [ "$OW_OLD" != "$TRAIN" ]; then
+        ( cd openwrt && GOWORK=off go mod edit -require="github.com/pigeonbox/core@$N_CORE_PIN" && GOWORK=off go mod tidy >/dev/null 2>&1 ) \
+            || echo "  ⚠ openwrt go mod 整理失败,人工检查"
+        OW_FILES="$OW_FILES go.mod go.sum"
+    fi
+    # shellcheck disable=SC2086
+    commit_if_changed openwrt openwrt "train: bump to $TRAIN" $OW_FILES
 
-    echo "── [5/8] desktop"
-    run bash -c "echo '$TRAIN' > desktop/VERSION"
-    run bash -c "printf '# 发布列车依赖钉版(真相源=hub release/train.yaml,由 release-train.sh bump 写入;勿手改)\nP2PC_REF=%s\n' '$N_P2PC' > desktop/DEPS.env"
-    run perl -pi -e 's/"version": "[^"]*"/"version": "'"$TRAIN"'"/ if !$done; $done=1 if /"version"/' desktop/src-tauri/tauri.conf.json
-    run perl -pi -e 's/^version = "[^"]*"/version = "'"$TRAIN"'"/ if !$done; $done=1 if /^version/' desktop/src-tauri/Cargo.toml
-    branch_repo desktop "train: bump to $TRAIN"
+    echo "── [5/7] desktop"
+    echo "$TRAIN" > "$DESKTOP_DIR/VERSION"
+    printf '# 发布列车依赖钉版(真相源=hub release/train.yaml,由 release-train.sh bump 写入;勿手改)\nP2PC_REF=%s\n' "$N_P2PC" > "$DESKTOP_DIR/DEPS.env"
+    perl -pi -e 's/"version": "[^"]*"/"version": "'"$TRAIN"'"/ if !$done; $done=1 if /"version"/' "$DESKTOP_DIR/src-tauri/tauri.conf.json"
+    perl -pi -e 's/^version = "[^"]*"/version = "'"$TRAIN"'"/ if !$done; $done=1 if /^version/' "$DESKTOP_DIR/src-tauri/Cargo.toml"
+    commit_if_changed "$DESKTOP_DIR" desktop "train: bump to $TRAIN" VERSION DEPS.env src-tauri/tauri.conf.json src-tauri/Cargo.toml
 
-    echo "── [6/8] NAS 打包四仓(模板→物化→VERSION)"
-    local p
+    echo "── [6/7] NAS 打包四仓(模板→物化→VERSION)"
+    local pre
     for p in $PLATFORMS; do
         run bash deploy/nas/sync.sh sync --platform "$p" --dir "$p"
-        run bash -c "echo '$TRAIN' > $p/VERSION"
-        branch_repo "$p" "train: bump to $TRAIN(镜像 $AV)"
+        echo "$TRAIN" > $p/VERSION
+        case "$p" in
+            synology) pre="VERSION spk/package/compose.yml spk/package/env.example" ;;
+            qnap) pre="VERSION qpkg/shared/compose.yml qpkg/shared/env.example" ;;
+            ugreen) pre="VERSION deploy/compose.yml deploy/env.example deploy/compose.ghcr-mirror.yml" ;;
+            terramaster) pre="VERSION deploy/compose.yml deploy/env.example" ;;
+        esac
+        # shellcheck disable=SC2086
+        commit_if_changed "$p" "$p" "train: bump to $TRAIN(镜像 $AV)" $pre
     done
 
-    echo "── [7/8] 推送 hub 分支"
-    run git push -q -u origin "train/$TRAIN"
-    run gh pr create -R $HUB_REPO --base main --head "train/$TRAIN" \
-        --title "train: bump to $TRAIN" --body "发布列车 $TRAIN(train.yaml/deploy 钉版/文档矩阵;AGENTS.md 为工作区文件已就地更新)。合并各仓 bump PR 后跑 train-release verify。"
-
-    echo "── [8/8] 完成"
+    echo "── [7/7] 完成"
     if [ "$DRY_RUN" = 1 ]; then
-        echo "✓ dry-run 结束(工作区有未提交改动即为计划内容,git checkout -- . 还原)。加 --push 实际执行。"
+        echo "✓ dry-run 结束。工作区的未提交改动即计划内容;确认后加 --push 重跑(还原请按仓 checkout 列车文件,勿整树还原)。"
     else
-        echo "✓ bump PR 已建齐。合并顺序: frontend → fnos/openwrt → desktop → NAS 四仓 → hub。"
-        echo "  合并后各仓 version-tagger 自动打 tag → Release 流水线接管;全部回挂完成后跑 train-release verify。"
+        echo "✓ bump PR 已建齐(无变更的仓已自动跳过)。合并后 version-tagger 自动打 tag → Release 流水线接管;"
+        echo "  全部回挂完成后: hub 跑 train-release 工作流(verify 等产物)→ finalize 出 v$TRAIN 快照。"
     fi
 }
 
