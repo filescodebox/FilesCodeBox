@@ -1,3 +1,9 @@
+<div align="center">
+
+<img src="https://raw.githubusercontent.com/pigeonbox/pigeonbox/main/docs/brand/logo.svg" width="112" alt="PigeonBox"/>
+
+</div>
+
 # PigeonBox(umbrella) · 文件快递柜
 
 [![License](https://img.shields.io/github/license/pigeonbox/pigeonbox)](LICENSE)

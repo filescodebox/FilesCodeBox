@@ -3,6 +3,9 @@ layout: home
 
 hero:
   name: PigeonBox
+  image:
+    src: /logo.svg
+    alt: PigeonBox
   text: 文件快递柜
   tagline: 匿名口令分享文本/文件的开源自托管平台 —— 多用户、多存储后端、Kubernetes 友好、内置 MCP AI 集成
   actions:
