@@ -38,8 +38,13 @@ def_branch() { # <repo> → 默认分支(fnos 历史原因用 master,其余 main
 }
 
 raw() { # <repo>/<ref>/<path> → stdout
-    curl -fsSL --retry 4 --retry-all-errors --connect-timeout 15 \
-        "https://raw.githubusercontent.com/${GH_ORG}/$1"
+    # 优先 gh contents API(与 CI 同源,无 CDN 缓存滞后——推完立查不吃旧内容);
+    # gh 不可用时回退 raw.githubusercontent(公网匿名可达)。
+    local repo=${1%%/*} rest=${1#*/}
+    local ref=${rest%%/*} path=${rest#*/}
+    gh api "repos/${GH_ORG}/${repo}/contents/${path}?ref=${ref}" --jq .content 2>/dev/null | base64 -d \
+        || curl -fsSL --retry 4 --retry-all-errors --connect-timeout 15 \
+            "https://raw.githubusercontent.com/${GH_ORG}/$1"
 }
 
 tag_exists() { # <repo> <tag> → 0/1
