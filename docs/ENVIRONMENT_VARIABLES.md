@@ -2,6 +2,8 @@
 
 所有环境变量优先级高于 config.yaml（12-factor 注入方式）。命名两套并存：文档化短名（如 `PORT`）与 `FCB_` 前缀全名（如 `FCB_SERVER_PORT`）。
 
+> **为什么前缀是 `FCB_` 而不是 `PIGEONBOX_`？** 前缀源自项目前身 FileCodeBox。品牌迁移至 PigeonBox 后经评估**刻意保留**：`FCB_*` 是已部署环境（compose `.env`、K8s Secret 键、NAS 包配置）的兼容性契约，改名属破坏性变更（路径型变量失配会导致升级后服务读不到既有数据），而收益仅是命名美学——与 `KUBE_`（Kubernetes）、`ES_`（Elasticsearch）等品牌变更后保留历史前缀的行业惯例一致。**请勿引入新前缀**，以免同一部署中出现两套变量名。
+
 ## 敏感项（生产必设）
 
 | 变量 | 说明 |
@@ -69,7 +71,7 @@
 | `FCB_API_TOKEN_PER_KEY_BURST` | 40 | 单 Key 限流桶容量；0 = 2×QPS |
 | `FCB_SSRF_ALLOW_PRIVATE` | false | 允许 s3/webdav 端点指向私网。**局域网 MinIO/WebDAV（飞牛 NAS）部署需设 true** |
 | `FCB_CORS_ALLOW_ORIGINS` | 空 | CORS 白名单，逗号分隔 |
-| `FCB_ENABLE_HSTS` | false | HSTS（仅 HTTPS 部署开启） |
+| `FCB_ENABLE_HSTS` | 未配置 | 三态：生产模式默认 true/开发默认 false；显式 true/false 恒生效（逃生开关） |
 
 ## 限流
 
