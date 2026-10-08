@@ -1,56 +1,39 @@
 # PigeonBox 发布列车真相源 —— 一趟列车全部组件版本/钉版/回挂期望的唯一声明。
-# 设计稿: docs/specs/2026-10-08-release-train-design.md
-#
-# 规则:
-#   - 键为扁平 dotted key(bash/CI 无第三方依赖解析);值统一裸字符串,不要引号
-#   - state: draft(列车开启中,内容在变) → shipping(产物构建/回挂验证中) → shipped(已出 hub v<train> 快照,本文件只读)
-#   - 库线(lib.*)是"本列车消费哪个版本"的记录,库线保持独立 semver 发版;
-#     终端线(terminal.*)是承诺——train-verify 逐项核对真实存在且内容一致
-#   - 新列车: scripts/release-train.sh bump TRAIN=x.y.z [--set k=v] [--push]
-#     终验:   scripts/release-train.sh verify;出快照: scripts/release-train.sh finalize
-#
-# ⚠️ as-is 盘点(2026-10-08 建档): desktop/NAS 四仓/hub 快照尚在 1.14.0,
-#    fnos/openwrt 已发 1.14.1——这是当前真实状态,下一列车统一拉齐。
+# 设计稿: docs/specs/2026-10-08-release-train-design.md;由 release-train.sh bump 生成,勿手改。
 schema: "1"
-train: "1.14.1"
+train: 1.14.2
 state: draft
-hotfix: "false"
+hotfix: false
 
-# ── 库线/服务线(独立 semver;镜像 tag 无 v 前缀,既定形态) ──
 lib.contracts: v0.8.0
-lib.core: v0.14.6
+lib.core: v0.14.7
 lib.kit: v0.3.1
 lib.p2p: v0.4.4
-images.server: 0.15.5
-images.frontend: 0.15.5
-frontend.tag: ""
-# frontend 尚未打 tag(四处构建拉 main,不可复现)——D2 已批与 server 同号,
-# 首列车起由 bump 写入同号 tag,server/fnos/openwrt 构建随之钉 tag
+images.server: 0.15.6
+images.frontend: 0.15.6
+frontend.tag: v0.15.6
 
-# ── charts(由 server tag→dispatch 自动对齐,列车只记录) ──
-charts.chart: "2.0.3"
-charts.app: v0.15.5
+charts.chart: "2.0.4"
+charts.app: v0.15.6
 
-# ── 终端线(版本策略 2026-10-07: 与产品主版本同号) ──
-terminal.desktop.tag: desktop-v1.14.0
-terminal.desktop.version: 1.14.0
+terminal.desktop.tag: desktop-v1.14.2
+terminal.desktop.version: 1.14.2
 terminal.desktop.p2pc: v0.4.4
-terminal.fnos.tag: v1.14.1
-terminal.fnos.version: 1.14.1
-terminal.fnos.core_pin: v0.14.5
-terminal.fnos.frontend_ref: main
-terminal.openwrt.tag: v1.14.1
-terminal.openwrt.version: 1.14.1
-terminal.openwrt.core_pin: v0.14.5
-terminal.openwrt.frontend_ref: main
-terminal.synology.tag: v1.14.0
-terminal.synology.version: 1.14.0
-terminal.qnap.tag: v1.14.0
-terminal.qnap.version: 1.14.0
-terminal.ugreen.tag: v1.14.0
-terminal.ugreen.version: 1.14.0
-terminal.terramaster.tag: v1.14.0
-terminal.terramaster.version: 1.14.0
+terminal.fnos.tag: v1.14.2
+terminal.fnos.version: 1.14.2
+terminal.fnos.core_pin: v0.14.7
+terminal.fnos.frontend_ref: v0.15.6
+terminal.openwrt.tag: v1.14.2
+terminal.openwrt.version: 1.14.2
+terminal.openwrt.core_pin: v0.14.7
+terminal.openwrt.frontend_ref: v0.15.6
+terminal.synology.tag: v1.14.2
+terminal.synology.version: 1.14.2
+terminal.qnap.tag: v1.14.2
+terminal.qnap.version: 1.14.2
+terminal.ugreen.tag: v1.14.2
+terminal.ugreen.version: 1.14.2
+terminal.terramaster.tag: v1.14.2
+terminal.terramaster.version: 1.14.2
 
-# ── 特性开关(灰度启用硬校验;W3 落地各仓 VERSION/DEPS.env 后由 bump 置 true) ──
-features.version_files: "false"
+features.version_files: "true"
