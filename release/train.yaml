@@ -6,7 +6,7 @@ state: draft
 hotfix: false
 
 lib.contracts: v0.8.0
-lib.core: v0.14.7
+lib.core: v0.14.8
 lib.kit: v0.3.1
 lib.p2p: v0.4.4
 images.server: 0.15.6
@@ -21,11 +21,11 @@ terminal.desktop.version: 1.14.2
 terminal.desktop.p2pc: v0.4.4
 terminal.fnos.tag: v1.14.2
 terminal.fnos.version: 1.14.2
-terminal.fnos.core_pin: v0.14.7
+terminal.fnos.core_pin: v0.14.8
 terminal.fnos.frontend_ref: v0.15.6
 terminal.openwrt.tag: v1.14.2
 terminal.openwrt.version: 1.14.2
-terminal.openwrt.core_pin: v0.14.7
+terminal.openwrt.core_pin: v0.14.8
 terminal.openwrt.frontend_ref: v0.15.6
 terminal.synology.tag: v1.14.2
 terminal.synology.version: 1.14.2
