@@ -19,7 +19,7 @@ jobs:
       - name: 生成说明(列车组件矩阵)
         run: bash scripts/release-train.sh notes "${{ github.ref_name }}" > notes.md
       - name: 创建 Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           name: "PigeonBox ${{ github.ref_name }}"
           body_path: notes.md
