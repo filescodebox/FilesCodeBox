@@ -71,11 +71,13 @@ set_table_last_cell() { # <file> <行内固定片段> <新单元格>  (管道分
     [ -s "$file.tmp" ] && mv "$file.tmp" "$file"
 }
 
-set_table_cell3() { # <file> <行首匹配> <新单元格>  (管道分隔表第三列=| 名 | 版本 | 说明)
-    local file=$1 rowre=$2 val=$3
-    grep -Eq "^$rowre" "$file" || { echo "  ⚠ 未找到表格行: $rowre" >&2; return 1; }
-    awk -v re="$rowre" -v val="$val" -F'|' -v OFS='|' '
-        $0 ~ re { $3 = " " val " " }
+set_table_cell3() { # <file> <行名(第2列,去空白)> <新单元格>  (管道分隔表第三列=| 名 | 版本 | 说明)
+    # 用 awk 字段精确比较而非动态正则——BSD awk(macOS) 对含 | 的动态 ERE
+    # 报 "illegal primary"(1.14.2/1.14.3 两轮 bump 矩阵静默失败的根因)。
+    local file=$1 name=$2 val=$3
+    grep -qF "| $name |" "$file" || { echo "  ⚠ 未找到表格行: $name" >&2; return 1; }
+    awk -v name="$name" -v val="$val" -F'|' -v OFS='|' '
+        { c = $2; gsub(/^ +| +$/, "", c); if (c == name) $3 = " " val " " }
         { print }' "$file" > "$file.tmp"
     [ -s "$file.tmp" ] && mv "$file.tmp" "$file"
 }
@@ -393,16 +395,16 @@ cmd_bump() {
     [ -s "$TRAIN_FILE.tmp" ] && mv "$TRAIN_FILE.tmp" "$TRAIN_FILE"
     # 文档矩阵(architecture.md 单元格 + AGENTS.md 末列,工作区文件不入库)
     local AV="v$N_SERVER"
-    set_table_cell3 docs/architecture.md '^\| contracts \|' "$N_CONTRACTS" || true
-    set_table_cell3 docs/architecture.md '^\| core \|' "$N_CORE" || true
-    set_table_cell3 docs/architecture.md '^\| server \|' "$AV" || true
-    set_table_cell3 docs/architecture.md '^\| fnos \|' "v$TRAIN(内置 core $N_CORE_PIN)" || true
-    set_table_cell3 docs/architecture.md '^\| openwrt \|' "v$TRAIN(内置 core $N_CORE_PIN)" || true
-    set_table_cell3 docs/architecture.md '^\| NAS 打包四仓 \|' "v$TRAIN(钉 server/frontend 镜像 $AV)" || true
-    set_table_cell3 docs/architecture.md '^\| p2p \|' "$N_P2P" || true
-    set_table_cell3 docs/architecture.md '^\| kit \|' "$N_KIT" || true
-    set_table_cell3 docs/architecture.md '^\| desktop \|' "desktop-v$TRAIN" || true
-    set_table_cell3 docs/architecture.md '^\| charts \|' "chart $CHART_NEW(app $AV)" || true
+    set_table_cell3 docs/architecture.md 'contracts' "$N_CONTRACTS" || true
+    set_table_cell3 docs/architecture.md 'core' "$N_CORE" || true
+    set_table_cell3 docs/architecture.md 'server' "$AV" || true
+    set_table_cell3 docs/architecture.md 'fnos' "v$TRAIN(内置 core $N_CORE_PIN)" || true
+    set_table_cell3 docs/architecture.md 'openwrt' "v$TRAIN(内置 core $N_CORE_PIN)" || true
+    set_table_cell3 docs/architecture.md 'NAS 打包四仓' "v$TRAIN(钉 server/frontend 镜像 $AV)" || true
+    set_table_cell3 docs/architecture.md 'p2p' "$N_P2P" || true
+    set_table_cell3 docs/architecture.md 'kit' "$N_KIT" || true
+    set_table_cell3 docs/architecture.md 'desktop' "desktop-v$TRAIN" || true
+    set_table_cell3 docs/architecture.md 'charts' "chart $CHART_NEW(app $AV)" || true
     local AGENTS="$PWD/../AGENTS.md"
     if [ -f "$AGENTS" ]; then
         set_table_last_cell "$AGENTS" '`PigeonBox/` |' "v$TRAIN" || true
