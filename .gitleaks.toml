@@ -1,0 +1,25 @@
+# gitleaks 配置（CI Security Scan 与本地 `gitleaks detect` 自动读取）。
+# 默认规则全量继承，仅豁免已核实误报——豁免必须写明理由，禁止无说明扩条。
+[extend]
+useDefault = true
+
+# 文档/示例中的 curl Authorization 头与占位 token（演示用途，非真实凭据）
+[[allowlists]]
+description = "docs/examples 的示例凭据"
+paths = [
+  '''^docs/''',
+  '''^examples/''',
+]
+
+# e2e 脚本自起 MinIO/server 的测试夹具密钥（本地回环，用完即弃）
+[[allowlists]]
+description = "e2e 脚本测试夹具密钥"
+paths = ['''^scripts/e2e-''']
+
+# 拆分前单体的历史路径（仅存在于 git 历史，现行 hub 布局已无这些目录）
+[[allowlists]]
+description = "历史单体路径（backend/idl、internal 测试）"
+paths = [
+  '''^backend/idl/.*\.thrift$''',
+  '''^internal/.*_test\.go$''',
+]
