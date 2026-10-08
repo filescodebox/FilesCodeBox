@@ -1,0 +1,8 @@
+# Dependabot 依赖保活。go.mod 不进 Dependabot：生态模块版本由发布列车
+# (hub release/train.yaml → make train-bump) 统一收口，双头管理必漂移。
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

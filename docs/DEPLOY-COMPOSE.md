@@ -19,7 +19,7 @@ curl http://localhost:12345/live    # 健康检查
 > **局域网访问**:入口默认绑定 `127.0.0.1`(仅部署机本机可用,安全默认——防绕过反代直连)。
 > 局域网其他设备访问时,在 `.env` 里设 `FCB_API_BIND=0.0.0.0` 后 `docker compose up -d` 重建即可。
 
-默认管理员 `admin / admin123`(未注入 `FCB_ADMIN_PASSWORD` 时,启动日志有警告),登录后请立即改密。
+默认管理员 `admin / admin123`（仅开发模式；生产模式未注入 `FCB_ADMIN_PASSWORD` 会**拒绝启动**——安全默认，或设 `FCB_DISABLE_DEFAULT_ADMIN=true` 走 /setup 首启向导），登录后请立即改密。
 
 内置 redis 密码:.env 设 `FCB_REDIS_PASSWORD=<随机串>` 即 server 与 redis 两端同时生效(未设时编排内网无密码,端口不对宿主发布;生产建议设置)。
 

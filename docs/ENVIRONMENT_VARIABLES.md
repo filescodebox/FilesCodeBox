@@ -7,7 +7,7 @@
 | 变量 | 说明 |
 |---|---|
 | `FCB_JWT_SECRET` | JWT 签名密钥（全环境强制：空或已知默认值将拒绝启动，≥32 位强随机） |
-| `FCB_ADMIN_PASSWORD` | 首个管理员 admin 的密码（默认 admin123，生产必须覆盖） |
+| `FCB_ADMIN_PASSWORD` | 首个管理员 admin 的密码（默认 admin123 仅限开发；生产模式未注入则**拒绝启动**，或设 `FCB_DISABLE_DEFAULT_ADMIN=true` 走 /setup 向导。仅在库中无 admin 且即将创建时校验，存量部署升级不受影响） |
 | `FCB_DATABASE_PASSWORD` | MySQL/Postgres 密码 |
 | `FCB_REDIS_PASSWORD` | Redis 密码 |
 | `FCB_PRESIGN_SIGNING_KEY` | 预签名直传专用签名密钥（缺省复用 jwt_secret） |
