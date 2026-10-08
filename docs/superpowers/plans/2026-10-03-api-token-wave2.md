@@ -67,5 +67,5 @@
 
 ### Task 5: 使用指南 + 收尾
 
-- [ ] Step 1 hub `docs/API-TOKENS.md`：获取 Key 两种姿势（页面/curl+JWT）、认证头规范（Bearer fcb_sk_ 首选/ApiKey/X-API-Key，禁 query）、direct+chunk+presign curl 示例、管理自己分享示例、防护机制说明（lockout/限流/fail-closed/吊销即时生效）、`PB_API_TOKEN_ENABLED`、**HTTP 明文部署警告**（215 类部署）。
+- [ ] Step 1 hub `docs/API-TOKENS.md`：获取 Key 两种姿势（页面/curl+JWT）、认证头规范（Bearer pb_sk_ 首选/ApiKey/X-API-Key，禁 query）、direct+chunk+presign curl 示例、管理自己分享示例、防护机制说明（lockout/限流/fail-closed/吊销即时生效）、`PB_API_TOKEN_ENABLED`、**HTTP 明文部署警告**（215 类部署）。
 - [ ] Step 2 hub 提交（ENV 文档 + API-TOKENS.md + 计划勾选）；更新记忆与 MEMORY.md。

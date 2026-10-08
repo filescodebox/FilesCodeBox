@@ -1,6 +1,6 @@
 # API Token（个人访问令牌）使用指南
 
-用户级 API Key（`fcb_sk_` 前缀）用于脚本 / CI / 第三方客户端直接调用 PigeonBox 接口，完成上传与"我的分享"管理，无需浏览器会话。
+用户级 API Key（`pb_sk_` 前缀）用于脚本 / CI / 第三方客户端直接调用 PigeonBox 接口，完成上传与"我的分享"管理，无需浏览器会话。
 
 ## 1. 获取 Key
 
@@ -43,9 +43,9 @@ curl -s -X POST http://localhost:12345/user/api-keys/revoke-all \
 三种请求头等价（**不接受 URL query 传参**——会被日志/Referer 泄露，服务端直接忽略）：
 
 ```
-Authorization: Bearer fcb_sk_xxx   # 首选（标准 HTTP 客户端习惯；按 fcb_sk_ 前缀与 JWT 自动区分）
-Authorization: ApiKey fcb_sk_xxx   # 兼容
-X-API-Key: fcb_sk_xxx              # 兼容
+Authorization: Bearer pb_sk_xxx   # 首选（标准 HTTP 客户端习惯；按 pb_sk_ 前缀与 JWT 自动区分）
+Authorization: ApiKey pb_sk_xxx   # 兼容
+X-API-Key: pb_sk_xxx              # 兼容
 ```
 
 ## 3. Key 能做什么
@@ -63,7 +63,7 @@ X-API-Key: fcb_sk_xxx              # 兼容
 ### 上传示例
 
 ```bash
-KEY="fcb_sk_xxx"
+KEY="pb_sk_xxx"
 
 # 文本
 curl -s -X POST http://localhost:12345/share/text/ \
@@ -98,4 +98,4 @@ curl -s "http://localhost:12345/api/v1/user/shares?page=1&page_size=20" \
 
 ## 6. Swagger
 
-`/api-docs` 页右上 Authorize 可填入 Key（bearerAuth 接受 `fcb_sk_` 值，或选 ApiKeyAuth 填 `X-API-Key`），此后 Try it out 自动携带。
+`/api-docs` 页右上 Authorize 可填入 Key（bearerAuth 接受 `pb_sk_` 值，或选 ApiKeyAuth 填 `X-API-Key`），此后 Try it out 自动携带。

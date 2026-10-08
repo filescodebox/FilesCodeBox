@@ -66,7 +66,7 @@
 | `PB_DOWNLOAD_TOKEN_ENABLED` | true | 取件下载令牌（HMAC 时间窗）强制校验 |
 | `PB_LOCKOUT_ENABLED` | true | 登录/取件失败计数锁定 |
 | `PB_LOCKOUT_MAX_ATTEMPTS` | 10 | 窗口内失败阈值 |
-| `PB_API_TOKEN_ENABLED` | true | 用户级 API Key（`fcb_sk_`）认证总开关；false 时携带 Key 的请求一律 401（紧急停用），详见 docs/API-TOKENS.md |
+| `PB_API_TOKEN_ENABLED` | true | 用户级 API Key（`pb_sk_`）认证总开关；false 时携带 Key 的请求一律 401（紧急停用），详见 docs/API-TOKENS.md |
 | `PB_API_TOKEN_PER_KEY_QPS` | 20 | 单 Key 独立限流（令牌桶，进程内）；0 = 不限 |
 | `PB_API_TOKEN_PER_KEY_BURST` | 40 | 单 Key 限流桶容量；0 = 2×QPS |
 | `PB_SSRF_ALLOW_PRIVATE` | false | 允许 s3/webdav 端点指向私网。**局域网 MinIO/WebDAV（飞牛 NAS）部署需设 true** |

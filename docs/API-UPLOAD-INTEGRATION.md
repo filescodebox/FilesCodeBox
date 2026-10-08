@@ -4,13 +4,13 @@
 当前示例统一以内部部署 `http://10.44.129.215` 为 Base URL（下文记作 `$BASE`），对接其他部署时替换即可。
 所有接口均已在 2026-10-04 对该部署实测通过。
 
-> 认证凭据（API Key）的申请与吊销见 [API-TOKENS.md](API-TOKENS.md)；本文假设你已持有一把 `fcb_sk_` 开头的 Key。
+> 认证凭据（API Key）的申请与吊销见 [API-TOKENS.md](API-TOKENS.md)；本文假设你已持有一把 `pb_sk_` 开头的 Key。
 
 ## 0. 30 秒上手
 
 ```bash
 BASE=http://10.44.129.215
-KEY=fcb_sk_xxxxxxxxxxxxxxxxxxxx
+KEY=pb_sk_xxxxxxxxxxxxxxxxxxxx
 
 # 上传一个文件（≤10MB），拿到取件码
 curl -X POST "$BASE/share/file/" \
@@ -30,9 +30,9 @@ curl -X POST "$BASE/share/file/" \
 三种请求头等价，任选其一；**不支持 URL query 传 Key**（防日志泄露，服务端直接忽略）：
 
 ```
-Authorization: Bearer fcb_sk_xxx    # 首选
-Authorization: ApiKey fcb_sk_xxx
-X-API-Key: fcb_sk_xxx
+Authorization: Bearer pb_sk_xxx    # 首选
+Authorization: ApiKey pb_sk_xxx
+X-API-Key: pb_sk_xxx
 ```
 
 - 携带 Key：上传归因到你的账号（`upload_type=authenticated`），按账号配额计。
@@ -226,7 +226,7 @@ DELETE /api/v1/user/shares/{code}/hard    # 永久删除（仅已软删的）
 import hashlib, os, requests
 
 BASE = "http://10.44.129.215"
-KEY  = "fcb_sk_xxxxxxxxxxxx"
+KEY  = "pb_sk_xxxxxxxxxxxx"
 H    = {"Authorization": f"Bearer {KEY}"}
 
 def sha256_file(path, buf=1 << 20):

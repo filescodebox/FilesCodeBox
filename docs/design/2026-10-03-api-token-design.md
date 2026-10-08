@@ -20,7 +20,7 @@
 | 设施 | 位置 | 状态 |
 |---|---|---|
 | `user_api_keys` 表 | `core/repo/db/model/user_api_key.go` | ✅ 含迁移 SQL |
-| 签发/列表/吊销 service | `core/app/user/service.go:438-535` | ✅ `fcb_sk_` 前缀 + 16 字节 crypto/rand（128bit）、SHA-256 存储、明文仅签发时返回一次、可选过期（`ExpiresAt`/`ExpiresInDays`）、上限 5 把 |
+| 签发/列表/吊销 service | `core/app/user/service.go:438-535` | ✅ `pb_sk_` 前缀 + 16 字节 crypto/rand（128bit）、SHA-256 存储、明文仅签发时返回一次、可选过期（`ExpiresAt`/`ExpiresInDays`）、上限 5 把 |
 | 管理端点 | `GET/POST/DELETE /user/api-keys`（JWT 保护） | ✅ 已挂 `AuthMiddleware` |
 | API Key 认证中间件 | `core/transport/http/middleware/api_key_auth.go` | ⚠️ **实现完整但全仓零挂载（孤儿代码）** |
 | 上下文键兼容 | 注入 `user_id/username/role/api_key_id/auth_type` | ✅ 与 JWT 中间件键一致，handler 零改动 |
@@ -65,12 +65,12 @@
 认证头定稿（对齐业界惯例：GitHub/GitLab/Stripe 的 PAT 均为"前缀化密钥 + Bearer 头"）：
 
 ```
-Authorization: Bearer fcb_sk_xxx   ← 首选，标准 HTTP 客户端/curl 习惯
-Authorization: ApiKey fcb_sk_xxx   ← 兼容保留
-X-API-Key: fcb_sk_xxx              ← 兼容保留（已在 CORS 白名单）
+Authorization: Bearer pb_sk_xxx   ← 首选，标准 HTTP 客户端/curl 习惯
+Authorization: ApiKey pb_sk_xxx   ← 兼容保留
+X-API-Key: pb_sk_xxx              ← 兼容保留（已在 CORS 白名单）
 ```
 
-`Bearer` 与 JWT 的区分**由前缀确定性判定**：`fcb_sk_` 开头 → 按 API Key 处理，否则按 JWT（JWT 恒为 `eyJ` 开头的 base64，无歧义、无需试探解析）。
+`Bearer` 与 JWT 的区分**由前缀确定性判定**：`pb_sk_` 开头 → 按 API Key 处理，否则按 JWT（JWT 恒为 `eyJ` 开头的 base64，无歧义、无需试探解析）。
 **删除 `?api_key=` query 支持**（不留配置开关，少一个开关多一分安全）。
 
 ## 4. 详细设计
@@ -83,7 +83,7 @@ X-API-Key: fcb_sk_xxx              ← 兼容保留（已在 CORS 白名单）
 
 1. `pkg/middleware.OptionalIdentityMiddleware()`（新）：
    实现为 `OptionalAuthMiddleware()`（既有，JWT）+ `APIKeyAuth` 收紧版 Optional 变体，顺序串联。先 JWT 后 Key，天然无覆盖冲突；都未携带 → 匿名放行。
-   凭证分发在提取层完成：`Bearer fcb_sk_*` / `ApiKey` / `X-API-Key` → Key；其余 Bearer → JWT。JWT 失效在 Optional 语义下按既有行为降级匿名（会话过期的 UX 惯例），与 Key 的 fail-closed（见 4.2-d）有意不对称：携带 Key 是显式认证意图，失效 JWT 是会话到期。
+   凭证分发在提取层完成：`Bearer pb_sk_*` / `ApiKey` / `X-API-Key` → Key；其余 Bearer → JWT。JWT 失效在 Optional 语义下按既有行为降级匿名（会话过期的 UX 惯例），与 Key 的 fail-closed（见 4.2-d）有意不对称：携带 Key 是显式认证意图，失效 JWT 是会话到期。
    挂载点（替换现有 `OptionalAuthMiddleware()`，`gen/router/*/middleware.go` 为人工维护、重生成不覆盖）：
    - `gen/router/share/middleware.go`：`_sharetextMw`、`_sharefileMw`、`_selectMw`
    - `gen/router/chunk/middleware.go`、`gen/router/presign/middleware.go`：所有 Optional 挂载点（impl 时逐一核对）
@@ -104,7 +104,7 @@ X-API-Key: fcb_sk_xxx              ← 兼容保留（已在 CORS 白名单）
 | # | 缺陷 | 修法 |
 |---|---|---|
 | a | 不查用户状态 | 验 Key 后校验 `user.Status == "active"`，否则 401；banned/inactive 用户 Key 立即全失效 |
-| b | query 传 Key | `extractAPIKey` 删除 `?api_key=` 分支，只留三种 Header（`Bearer fcb_sk_*` / `ApiKey` / `X-API-Key`） |
+| b | query 传 Key | `extractAPIKey` 删除 `?api_key=` 分支，只留三种 Header（`Bearer pb_sk_*` / `ApiKey` / `X-API-Key`） |
 | c | `TouchLastUsed` 每请求写库 | 进程内 `sync.Map[keyID]lastTouch` 节流：每 Key 60s 最多写一次（多实例各自节流即可，目的只是降写放大） |
 | d | Optional 变体 fail-open | 语义改为：**未携带 Key → 匿名放行；携带但无效/过期/吊销/用户禁用 → 一律 401 拒绝**。统一文案 `Invalid API Key`，不区分具体原因（防枚举） |
 | e | 无防爆破 | 携带 Key 且校验失败 → 复用现有 lockout（`lockout.RecordFailure("apikey|" + ResolveClientIP)`，CheckLocked 前置），走默认 10 次/5 分钟锁定参数；成功验证 → Reset |

@@ -54,7 +54,7 @@ docker compose --profile nginx up -d     # 占用宿主 80(PB_HTTP_PORT 可改)
 
 启用反代后建议再设 `PB_API_BIND=127.0.0.1` 把对外入口(frontend 容器)收进回环:部分宿主防火墙/NAT 会把外部直连流量 SNAT 成 docker 网关地址(恰好在可信网段内),此时直连客户端可伪造 XFF 绕过按 IP 的限流与锁定;收进回环后所有流量必须走反代,来源 IP 全部可信解析。
 
-HTTPS / 子路径部署:模板 `deploy/nginx/nginx.conf` 内置了 443 server 块与 `/fcb/` 子路径前缀改写的完整注释示例,取消注释、挂载证书即可,此处不重复。该文件头部还有 `client_max_body_size` 与后端 `upload.upload_size / max_file_size / chunk_size` 的三处配平说明,调上传上限前先读。
+HTTPS / 子路径部署:模板 `deploy/nginx/nginx.conf` 内置了 443 server 块与 `/pb/` 子路径前缀改写的完整注释示例,取消注释、挂载证书即可,此处不重复。该文件头部还有 `client_max_body_size` 与后端 `upload.upload_size / max_file_size / chunk_size` 的三处配平说明,调上传上限前先读。
 
 数据面路径相关的路由(下载/分片/预签名)已在模板中关闭缓冲并放宽超时,大文件不再占用 nginx 缓冲区,慢速客户端不会被 60s 默认超时切断。
 

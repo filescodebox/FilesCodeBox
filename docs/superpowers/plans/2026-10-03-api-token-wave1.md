@@ -376,15 +376,15 @@ import (
 )
 
 // apiKeyPlainPrefix API Key 明文前缀（与 app/user 签发端一致）。
-// 同时承担 Bearer 凭证与 JWT 的确定性区分：fcb_sk_ 开头必为 Key（JWT 恒为 eyJ 开头）。
-const apiKeyPlainPrefix = "fcb_sk_"
+// 同时承担 Bearer 凭证与 JWT 的确定性区分：pb_sk_ 开头必为 Key（JWT 恒为 eyJ 开头）。
+const apiKeyPlainPrefix = "pb_sk_"
 
 // errInvalidAPIKey 统一拒绝原因（对外一律 401 "Invalid API Key"，不区分过期/吊销/封禁，防枚举）。
 var errInvalidAPIKey = errors.New("invalid api key")
 
 // extractAPIKey 从请求头提取 API Key。拒绝 query 传参（防访问日志/Referer/代理日志泄露）。
 // 支持三种形式：
-//  1. Authorization: Bearer fcb_sk_xxx（首选）
+//  1. Authorization: Bearer pb_sk_xxx（首选）
 //  2. Authorization: ApiKey xxx
 //  3. X-API-Key: xxx
 //
@@ -555,7 +555,7 @@ Expected: 无 vet 告警；既有 ratelimit/lockout/clientip 测试不破。
 - [x] **Step 6: 提交**
 
 ```bash
-cd core && git add pkg/middleware/apikey.go pkg/middleware/apikey_test.go && git commit -m "feat(middleware): API Key 认证核心——fail-closed/防爆破/Touch节流/Bearer fcb_sk_ 兼容" -- pkg/middleware/apikey.go pkg/middleware/apikey_test.go
+cd core && git add pkg/middleware/apikey.go pkg/middleware/apikey_test.go && git commit -m "feat(middleware): API Key 认证核心——fail-closed/防爆破/Touch节流/Bearer pb_sk_ 兼容" -- pkg/middleware/apikey.go pkg/middleware/apikey_test.go
 ```
 
 ---
@@ -626,7 +626,7 @@ func _presignMw() []app.HandlerFunc {
 
 ```go
 	// ===== 自定义 REST API（用户 JWT 或 API Key 认证）=====
-	// UserOrAPIKey：浏览器走 JWT（含黑名单），第三方脚本走 X-API-Key / Bearer fcb_sk_。
+	// UserOrAPIKey：浏览器走 JWT（含黑名单），第三方脚本走 X-API-Key / Bearer pb_sk_。
 	// 覆盖我的分享管理与站内通知；Key 永不进入 /admin 与 /user/api-keys（Key 不能管 Key）。
 	apiV1 := r.Group("/api/v1", middleware.UserOrAPIKey())
 ```
