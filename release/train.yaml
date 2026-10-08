@@ -31,6 +31,8 @@ terminal.synology.tag: v1.14.3
 terminal.synology.version: 1.14.3
 terminal.qnap.tag: v1.14.3
 terminal.qnap.version: 1.14.3
+terminal.qnap.core_pin: v0.14.9
+terminal.qnap.frontend_ref: v0.15.7
 terminal.ugreen.tag: v1.14.3
 terminal.ugreen.version: 1.14.3
 terminal.terramaster.tag: v1.14.3

@@ -10,6 +10,7 @@ use (
 	./server
 	./fnos
 	./openwrt
+	./qnap
 	./p2p
 	./kit
 )

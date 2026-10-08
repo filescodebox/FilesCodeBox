@@ -26,7 +26,7 @@ cd "$(dirname "$0")/.."
 TRAIN_FILE=release/train.yaml
 GH_ORG=pigeonbox
 HUB_REPO=pigeonbox/pigeonbox
-PLATFORMS="synology qnap ugreen terramaster"
+PLATFORMS="synology ugreen terramaster"
 
 # ───────────────────────── 基础工具 ─────────────────────────
 
@@ -158,7 +158,7 @@ cmd_verify() {
     if grep -qE '^replace ' go.work; then fail "go.work 仍存在版本化 replace(应纯 use 映射)"
     else ok "go.work 纯 use 映射"; fi
 
-    echo "── 4. NAS 打包四仓物化"
+    echo "── 4. NAS 打包三仓物化(qnap 已切原生走第 6/7 节)"
     if [ $ci = 0 ]; then
         bash deploy/nas/sync.sh check --all >/dev/null 2>&1 \
             && ok "sync.sh check --all 一致" \
@@ -187,7 +187,7 @@ cmd_verify() {
 
     echo "── 6. 终端仓钉版与双写面"
     local t v corep
-    for t in fnos openwrt; do
+    for t in fnos openwrt qnap; do
         v=$(tget "terminal.$t.version"); corep=$(tget "terminal.$t.core_pin")
         local BR; BR=$(def_branch "$t")
         tagchk "$t" "$(tget "terminal.$t.tag")" "$t"
@@ -218,7 +218,7 @@ cmd_verify() {
             [ "$(raw "$t/$(def_branch "$t")/VERSION" 2>/dev/null | tr -d '[:space:]')" = "$v" ] \
                 && ok "$t VERSION = $v" || soft_fail "$t VERSION ≠ $v(发版走 train bump,勿手改)"
         done
-        for t in fnos openwrt; do
+        for t in fnos openwrt qnap; do
             local DE; DE=$(raw "$t/$(def_branch "$t")/DEPS.env" 2>/dev/null) || DE=""
             [ "$(grep -E '^CORE_PIN=' <<<"$DE" | cut -d= -f2)" = "$(tget "terminal.$t.core_pin")" ] \
                 && ok "$t DEPS CORE_PIN" || soft_fail "$t DEPS CORE_PIN ≠ train.yaml"
@@ -240,7 +240,7 @@ cmd_verify() {
     echo "── 9. 文档版本矩阵(hub docs/architecture.md)"
     local row want
     for row in "contracts:$C_CONTRACTS" "core:$C_CORE" "server:v$SERVER_V" \
-        "fnos:$(tget terminal.fnos.version)" "openwrt:$(tget terminal.openwrt.version)" \
+        "fnos:$(tget terminal.fnos.version)" "openwrt:$(tget terminal.openwrt.version)" "qnap:$(tget terminal.qnap.version)" \
         "p2p:$C_P2P" "kit:$C_KIT" "desktop:$(tget terminal.desktop.tag)"; do
         want=${row#*:}
         awk -F'|' -v r="^\\| ${row%%:*} \\|" 'NR==FNR{next}' /dev/null 2>/dev/null
@@ -339,7 +339,7 @@ cmd_bump() {
     # desktop 检出在工作区根(../desktop),其余模块在 hub 目录内
     local DESKTOP_DIR="$PWD/../desktop"
     local d
-    for d in . frontend fnos openwrt $PLATFORMS; do
+    for d in . frontend fnos openwrt qnap $PLATFORMS; do
         [ -d "$d/.git" ] || { echo "✗ 缺 $d 检出(先 make setup)" >&2; exit 1; }
         git -C "$d" fetch -q origin
     done
@@ -384,6 +384,10 @@ cmd_bump() {
         echo "terminal.openwrt.version: $TRAIN"
         echo "terminal.openwrt.core_pin: $N_CORE_PIN"
         echo "terminal.openwrt.frontend_ref: $FE_REF"
+        echo "terminal.qnap.tag: v$TRAIN"
+        echo "terminal.qnap.version: $TRAIN"
+        echo "terminal.qnap.core_pin: $N_CORE_PIN"
+        echo "terminal.qnap.frontend_ref: $FE_REF"
         local p
         for p in $PLATFORMS; do
             echo "terminal.$p.tag: v$TRAIN"
@@ -400,7 +404,8 @@ cmd_bump() {
     set_table_cell3 docs/architecture.md 'server' "$AV" || true
     set_table_cell3 docs/architecture.md 'fnos' "v$TRAIN(内置 core $N_CORE_PIN)" || true
     set_table_cell3 docs/architecture.md 'openwrt' "v$TRAIN(内置 core $N_CORE_PIN)" || true
-    set_table_cell3 docs/architecture.md 'NAS 打包四仓' "v$TRAIN(钉 server/frontend 镜像 $AV)" || true
+    set_table_cell3 docs/architecture.md 'qnap' "v$TRAIN(原生,内置 core $N_CORE_PIN)" || true
+    set_table_cell3 docs/architecture.md 'NAS 打包三仓' "v$TRAIN(钉 server/frontend 镜像 $AV)" || true
     set_table_cell3 docs/architecture.md 'p2p' "$N_P2P" || true
     set_table_cell3 docs/architecture.md 'kit' "$N_KIT" || true
     set_table_cell3 docs/architecture.md 'desktop' "desktop-v$TRAIN" || true
@@ -414,6 +419,7 @@ cmd_bump() {
         set_table_last_cell "$AGENTS" '`PigeonBox/frontend/`' "$FE_REF(VERSION 真相源,tag 随列车)" || true
         set_table_last_cell "$AGENTS" '`PigeonBox/fnos/`' "v$TRAIN / core $N_CORE_PIN" || true
         set_table_last_cell "$AGENTS" '`PigeonBox/openwrt/`' "v$TRAIN / core $N_CORE_PIN" || true
+        set_table_last_cell "$AGENTS" '`PigeonBox/qnap/`' "v$TRAIN / core $N_CORE_PIN" || true
         set_table_last_cell "$AGENTS" '`PigeonBox/p2p/`' "$N_P2P" || true
         set_table_last_cell "$AGENTS" '`PigeonBox/kit/`' "$N_KIT" || true
         set_table_last_cell "$AGENTS" '`desktop/`' "desktop-v$TRAIN" || true
@@ -452,7 +458,7 @@ changelog=$TRAIN: 发布列车 $TRAIN(底层 core $N_CORE_PIN;前端 $FE_REF;详
     # shellcheck disable=SC2086
     commit_if_changed fnos fnos "train: bump to $TRAIN" $FNOS_FILES
 
-    echo "── [4/7] openwrt"
+    echo "── [4/8] openwrt"
     local OW_OLD; OW_OLD=$(cat openwrt/VERSION)
     echo "$TRAIN" > openwrt/VERSION
     printf '# 发布列车依赖钉版(真相源=hub release/train.yaml,由 release-train.sh bump 写入;勿手改)\nCORE_PIN=%s\nFRONTEND_REF=%s\n' "$N_CORE_PIN" "$FE_REF" > openwrt/DEPS.env
@@ -465,21 +471,33 @@ changelog=$TRAIN: 发布列车 $TRAIN(底层 core $N_CORE_PIN;前端 $FE_REF;详
     # shellcheck disable=SC2086
     commit_if_changed openwrt openwrt "train: bump to $TRAIN" $OW_FILES
 
-    echo "── [5/7] desktop"
+    echo "── [5/8] qnap"
+    local QN_OLD; QN_OLD=$(cat qnap/VERSION)
+    echo "$TRAIN" > qnap/VERSION
+    printf '# 发布列车依赖钉版(真相源=hub release/train.yaml,由 release-train.sh bump 写入;勿手改)\nCORE_PIN=%s\nFRONTEND_REF=%s\n' "$N_CORE_PIN" "$FE_REF" > qnap/DEPS.env
+    local QN_FILES="VERSION DEPS.env"
+    if [ "$QN_OLD" != "$TRAIN" ]; then
+        ( cd qnap && GOWORK=off go mod edit -require="github.com/pigeonbox/core@$N_CORE_PIN" && GOWORK=off go mod tidy >/dev/null 2>&1 ) \
+            || echo "  ⚠ qnap go mod 整理失败,人工检查"
+        QN_FILES="$QN_FILES go.mod go.sum"
+    fi
+    # shellcheck disable=SC2086
+    commit_if_changed qnap qnap "train: bump to $TRAIN" $QN_FILES
+
+    echo "── [6/8] desktop"
     echo "$TRAIN" > "$DESKTOP_DIR/VERSION"
     printf '# 发布列车依赖钉版(真相源=hub release/train.yaml,由 release-train.sh bump 写入;勿手改)\nP2PC_REF=%s\n' "$N_P2PC" > "$DESKTOP_DIR/DEPS.env"
     perl -pi -e 's/"version": "[^"]*"/"version": "'"$TRAIN"'"/ if !$done; $done=1 if /"version"/' "$DESKTOP_DIR/src-tauri/tauri.conf.json"
     perl -pi -e 's/^version = "[^"]*"/version = "'"$TRAIN"'"/ if !$done; $done=1 if /^version/' "$DESKTOP_DIR/src-tauri/Cargo.toml"
     commit_if_changed "$DESKTOP_DIR" desktop "train: bump to $TRAIN" VERSION DEPS.env src-tauri/tauri.conf.json src-tauri/Cargo.toml
 
-    echo "── [6/7] NAS 打包四仓(模板→物化→VERSION)"
+    echo "── [7/8] NAS 打包三仓(模板→物化→VERSION)"
     local pre
     for p in $PLATFORMS; do
         run bash deploy/nas/sync.sh sync --platform "$p" --dir "$p"
         echo "$TRAIN" > $p/VERSION
         case "$p" in
             synology) pre="VERSION spk/package/compose.yml spk/package/env.example" ;;
-            qnap) pre="VERSION qpkg/shared/compose.yml qpkg/shared/env.example" ;;
             ugreen) pre="VERSION deploy/compose.yml deploy/env.example deploy/compose.ghcr-mirror.yml" ;;
             terramaster) pre="VERSION deploy/compose.yml deploy/env.example" ;;
         esac
@@ -487,7 +505,7 @@ changelog=$TRAIN: 发布列车 $TRAIN(底层 core $N_CORE_PIN;前端 $FE_REF;详
         commit_if_changed "$p" "$p" "train: bump to $TRAIN(镜像 $AV)" $pre
     done
 
-    echo "── [7/7] 完成"
+    echo "── [8/8] 完成"
     if [ "$DRY_RUN" = 1 ]; then
         echo "✓ dry-run 结束。工作区的未提交改动即计划内容;确认后加 --push 重跑(还原请按仓 checkout 列车文件,勿整树还原)。"
     else
@@ -540,9 +558,10 @@ EOF
     echo "| desktop | $(tget terminal.desktop.tag) | [desktop-v*](https://github.com/pigeonbox/pigeonbox/releases?q=desktop-v&expanded=false) Windows/macOS/Linux 安装包(p2pc $(tget terminal.desktop.p2pc)) |"
     echo "| fnos | $(tget terminal.fnos.tag) | [fnos-v*](https://github.com/pigeonbox/pigeonbox/releases?q=fnos-v&expanded=false) fpk 应用包 |"
     echo "| openwrt | $(tget terminal.openwrt.tag) | [openwrt-v*](https://github.com/pigeonbox/pigeonbox/releases?q=openwrt-v&expanded=false) ipk + apk |"
+    echo "| qnap | $(tget terminal.qnap.tag) | [qnap-v*](https://github.com/pigeonbox/pigeonbox/releases?q=qnap-v&expanded=false) QPKG 原生应用包(免 Container Station) |"
     echo "| p2p | $(tget lib.p2p) | [p2p-v*](https://github.com/pigeonbox/pigeonbox/releases?q=p2p-v&expanded=false) p2pc 二进制;镜像 ghcr.io/pigeonbox/p2p |"
     local p
-    for p in synology qnap ugreen terramaster; do
+    for p in synology ugreen terramaster; do
         echo "| $p | $(tget terminal.$p.tag) | [${p}-v*](https://github.com/pigeonbox/pigeonbox/releases?q=${p}-v&expanded=false) 部署包 |"
     done
     echo ""

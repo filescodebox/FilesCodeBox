@@ -82,7 +82,8 @@ desktop 不进 go.work(Rust 项目),经 HTTP API 连接任意 PigeonBox 服务�
 | server | v0.15.7 | **v0.15.x=单机内存模式列车(core v0.14.0)**;v0.14.x=多副本拆分列车(core v0.13.0,PB_DEPLOY_MODE);纯后端镜像(默认 release 模式,alpine 钉 3.22);frontend 分离镜像由同一 `v*` tag 同步发布(`ghcr.io/pigeonbox/server` / `frontend`) |
 | fnos | v1.14.3(内置 core v0.14.9) | 镜像 `ghcr.io/pigeonbox/fnos`(旧镜像 `pigeonbox-fnos` 冻结在 v0.2.6,更早 `pigeonbox-fnos` 冻结在 v0.2.1) |
 | openwrt | v1.14.3(内置 core v0.14.9) | OpenWrt/iStoreOS 原生 ipk:procd 托管,UCI 配置(`/etc/config/pigeonbox`)+drop-in config.yaml,双架构 x86_64/aarch64_generic;ipk 回挂 hub Release(`openwrt-v*`) |
-| NAS 打包四仓 | v1.14.3(钉 server/frontend 镜像 v0.15.7) | synology SPK(noarch,DSM 7.2+ Container Manager)/ qnap QPKG(x86_64+arm_64,QDK qbuild)/ ugreen·terramaster compose 部署包(UPK/TOS7 应用包送审二期);纯 shell 零 Go,编排=双容器免 Redis;包回挂 hub Release(各 `*-v*` tag) |
+| qnap | v1.14.3(原生,内置 core v0.14.9) | 威联通 QTS 原生 QPKG(v1.14.4 起切原生进程模式,对齐 fnos):包内自带双架构静态二进制+前端,单进程单端口,免 Container Station(QTS 4.5+);QPKG 服务脚本托管(setsid 后台引导+PID+看门狗自愈),.env 在卷根 pigeonbox/;QDK qbuild 组包,包回挂 hub Release(`qnap-v*`) |
+| NAS 打包三仓 | v1.14.3(钉 server/frontend 镜像 v0.15.7) | synology SPK(noarch,DSM 7.2+ Container Manager)/ ugreen·terramaster compose 部署包(UPK/TOS7 应用包送审二期);纯 shell 零 Go,编排=双容器免 Redis;共享模板在 hub `deploy/nas/`(qnap 原生切出后不消费);包回挂 hub Release(各 `*-v*` tag) |
 | p2p | v0.4.10 | v0.3.x=M3 设备直传全量(p2pc)+六平台二进制;v0.4.0=wire AEAD/注册 token/中继限流安全加固;v0.4.1=p2pc 修复;v0.4.10=env 前缀 PB_ 更名(对齐 core);镜像 `ghcr.io/pigeonbox/p2p`(含 p2pc) |
 | kit | v0.3.1 | 共享 Go 工具库(28 包);已被 core(17 处)、p2p(ratelimit)、fnos/server(version) 消费;纯库仓无镜像,`go get github.com/pigeonbox/kit/<包名>` |
 | desktop | desktop-v1.14.3 | Tauri 2 桌面客户端+**p2pc sidecar 设备直传**(p2pc 0.4 传输协议 v2,与旧版服务端/客户端互不兼容需双端同版);三平台安装包回挂本仓 Release(`desktop-v*` tag) |

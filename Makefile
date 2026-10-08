@@ -20,15 +20,15 @@ build:            ## workspace 联编 Go 模块(产物 bin/)
 	@echo "✓ build OK → bin/"
 
 test:             ## 全仓 Go 测试 + 前端 typecheck
-	go test ./contracts/... ./core/... ./server/... ./fnos/... ./openwrt/... ./p2p/... ./kit/...
+	go test ./contracts/... ./core/... ./server/... ./fnos/... ./openwrt/... ./qnap/... ./p2p/... ./kit/...
 	cd frontend && ([ -d node_modules ] || npm ci) && npm run typecheck
 
 vet:
-	go vet ./contracts/... ./core/... ./server/... ./fnos/... ./openwrt/... ./p2p/... ./kit/...
+	go vet ./contracts/... ./core/... ./server/... ./fnos/... ./openwrt/... ./qnap/... ./p2p/... ./kit/...
 
 lint:             ## golangci-lint 各 Go 模块（CI 同款门禁；本地提交前建议跑，防 lint 溜进 CI）
 	@command -v golangci-lint >/dev/null || { echo "golangci-lint 未安装: brew install golangci-lint"; exit 1; }
-	for m in contracts core server fnos openwrt p2p kit; do echo "── $$m"; (cd $$m && golangci-lint run ./...); done
+	for m in contracts core server fnos openwrt qnap p2p kit; do echo "── $$m"; (cd $$m && golangci-lint run ./...); done
 	@echo "✓ lint OK"
 
 smoke: build      ## 本地起 server 并跑冒烟(健康检查/admin 登录;全量断言见 scripts/smoke-full.sh)
@@ -53,10 +53,10 @@ compose-up:       ## docker compose 起前后端分离栈(默认拉 ghcr 镜像;
 compose-down:
 	docker compose --profile nginx down
 
-nas-check:         ## NAS 打包四仓共享资产漂移校验(对 deploy/nas/ 模板)
+nas-check:         ## NAS 打包三仓共享资产漂移校验(对 deploy/nas/ 模板;qnap 已切原生不消费)
 	bash deploy/nas/sync.sh check --all
 
-nas-sync:          ## hub 模板物化到 NAS 打包四仓(改模板后跑;CI 有漂移门禁兜底)
+nas-sync:          ## hub 模板物化到 NAS 打包三仓(改模板后跑;CI 有漂移门禁兜底)
 	bash deploy/nas/sync.sh sync --all
 
 train-verify:      ## 发布列车对账:train.yaml ↔ 全生态真实状态(漂移即失败;CI 同款 train-verify 工作流)

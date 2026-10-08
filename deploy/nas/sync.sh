@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
-# NAS 打包四仓共享资产同步器(真相源 = 本目录模板,四仓只是物化结果)。
+# NAS 打包三仓共享资产同步器(真相源 = 本目录模板,三仓只是物化结果)。
+# (qnap 已切原生 QPKG 进程模式,不再消费 compose/env 模板——2026-10-09)
 #
-# 覆盖文件(四仓完全同源,平台差异只有 compose 首行说明):
+# 覆盖文件(三仓完全同源,平台差异只有 compose 首行说明):
 #   compose.yml → 平台头(#[__NAS_PLATFORM_HEADER__] 占位) + 模板本体
 #   env.example → 逐字
 #   ugreen 另有 compose.ghcr-mirror.yml = compose 的 ghcr.io→ghcr.nju.edu.cn 替换
 #
 # 用法:
 #   sync.sh check  --platform <p> --dir <repo根>   校验单仓(适配器 CI 漂移门禁)
-#   sync.sh check  --all [--root <工作区>]          校验四仓(--all 默认兄弟目录)
+#   sync.sh check  --all [--root <工作区>]          校验三仓(--all 默认兄弟目录)
 #   sync.sh sync   --platform <p> --dir <repo根>    物化单仓
 #   sync.sh sync   --all [--root <工作区>]
 #   sync.sh platforms                               列出支持平台
@@ -20,12 +21,11 @@ set -euo pipefail
 BASE_RAW="https://raw.githubusercontent.com/pigeonbox/pigeonbox/main/deploy/nas"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-platforms() { echo "synology qnap ugreen terramaster"; }
+platforms() { echo "synology ugreen terramaster"; }
 
 compose_path() {
     case "$1" in
         synology) echo "spk/package/compose.yml" ;;
-        qnap) echo "qpkg/shared/compose.yml" ;;
         ugreen) echo "deploy/compose.yml" ;;
         terramaster) echo "deploy/compose.yml" ;;
         *) return 1 ;;
@@ -34,7 +34,6 @@ compose_path() {
 env_path() {
     case "$1" in
         synology) echo "spk/package/env.example" ;;
-        qnap) echo "qpkg/shared/env.example" ;;
         ugreen) echo "deploy/env.example" ;;
         terramaster) echo "deploy/env.example" ;;
         *) return 1 ;;
@@ -43,7 +42,6 @@ env_path() {
 compose_header() {
     case "$1" in
         synology) echo "# PigeonBox 群晖 DSM 部署编排(SPK 内置;.env 在 @appdata/包 var 目录)" ;;
-        qnap) echo "# PigeonBox 威联通 QTS 部署编排(QPKG 内置;.env 在卷根 pigeonbox/ 目录)" ;;
         ugreen) echo "# PigeonBox 绿联 NAS(UGOS Pro)部署编排(Docker → 项目 → 创建 → 粘贴本文件)" ;;
         terramaster) echo "# PigeonBox 铁威马 TOS 部署编排(Docker Manager → 项目 → 添加 → 上传/粘贴本文件)" ;;
         *) return 1 ;;
