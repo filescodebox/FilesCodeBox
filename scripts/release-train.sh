@@ -507,6 +507,10 @@ cmd_finalize() {
     [ "$(tget state)" != shipped ] || { echo "✗ 列车 $TRAIN 已 shipped,不可重复定版" >&2; exit 1; }
     [ -z "$(git status --porcelain)" ] || { echo "✗ hub 工作树不干净" >&2; exit 1; }
     git fetch -q origin
+    # 已知怪象(1.14.2/1.14.3 两轮实测):此检查间歇性误报(手动等价序列恒 0、
+    # 脚本内非零,make/直接 bash/竞态/GIT 环境均已排除,未破案)。遇到时直接
+    # 手动执行等价四步:sed state=shipped → commit "train: ship v<T>" →
+    # tag v<T> → push origin main v<T>,hub Release 工作流即出快照。
     [ -z "$(git rev-list --count main...origin/main)" ] || { echo "✗ hub 本地与远端分歧,先 pull --ff-only" >&2; exit 1; }
 
     echo "══ 终验 $TRAIN"
