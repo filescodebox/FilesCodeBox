@@ -31,7 +31,7 @@
 | JWT 密钥 | 移植 fnos `ensureJWTSecret`：未配置时自动生成强密钥持久化到数据目录（0600） | core 安全基线缺 secret 拒启；路由器用户不应被迫手工生成 |
 | 前端 | ipk 内置 dist（`/usr/share/pigeonbox/www/`），CI 从 frontend 仓构建 | core SPA 回退同端口服务前端（文件优先+SPA 回退，bootstrap.go:1167）；frontend 仓无 dist Release 资产，故 CI 源码构建 |
 | Redis | ipk `Depends: redis-server`（OpenWrt packages 官方源） | 匿名取件强依赖 Redis（core bootstrap:667 降级但 anonymous 域直接报错）；原生形态无 Docker；官方源包带 procd init。**勘误（2026-10-06）**：core main fa8636c 起单机内存模式（host 空=进程内 KV 全功能、重启丢映射），bump core 后 `Depends: redis-server` 可复议降级为持久化可选项（路由器小内存设备受益）；v0.1.0 钉 core v0.13.0 维持硬依赖 |
-| 配置面 | UCI 常用项 → init 脚本翻译成 `FCB_*` env（env 优先级高于 yaml）；`/etc/pigeonbox/config.yaml` 存在则以 `--config` 传入（高级面） | core envBindings 全集已核实；OpenWrt 惯例 UCI 优先，同时保留 core 全量配置逃生口 |
+| 配置面 | UCI 常用项 → init 脚本翻译成 `PB_*` env（env 优先级高于 yaml）；`/etc/pigeonbox/config.yaml` 存在则以 `--config` 传入（高级面） | core envBindings 全集已核实；OpenWrt 惯例 UCI 优先，同时保留 core 全量配置逃生口 |
 | 数据目录 | UCI `data_dir` 默认 `/etc/pigeonbox/data` | overlay 可持久；README 建议大容量场景指到数据盘（如 `/mnt/sda1/pigeonbox`） |
 | 打包 | 无 SDK ipk 组装：外层纯 tar.gz（内含 ./debian-binary + control.tar.gz + data.tar.gz） | OpenWrt 23.05 起 ipk 即纯 tar.gz（对官方 zlib ipk 实测核对）；且须强制 ustar/gnu 格式——macOS bsdtar 默认 pax 扩展头 opkg 不识别会整条跳过（实测踩坑） |
 | 架构 | `x86_64` + `aarch64_generic` 两 ipk | iStoreOS x86 主流 + ARM SBC（rockchip）；Architecture 字段须匹配 opkg arch |
@@ -54,21 +54,21 @@ procd init：`procd_set_param respawn`（崩溃重启）+ stdout/stderr 进 sysl
 ```
 config main 'main'
     option enabled '1'                    # 停用开关(init 检查)
-    option port '12345'                   # → FCB_SERVER_PORT
-    option host '0.0.0.0'                 # → FCB_SERVER_HOST
-    option data_dir '/etc/pigeonbox/data'  # → FCB_DATA_PATH / FCB_DATABASE_DB_NAME / FCB_STORAGE_PATH
-    option open_upload '1'                # → FCB_OPEN_UPLOAD
-    option admin_password ''              # → FCB_ADMIN_PASSWORD(空=默认 admin123,文档强制建议修改)
-    option base_url ''                    # → FCB_SERVER_BASE_URL(presign 直下需要)
+    option port '12345'                   # → PB_SERVER_PORT
+    option host '0.0.0.0'                 # → PB_SERVER_HOST
+    option data_dir '/etc/pigeonbox/data'  # → PB_DATA_PATH / PB_DATABASE_DB_NAME / PB_STORAGE_PATH
+    option open_upload '1'                # → PB_OPEN_UPLOAD
+    option admin_password ''              # → PB_ADMIN_PASSWORD(空=默认 admin123,文档强制建议修改)
+    option base_url ''                    # → PB_SERVER_BASE_URL(presign 直下需要)
 
 config redis 'redis'
     option enabled '1'                    # 关闭=匿名取件不可用(降级)
-    option host '127.0.0.1'               # → FCB_REDIS_HOST
-    option port '6379'                    # → FCB_REDIS_PORT
-    option password ''                    # → FCB_REDIS_PASSWORD
+    option host '127.0.0.1'               # → PB_REDIS_HOST
+    option port '6379'                    # → PB_REDIS_PORT
+    option password ''                    # → PB_REDIS_PASSWORD
 ```
 
-固定注入（不可配）：`FCB_SERVER_MODE=release`、`FCB_PRODUCTION=1`、`FCB_DATABASE_DRIVER=sqlite`、`TZ`。
+固定注入（不可配）：`PB_SERVER_MODE=release`、`PB_PRODUCTION=1`、`PB_DATABASE_DRIVER=sqlite`、`TZ`。
 高级项（S3/OIDC/联邦/mcp…）走 `/etc/pigeonbox/config.yaml` 或 `/etc/init.d/pigeonbox` 自定义 env——UCI 面保持小。
 
 ## 5. ipk 控制文件

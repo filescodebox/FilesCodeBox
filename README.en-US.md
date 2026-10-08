@@ -38,7 +38,7 @@ Dependency direction (CI-enforced): `server / fnos / openwrt / frontend ──�
 docker compose up -d          # or: BUILD=1 make compose-up (local build, run make setup first)
 ```
 
-Frontend entry `http://localhost:12345` (`FCB_API_PORT`, default 12345) — the frontend image also proxies the API, the server publishes no ports. `FCB_HTTP_PORT` (default 80) only applies to the optional nginx profile. Default admin is `admin / admin123` — override with `FCB_ADMIN_PASSWORD` in production.
+Frontend entry `http://localhost:12345` (`PB_API_PORT`, default 12345) — the frontend image also proxies the API, the server publishes no ports. `PB_HTTP_PORT` (default 80) only applies to the optional nginx profile. Default admin is `admin / admin123` — override with `PB_ADMIN_PASSWORD` in production.
 
 Build from source:
 

@@ -32,7 +32,7 @@ lint:             ## golangci-lint 各 Go 模块（CI 同款门禁；本地提�
 	@echo "✓ lint OK"
 
 smoke: build      ## 本地起 server 并跑冒烟(健康检查/admin 登录;全量断言见 scripts/smoke-full.sh)
-	cd server && mkdir -p data logs && (FCB_JWT_SECRET=$$(openssl rand -hex 32) \
+	cd server && mkdir -p data logs && (PB_JWT_SECRET=$$(openssl rand -hex 32) \
 	  go run ./cmd/server --config ./configs/config.yaml & echo $$! > /tmp/fcb.pid; \
 	  sleep 8; \
 	  curl -sf http://localhost:12345/live && \

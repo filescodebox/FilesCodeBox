@@ -14,7 +14,7 @@
 - 依赖方向 contracts ← core ← server/frontend，禁止 replace 钉版本；新错误码先改 contracts 并发版（tag）后 core 升 go.mod。
 - 生成物勿手改：contracts `gen/`、core `gen/`（本计划只改 core gen/ 中**已有人工维护痕迹的 handler 文件**，与现状一致）、frontend `src/types/api.gen.ts`。
 - 老库兼容：仅 AutoMigrate 加列，新列有默认值或可空；`status` 默认 `normal`。
-- 新增配置全部带 env 绑定（`FCB_*`，加进 `bootstrap/bootstrap.go` `envBindings`）+ 三份配置模板同步（`server/configs/config{,.example,.prod}.yaml`）。
+- 新增配置全部带 env 绑定（`PB_*`，加进 `bootstrap/bootstrap.go` `envBindings`）+ 三份配置模板同步（`server/configs/config{,.example,.prod}.yaml`）。
 - 测试命令：core 内 `go test ./...`；hub 根 `make test`（三 Go 模块 + frontend typecheck）。
 - 提交纪律：每任务一个 commit（core/contracts/frontend 各自仓内）；受 AGENTS.md 约束 push 前需用户确认。
 
@@ -108,7 +108,7 @@ func CheckDownloadLogin(userID *uint) error          // download.require_login �
 ### Task P0-7: 死配置处置 + P0 验证
 
 - `server/configs/config*.yaml`：`download.max_concurrent_downloads`、`transfer.max_count`、`upload.max_save_seconds`（旧名）注释标 `# deprecated(未实现)`；`max_save_seconds_cap`、`blocked_extensions`、`anonymous_daily_*`（P1 键位可先占位注释）加示例。
-- `docs/ENVIRONMENT_VARIABLES.md` 增 `FCB_UPLOAD_BLOCKED_EXTENSIONS`。
+- `docs/ENVIRONMENT_VARIABLES.md` 增 `PB_UPLOAD_BLOCKED_EXTENSIONS`。
 - `cd PigeonBox && make test && make vet`（contracts 变更后 core go.mod 需指向可解析版本：开发期 go.work 直接用本地模块即可；发布步骤见文末）。
 
 ## P1 管控核心（contracts + core + frontend）
@@ -137,7 +137,7 @@ func CheckDownloadLogin(userID *uint) error          // download.require_login �
 
 **Files:**
 - Create `core/pkg/gate/quota.go`：`DailyQuota{ rdb *redis.Client, mem memStore }`；`Allow(ctx, ip string, addBytes int64) (bool, string)`——key `fcb:quota:<ip>:<yyyymmdd>`，Redis `INCR`+`EXPIRE 25h`（无 Redis 用内存 map+日期轮转+锁）；count 与 bytes 双计数，任一超限拒绝。
-- conf：`upload.anonymous_daily_count int` / `upload.anonymous_daily_bytes int64`（0=不限，默认 0）+ env `FCB_UPLOAD_ANON_DAILY_COUNT/_BYTES`。
+- conf：`upload.anonymous_daily_count int` / `upload.anonymous_daily_bytes int64`（0=不限，默认 0）+ env `PB_UPLOAD_ANON_DAILY_COUNT/_BYTES`。
 - gate 增 `CheckAnonymousQuota(ctx, ip, size)`：仅 userID==nil 且配额>0 时计数检查；接线四个上传入口（ShareFile/ChunkUploadInit/presign Init/anonymous create，直传文本不计数）；bootstrap 装配 Redis client 注入（rate_limit 已有获取方式，复用）。拒绝返 10014。
 - 测试：内存模式 count 超限/bytes 超限/次日重置（注入时钟或直接构造日期 key）。
 
@@ -170,7 +170,7 @@ type Moderator interface {
 }
 type WordListModerator struct{ words []string; action string } // conf 注入
 ```
-- conf：`moderation.enabled bool(默认 false)`、`moderation.blocked_words []string`、`moderation.block_action string(reject|pending)` + env（`FCB_MODERATION_ENABLED/_BLOCKED_WORDS(逗号分隔)/_BLOCK_ACTION`）。
+- conf：`moderation.enabled bool(默认 false)`、`moderation.blocked_words []string`、`moderation.block_action string(reject|pending)` + env（`PB_MODERATION_ENABLED/_BLOCKED_WORDS(逗号分隔)/_BLOCK_ACTION`）。
 - 接线：bootstrap 构造并 `share.Service.SetModerator(...)`（模式同 SetQuotaChecker）；`ShareTextWithAuth` 在写库前 InspectText：reject → `&ContentRejectedError{}`（30013）；pending → 建库后 `SetShareStatus(...,pending_review)`。文件侧钩子位置留空实现（handler complete 后调用，恒 Allow，不落库不耗时）。
 - webhook：`pkg/transfer.Record` 模式旁新增 `pkg/webhook.Emit(event, payload)`（读 `notify.webhook_url`，异步 POST JSON，失败仅日志）；moderation 命中时发 `share.flagged`。
 - 管理队列：`GET /admin/moderation`（=ListWithFilter status=pending_review 包装）+ 复用 `PUT /admin/files/:id/status` 处置；bootstrap 注册。

@@ -13,7 +13,7 @@
     `download_share_file`（base64 回传，单文件/未过期/受 `mcp.max_file_size` 限）、
     P2P 联邦 `federation_status`（启用/节点 ID/registry/心跳）与 `federation_resolve`
     （口令联邦路由查询）。
-  - 新配置 `mcp.max_file_size`（默认 6MB，env `FCB_MCP_MAX_FILE_SIZE`；base64 膨胀 4/3
+  - 新配置 `mcp.max_file_size`（默认 6MB，env `PB_MCP_MAX_FILE_SIZE`；base64 膨胀 4/3
     后须低于请求体上限，超限时同步调大 `upload.max_file_size`）。
   - 修复：`CreateShare` 路径（文件/多文件/本地导入/MCP）此前不生成 `full_share_url`，
     统一下沉到 `modelToResp` 三通道生成。
@@ -29,7 +29,7 @@
   [docs/specs/2026-10-06-openwrt-istoreos-adapter-design.md](docs/specs/2026-10-06-openwrt-istoreos-adapter-design.md)。
 
 ### Changed
-- **多副本拆分列车**（core v0.13.0 / server v0.14.0 / chart 1.3.22+）：`FCB_DEPLOY_MODE`
+- **多副本拆分列车**（core v0.13.0 / server v0.14.0 / chart 1.3.22+）：`PB_DEPLOY_MODE`
   三模式 standalone（默认）/ public×N / admin×1——按模式注册路由组、public 管理面门卫 404、
   迁移/后台任务归 admin、Redis pubsub 配置广播 + revision 对账；chart `replicaCount>1`
   自动渲染 public×N + admin×1 双拓扑。core 新增回收站（软删/恢复/彻底删除）。
@@ -46,7 +46,7 @@ v0.11/0.12 hz 链路治理+攻击面收缩+契约化）明细见 AGENTS.md 生�
 ## [归档] 0.2.0 → 1.12.0 生态快照累计变更（2026-10-03 → 2026-10-05 已发布）
 
 ### Added
-- **站点级全局存储配额**（core v0.7.0）：`storage.quota`（字节，0=不限，env `FCB_STORAGE_QUOTA`），
+- **站点级全局存储配额**（core v0.7.0）：`storage.quota`（字节，0=不限，env `PB_STORAGE_QUOTA`），
   全通道统一闸口（直传/分片完成/预签名完成/本地导入/多文件）；超限返回
   `CodeStorageQuota`；统计口径=存活 file_codes 合计，统计故障 fail-open。
 - **分片逐片期望哈希强校验**（core v0.7.0，对标上游）：分片上传可携带 `hash`
@@ -70,7 +70,7 @@ v0.11/0.12 hz 链路治理+攻击面收缩+契约化）明细见 AGENTS.md 生�
 - **真·S3 预签名直传直下**（core）：存储后端为 s3 时 `presign.Init` 直接签发对象存储
   预签名 PUT URL（`meta.Scheme=s3`），上传流量不过服务器；`Complete` 向 S3 核实对象
   真实存在并以实际大小落库（服务器未接触内容，秒传指纹依赖客户端预计算哈希）。
-  下载侧新增 `download.s3_direct_download`（env `FCB_DOWNLOAD_S3_DIRECT`，默认关）：
+  下载侧新增 `download.s3_direct_download`（env `PB_DOWNLOAD_S3_DIRECT`，默认关）：
   开启后文件下载 302 到短时效预签名 GET。**注意**：浏览器直传/直下需在对象存储桶上
   配置 CORS 允许站点来源；local/webdav 后端自动回退自家中转，行为不变。
 - **存储后端点亮**（core）：S3 / WebDAV 真实读写全链路（opendal 驱动：minio-go / gowebdav），
@@ -118,7 +118,7 @@ v0.11/0.12 hz 链路治理+攻击面收缩+契约化）明细见 AGENTS.md 生�
 - `user.require_email_verify`（无验证码流程；注册 email 为普通必填字段）。
 - `ui.theme/background/page_explain/show_admin_addr/opacity/notify_*`（仅 `ui.robots_text` 实际消费；
   主题系统实装时按新形状回归）。
-- `observability.tracing.*` 与 `FCB_TRACING_ENABLED`（OTel 未实装）。
+- `observability.tracing.*` 与 `PB_TRACING_ENABLED`（OTel 未实装）。
 - onedrive 存储类型空壳常量。残留旧键的存量配置可无损升级（viper 忽略未知键）。
 
 ### 升级说明

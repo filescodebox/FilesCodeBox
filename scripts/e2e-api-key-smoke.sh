@@ -5,7 +5,7 @@ cd "$(dirname "$0")/.."
 cd server || exit 1
 mkdir -p data logs
 
-FCB_JWT_SECRET=$(openssl rand -hex 32) go run ./cmd/server --config ./configs/config.yaml >/tmp/fcb-e2e.log 2>&1 &
+PB_JWT_SECRET=$(openssl rand -hex 32) go run ./cmd/server --config ./configs/config.yaml >/tmp/fcb-e2e.log 2>&1 &
 SRV=$!
 trap 'kill $SRV 2>/dev/null' EXIT
 for i in $(seq 1 30); do curl -sf http://localhost:12345/live >/dev/null 2>&1 && break; sleep 1; done

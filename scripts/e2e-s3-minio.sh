@@ -49,7 +49,7 @@ storage:
 user:
   jwt_secret: "e2e-secret-key-0123456789abcdef0123456789abcdef"
 EOF
-FCB_JWT_SECRET="e2e-secret-key-0123456789abcdef0123456789abcdef" \
+PB_JWT_SECRET="e2e-secret-key-0123456789abcdef0123456789abcdef" \
   go run ./cmd/server --config "$DATA/config.yaml" >"$DATA/server.log" 2>&1 &
 SERVER_PID=$!
 trap 'kill $SERVER_PID 2>/dev/null || true; cleanup' EXIT

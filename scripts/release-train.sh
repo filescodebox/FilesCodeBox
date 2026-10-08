@@ -148,8 +148,8 @@ cmd_verify() {
 
     echo "── 3. hub 分发面钉版"
     local PIN_V="v$SERVER_V"
-    grep -q "FCB_IMAGE_TAG:-$PIN_V" deploy/nas/compose.yml \
-        && grep -q "^FCB_IMAGE_TAG=$PIN_V" deploy/nas/env.example \
+    grep -q "PB_IMAGE_TAG:-$PIN_V" deploy/nas/compose.yml \
+        && grep -q "^PB_IMAGE_TAG=$PIN_V" deploy/nas/env.example \
         && ok "deploy/nas 模板钉版 = $PIN_V" || fail "deploy/nas 模板钉版 ≠ $PIN_V"
     grep -q "newTag: $SERVER_V" deploy/k8s/overlays/prod/kustomization.yaml \
         && ok "k8s prod overlay newTag = $SERVER_V" || fail "k8s prod overlay newTag ≠ $SERVER_V"
@@ -169,7 +169,7 @@ cmd_verify() {
                 qnap) cpath=qpkg/shared/compose.yml ;;
                 *) cpath=deploy/compose.yml ;;
             esac
-            local n; n=$(raw "$p/main/$cpath" 2>/dev/null | grep -c "FCB_IMAGE_TAG:-$PIN_V" || true)
+            local n; n=$(raw "$p/main/$cpath" 2>/dev/null | grep -c "PB_IMAGE_TAG:-$PIN_V" || true)
             [ "$n" = "2" ] && ok "$p compose 钉版 = $PIN_V" || fail "$p compose 钉版漂移(期望 $PIN_V×2,实得 ${n:-0})"
         done
     fi
@@ -345,8 +345,8 @@ cmd_bump() {
     git -C "$DESKTOP_DIR" fetch -q origin
 
     echo "── [1/7] hub"
-    sed -i.bak "s/FCB_IMAGE_TAG:-v[0-9]*\.[0-9]*\.[0-9]*/FCB_IMAGE_TAG:-v$N_SERVER/" deploy/nas/compose.yml && rm -f deploy/nas/compose.yml.bak
-    sed -i.bak "s/^FCB_IMAGE_TAG=v[0-9]*\.[0-9]*\.[0-9]*/FCB_IMAGE_TAG=v$N_SERVER/" deploy/nas/env.example && rm -f deploy/nas/env.example.bak
+    sed -i.bak "s/PB_IMAGE_TAG:-v[0-9]*\.[0-9]*\.[0-9]*/PB_IMAGE_TAG:-v$N_SERVER/" deploy/nas/compose.yml && rm -f deploy/nas/compose.yml.bak
+    sed -i.bak "s/^PB_IMAGE_TAG=v[0-9]*\.[0-9]*\.[0-9]*/PB_IMAGE_TAG=v$N_SERVER/" deploy/nas/env.example && rm -f deploy/nas/env.example.bak
     sed -i.bak "s/newTag: [0-9.]*/newTag: $N_SERVER/g" deploy/k8s/overlays/prod/kustomization.yaml && rm -f deploy/k8s/overlays/prod/kustomization.yaml.bak
     # charts: server 变了则 chart patch+1(dispatch 会自动对齐,这里同步记录)
     local OLD_SERVER CHART_NEW

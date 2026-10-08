@@ -1,6 +1,6 @@
 # API Token 波次 2（配置面 + 契约 + 文档 + 前端管理页）实现计划
 
-> **存档（2026-10-04）**：本计划已全部实施上线（`FCB_API_TOKEN_ENABLED` 开关、openapi securitySchemes、`docs/API-TOKENS.md`、前端 `/#/user/tokens` 页均已交付），checkbox 保留计划时点原样；文中 `frontend/openapi.json` 快照链路已废弃（规范真相源=后端运行时 `/openapi.json`）。请勿据此计划再实施。
+> **存档（2026-10-04）**：本计划已全部实施上线（`PB_API_TOKEN_ENABLED` 开关、openapi securitySchemes、`docs/API-TOKENS.md`、前端 `/#/user/tokens` 页均已交付），checkbox 保留计划时点原样；文中 `frontend/openapi.json` 快照链路已废弃（规范真相源=后端运行时 `/openapi.json`）。请勿据此计划再实施。
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -30,13 +30,13 @@
 - Test: `core/pkg/middleware/apikey_test.go` 追加
 
 - [ ] Step 1 写失败测试 `TestOptionalAPIKey_DisabledSwitch_401`：`conf.SetGlobalConfig(&conf.AppConfiguration{Security: conf.SecurityConfig{APIToken: conf.APITokenConfig{Enabled: false}}})`（Cleanup 恢复 nil）→ 携带有效 Key 请求应 401 且 body 含 "disabled"。
-- [ ] Step 2 实现：`APITokenConfig{Enabled bool}` 挂进 SecurityConfig；`v.SetDefault("security.api_token.enabled", true)`；envBindings 加 `"security.api_token.enabled": {"FCB_API_TOKEN_ENABLED"}`；`validateAPIKey` 开头（lockout 之前）`if !apiTokenEnabled() { return ctx, errAPITokenDisabled }`；`respondAPIKeyError` 用 `errors.Is` 分支输出 401 `"API token authentication is disabled"`。`apiTokenEnabled()` 无全局配置时默认 true。
+- [ ] Step 2 实现：`APITokenConfig{Enabled bool}` 挂进 SecurityConfig；`v.SetDefault("security.api_token.enabled", true)`；envBindings 加 `"security.api_token.enabled": {"PB_API_TOKEN_ENABLED"}`；`validateAPIKey` 开头（lockout 之前）`if !apiTokenEnabled() { return ctx, errAPITokenDisabled }`；`respondAPIKeyError` 用 `errors.Is` 分支输出 401 `"API token authentication is disabled"`。`apiTokenEnabled()` 无全局配置时默认 true。
 - [ ] Step 3 `go test ./pkg/middleware/ && go build ./... && go vet ./...` 全绿。
 - [ ] Step 4 提交 core：`feat(middleware): API Key 认证总开关 security.api_token.enabled`。
 
 ### Task 2: 配置模板与 env 文档
 
-**Files:** Modify `server/configs/config.example.yaml`、`server/configs/config.prod.yaml`（security 节加 `api_token.enabled: true` 带注释）；Modify hub `docs/ENVIRONMENT_VARIABLES.md` 安全节加一行 `FCB_API_TOKEN_ENABLED`。
+**Files:** Modify `server/configs/config.example.yaml`、`server/configs/config.prod.yaml`（security 节加 `api_token.enabled: true` 带注释）；Modify hub `docs/ENVIRONMENT_VARIABLES.md` 安全节加一行 `PB_API_TOKEN_ENABLED`。
 
 - [ ] Step 1 三处编辑（example/prod/ENV 文档）。
 - [ ] Step 2 提交：server 仓 yaml 一个 commit；hub ENV 文档随 Task 5 一起。
@@ -67,5 +67,5 @@
 
 ### Task 5: 使用指南 + 收尾
 
-- [ ] Step 1 hub `docs/API-TOKENS.md`：获取 Key 两种姿势（页面/curl+JWT）、认证头规范（Bearer fcb_sk_ 首选/ApiKey/X-API-Key，禁 query）、direct+chunk+presign curl 示例、管理自己分享示例、防护机制说明（lockout/限流/fail-closed/吊销即时生效）、`FCB_API_TOKEN_ENABLED`、**HTTP 明文部署警告**（215 类部署）。
+- [ ] Step 1 hub `docs/API-TOKENS.md`：获取 Key 两种姿势（页面/curl+JWT）、认证头规范（Bearer fcb_sk_ 首选/ApiKey/X-API-Key，禁 query）、direct+chunk+presign curl 示例、管理自己分享示例、防护机制说明（lockout/限流/fail-closed/吊销即时生效）、`PB_API_TOKEN_ENABLED`、**HTTP 明文部署警告**（215 类部署）。
 - [ ] Step 2 hub 提交（ENV 文档 + API-TOKENS.md + 计划勾选）；更新记忆与 MEMORY.md。

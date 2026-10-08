@@ -150,7 +150,7 @@ security:
     enabled: true        # 总开关：出事可一键停用 Key 认证（false 时携带 Key 的请求按 401 处理）
 ```
 
-- env：`FCB_API_TOKEN_ENABLED`，按惯例登记 4 处：`core/conf/config.go`（struct + mapstructure）、`bootstrap.go setDefaults`、`envBindings` 映射、`server/configs/config.example.yaml` + hub `docs/ENVIRONMENT_VARIABLES.md`；
+- env：`PB_API_TOKEN_ENABLED`，按惯例登记 4 处：`core/conf/config.go`（struct + mapstructure）、`bootstrap.go setDefaults`、`envBindings` 映射、`server/configs/config.example.yaml` + hub `docs/ENVIRONMENT_VARIABLES.md`；
 - Helm：非敏感配置走现有 `config: {}` ConfigMap 口子，**零模板改动**；
 - `max_keys=5`、过期策略不配置化（YAGNI，代码常量已够）。
 

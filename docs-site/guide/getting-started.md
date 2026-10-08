@@ -18,10 +18,10 @@ title: 快速开始
 git clone https://github.com/pigeonbox/pigeonbox.git
 cd pigeonbox
 
-# 2. 生成环境配置（全部项有安全默认，可留空；生产至少设 FCB_ADMIN_PASSWORD）
+# 2. 生成环境配置（全部项有安全默认，可留空；生产至少设 PB_ADMIN_PASSWORD）
 cp .env.example .env
 
-# 3. 启动（拉取 ghcr.io/pigeonbox 的 server + frontend 双镜像，版本由 FCB_IMAGE_TAG 同钉）
+# 3. 启动（拉取 ghcr.io/pigeonbox 的 server + frontend 双镜像，版本由 PB_IMAGE_TAG 同钉）
 docker compose up -d
 ```
 
@@ -32,20 +32,20 @@ curl http://localhost:12345/live    # 健康检查
 ```
 
 浏览器打开 `http://localhost:12345` 即可使用(compose 入口默认仅本机可访问;
-**局域网其他设备访问**需在 `.env` 设 `FCB_API_BIND=0.0.0.0` 后 `docker compose up -d` 重建)。
+**局域网其他设备访问**需在 `.env` 设 `PB_API_BIND=0.0.0.0` 后 `docker compose up -d` 重建)。
 
 ## 首次初始化
 
 - **初始化向导**：首次访问按前端引导完成站点初始化；后端接口为 `GET /setup/check`（查询初始化状态）与 `POST /setup`（提交初始化）。
-- **管理员账号**：默认 `admin / admin123`。生产环境必须在 `.env` 里用 `FCB_ADMIN_PASSWORD` 覆盖（未覆盖时启动日志会告警），登录后也请立即改密。
-- **JWT 密钥**：`FCB_JWT_SECRET` 留空时容器首启自动生成 48 位随机值并持久化到 `./data/.jwt_secret`（权限 600），重启/升级不丢；生产建议显式注入（如 `openssl rand -hex 32`）。
+- **管理员账号**：默认 `admin / admin123`。生产环境必须在 `.env` 里用 `PB_ADMIN_PASSWORD` 覆盖（未覆盖时启动日志会告警），登录后也请立即改密。
+- **JWT 密钥**：`PB_JWT_SECRET` 留空时容器首启自动生成 48 位随机值并持久化到 `./data/.jwt_secret`（权限 600），重启/升级不丢；生产建议显式注入（如 `openssl rand -hex 32`）。
 
 ## 端口
 
 | 端口 | 说明 |
 | --- | --- |
-| `12345` | 对外入口（frontend 容器：静态页面 + API 反代，`.env` 的 `FCB_API_PORT` 可改；server 不直接对外） |
-| `80` | nginx 反代入口（仅 `--profile nginx` 启用时占用，`FCB_HTTP_PORT` 可改） |
+| `12345` | 对外入口（frontend 容器：静态页面 + API 反代，`.env` 的 `PB_API_PORT` 可改；server 不直接对外） |
+| `80` | nginx 反代入口（仅 `--profile nginx` 启用时占用，`PB_HTTP_PORT` 可改） |
 
 ## 下一步
 

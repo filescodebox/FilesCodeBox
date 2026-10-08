@@ -54,12 +54,12 @@ make smoke     # 起 server 跑冒烟(健康检查/admin 登录;44 项全量断�
 
 ```bash
 cp .env.example .env          # 可选,全部项有安全默认
-docker compose up -d          # ghcr 发布镜像;前端入口 http://localhost:12345(FCB_API_PORT,默认 12345),前端镜像同时反代 API,server 不发布端口
+docker compose up -d          # ghcr 发布镜像;前端入口 http://localhost:12345(PB_API_PORT,默认 12345),前端镜像同时反代 API,server 不发布端口
 # BUILD=1 make compose-up     # 本地构建(需先 make setup)
-# docker compose --profile nginx up -d   # 加 nginx 反代(须配 FCB_TRUSTED_PROXIES,见部署指南;FCB_HTTP_PORT 默认 80 仅作用于此 profile)
+# docker compose --profile nginx up -d   # 加 nginx 反代(须配 PB_TRUSTED_PROXIES,见部署指南;PB_HTTP_PORT 默认 80 仅作用于此 profile)
 ```
 
-默认管理员 `admin / admin123`(生产务必以 `FCB_ADMIN_PASSWORD` 覆盖)。JWT 密钥留空时首启自动生成并持久化到 `./data/.jwt_secret`。
+默认管理员 `admin / admin123`(生产务必以 `PB_ADMIN_PASSWORD` 覆盖)。JWT 密钥留空时首启自动生成并持久化到 `./data/.jwt_secret`。
 
 ## 工作区布局(setup 后)
 

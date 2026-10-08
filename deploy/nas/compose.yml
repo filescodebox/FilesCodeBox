@@ -1,53 +1,53 @@
 #__NAS_PLATFORM_HEADER__
 #
 # 架构: 对外端口 → frontend(nginx 静态+API 反代) → pigeonbox(纯后端, 不发布端口)
-# 数据: FCB_DATA_DIR 指向的目录(SQLite 库 + 上传文件 + JWT 密钥), 挂后端容器
+# 数据: PB_DATA_DIR 指向的目录(SQLite 库 + 上传文件 + JWT 密钥), 挂后端容器
 #       —— 备份这个目录 = 备份全部数据
 # Redis: 默认不启用。core v0.14.0 起单机内存模式全功能免 Redis(匿名取件可用,
 #        取件码映射重启丢失); 需要重启保留映射时解开文件尾 redis 段注释,
-#        并在 .env 设 FCB_REDIS_HOST=redis 后 docker compose up -d
+#        并在 .env 设 PB_REDIS_HOST=redis 后 docker compose up -d
 #
 # 同目录 .env 由平台安装包自动生成(或按各仓 README 手工准备),
 # 改后 docker compose -p pigeonbox up -d 生效。
 
 services:
   pigeonbox:
-    image: ghcr.io/pigeonbox/server:${FCB_IMAGE_TAG:-v0.15.6}
+    image: ghcr.io/pigeonbox/server:${PB_IMAGE_TAG:-v0.15.6}
     container_name: pigeonbox-server
     environment:
       - TZ=${TZ:-Asia/Shanghai}
-      - FCB_SERVER_MODE=release
-      - FCB_PRODUCTION=1
+      - PB_SERVER_MODE=release
+      - PB_PRODUCTION=1
       # JWT 密钥留空 → 容器首启自动生成强随机值并持久化到数据目录(重启/升级不丢)
-      - FCB_JWT_SECRET=${FCB_JWT_SECRET:-}
+      - PB_JWT_SECRET=${PB_JWT_SECRET:-}
       # 管理员密码留空 → 默认 admin/admin123(装完请立即修改), .env 覆盖
-      - FCB_ADMIN_PASSWORD=${FCB_ADMIN_PASSWORD:-}
+      - PB_ADMIN_PASSWORD=${PB_ADMIN_PASSWORD:-}
       # 对外完整地址(生成分享链接用; 有域名/HTTPS 反代时在 .env 填)
-      - FCB_SERVER_BASE_URL=${FCB_SERVER_BASE_URL:-}
+      - PB_SERVER_BASE_URL=${PB_SERVER_BASE_URL:-}
       # NAS 场景默认关闭开放注册(管理员建号), 与 fnos 适配层同款
-      - FCB_USER_ALLOW_REGISTRATION=${FCB_USER_ALLOW_REGISTRATION:-false}
+      - PB_USER_ALLOW_REGISTRATION=${PB_USER_ALLOW_REGISTRATION:-false}
       # 套反代/HTTPS 网关时填容器网段 CIDR, 否则限流按代理 IP 计数
-      - FCB_TRUSTED_PROXIES=${FCB_TRUSTED_PROXIES:-}
+      - PB_TRUSTED_PROXIES=${PB_TRUSTED_PROXIES:-}
       # 留空 = 单机内存模式; 启用下方 redis 段后设为 redis
-      - FCB_REDIS_HOST=${FCB_REDIS_HOST:-}
-      - FCB_REDIS_PORT=${FCB_REDIS_PORT:-6379}
-      - FCB_REDIS_PASSWORD=${FCB_REDIS_PASSWORD:-}
+      - PB_REDIS_HOST=${PB_REDIS_HOST:-}
+      - PB_REDIS_PORT=${PB_REDIS_PORT:-6379}
+      - PB_REDIS_PASSWORD=${PB_REDIS_PASSWORD:-}
     volumes:
-      - ${FCB_DATA_DIR:-./data}:/app/data
+      - ${PB_DATA_DIR:-./data}:/app/data
     # 核心启动逻辑前置: JWT 密钥为空时生成并写入数据卷(镜像内 busybox 实现)。
     # 与生态主仓 docker-compose.yml 逐字一致, 勿单方改动。
     entrypoint:
       - /bin/sh
       - -c
       - |
-        if [ -z "$$FCB_JWT_SECRET" ] && [ -f /app/data/.jwt_secret ]; then
-          FCB_JWT_SECRET=$$(cat /app/data/.jwt_secret)
-          export FCB_JWT_SECRET
+        if [ -z "$$PB_JWT_SECRET" ] && [ -f /app/data/.jwt_secret ]; then
+          PB_JWT_SECRET=$$(cat /app/data/.jwt_secret)
+          export PB_JWT_SECRET
         fi
-        if [ -z "$$FCB_JWT_SECRET" ]; then
-          FCB_JWT_SECRET=$$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 48)
-          export FCB_JWT_SECRET
-          printf '%s' "$$FCB_JWT_SECRET" > /app/data/.jwt_secret
+        if [ -z "$$PB_JWT_SECRET" ]; then
+          PB_JWT_SECRET=$$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 48)
+          export PB_JWT_SECRET
+          printf '%s' "$$PB_JWT_SECRET" > /app/data/.jwt_secret
           chmod 600 /app/data/.jwt_secret
         fi
         exec ./server --config ./config/config.yaml
@@ -66,15 +66,15 @@ services:
         max-file: "3"
 
   frontend:
-    image: ghcr.io/pigeonbox/frontend:${FCB_IMAGE_TAG:-v0.15.6}
+    image: ghcr.io/pigeonbox/frontend:${PB_IMAGE_TAG:-v0.15.6}
     container_name: pigeonbox-frontend
     ports:
-      - "${FCB_API_BIND:-0.0.0.0}:${FCB_API_PORT:-12345}:8080"
+      - "${PB_API_BIND:-0.0.0.0}:${PB_API_PORT:-12345}:8080"
     environment:
       - BACKEND_HOST=pigeonbox
       - BACKEND_PORT=12345
       # nginx 反代体积上限(分片上传不受影响; 多文件 zip 流式下载/大请求体会被 nginx 先拒)
-      - CLIENT_MAX_BODY_SIZE=${FCB_MAX_BODY_SIZE:-1024m}
+      - CLIENT_MAX_BODY_SIZE=${PB_MAX_BODY_SIZE:-1024m}
     depends_on:
       pigeonbox:
         condition: service_healthy
@@ -93,7 +93,7 @@ services:
         max-file: "3"
 
   # ── 可选 Redis(默认关闭) ──
-  # 解开本段与文件尾 volumes 注释, 并在 .env 设 FCB_REDIS_HOST=redis 后 up -d:
+  # 解开本段与文件尾 volumes 注释, 并在 .env 设 PB_REDIS_HOST=redis 后 up -d:
   # 取件码映射/预签名/分布式限流改走 Redis, AOF 持久化重启不丢。
   # redis:
   #   image: redis:7-alpine

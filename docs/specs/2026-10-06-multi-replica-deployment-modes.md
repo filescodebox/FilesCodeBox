@@ -8,7 +8,7 @@
 - 单机部署（fnos / desktop / docker-compose 单机）必须零回归——默认形态与历史完全一致。
 - 服务间通信评估结论：**本拆分的通信本质是"共享数据层 + 配置变更广播"，不存在请求路径上的跨进程调用**，v1 不引入 RPC；Kitex（thrift 协议与 contracts IDL 同源，CloudWeGo 同族）作为预留升级路径，触发条件见 §6。
 
-## 2. 运行模式（`deployment.mode` / env `FCB_DEPLOY_MODE`）
+## 2. 运行模式（`deployment.mode` / env `PB_DEPLOY_MODE`）
 
 | | standalone（默认） | public（可 N 副本） | admin（全局 1 实例） |
 |---|---|---|---|

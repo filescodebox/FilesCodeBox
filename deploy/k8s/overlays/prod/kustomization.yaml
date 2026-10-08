@@ -2,7 +2,7 @@
 # 用法: kubectl apply -k deploy/k8s/overlays/prod
 #
 # ⚠️ 部署前必须完成两件事（漏做会启动失败——这是刻意的 fail-fast）：
-#   1. 编辑 base/secret.yaml 把 FCB_JWT_SECRET 换成强随机值
+#   1. 编辑 base/secret.yaml 把 PB_JWT_SECRET 换成强随机值
 #      (openssl rand -hex 32)。占位值在服务端黑名单中，直接 apply 会 crash-loop。
 #   2. 下方面像 tag 钉到实际发布的版本(ghcr tag 无 v 前缀)，勿用 latest。
 apiVersion: kustomize.config.k8s.io/v1beta1
@@ -16,7 +16,7 @@ images:
   - name: ghcr.io/pigeonbox/frontend
     newTag: 0.15.6
 # 生产覆盖：副本数
-# ⚠️ server ≥ 0.14.0 起多副本须按 FCB_DEPLOY_MODE 拆分拓扑部署
+# ⚠️ server ≥ 0.14.0 起多副本须按 PB_DEPLOY_MODE 拆分拓扑部署
 #    （public×N + admin×1，推荐用 charts 仓 pigeonbox chart 1.3.22+ 的 replicaCount>1 渲染；
 #    裸 manifest 直接对单 Deployment 扩副本=多实例同跑迁移/后台任务，语义不成立）。
 patches:

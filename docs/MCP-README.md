@@ -6,11 +6,11 @@ PigeonBox 内置 **Model Context Protocol (MCP) server**：AI 客户端（Claude
 |---|---|
 | 端点 | `POST /api/v1/mcp`（单端点，Streamable HTTP 传输，JSON-RPC 2.0，符合 MCP 规范） |
 | 认证 | 管理员 JWT，`Authorization: Bearer <token>`（与 Web 管理后台同一账号体系） |
-| 开关 | `mcp.enabled`（默认 `true`）/ env `FCB_MCP_ENABLED` |
+| 开关 | `mcp.enabled`（默认 `true`）/ env `PB_MCP_ENABLED` |
 | 协议版本 | `2025-03-26`（握手应答声明，服务端无会话状态，不强制握手） |
 
 > **部署模式门控（core v0.13.0+）**：MCP 路由仅在 **standalone**（默认）与 **admin** 模式注册；
-> `FCB_DEPLOY_MODE=public` 的多副本公开面不含 MCP（请求 404）。多副本拓扑（chart
+> `PB_DEPLOY_MODE=public` 的多副本公开面不含 MCP（请求 404）。多副本拓扑（chart
 > `replicaCount>1`）下请对接 admin 面：`<release>-admin` Service 或 `serverAdmin.ingress` 域名。
 
 ## 能力清单（13 个工具）
@@ -36,7 +36,7 @@ PigeonBox 内置 **Model Context Protocol (MCP) server**：AI 客户端（Claude
 `expire_style` 取值：`minute` / `hour` / `day` / `week` / `month` / `year` / `forever`；
 `custom_code` 为 3-32 位字母/数字/`-`/`_`（冲突报错）。所有工具结果均为文本块，中文友好。
 
-> `mcp.max_file_size`（默认 6MB，env `FCB_MCP_MAX_FILE_SIZE`）约束 share_file 上传与
+> `mcp.max_file_size`（默认 6MB，env `PB_MCP_MAX_FILE_SIZE`）约束 share_file 上传与
 > download_share_file 下载的单文件大小——base64 膨胀 4/3 后需低于请求体上限
 > （max(10MB, upload.max_file_size)），调大本值超过请求体上限时须同步调大
 > `upload.max_file_size`。大文件请走 Web/客户端直传通道，MCP 定位是小文件与自动化。
@@ -125,7 +125,7 @@ cp -r pigeonbox/skills/pigeonbox-mcp ~/.agents/skills/   # 或 <project>/.agents
 - 多副本部署时 MCP 只在 admin 面存在，公网入口天然打不到（404），无需额外封禁。
 - 对 AI 客户端开放删除/清理类工具前评估误操作风险：`delete_share` 是**硬删除**（DB 记录 +
   物理文件，不经 v0.13.0 的回收站，不可恢复），`cleanup_expired` 批量清理全部过期分享。
-- `mcp.enabled=false` 可整体关闭（env `FCB_MCP_ENABLED=false`），关闭后路由不注册。
+- `mcp.enabled=false` 可整体关闭（env `PB_MCP_ENABLED=false`），关闭后路由不注册。
 
 ## 协议细节
 
@@ -139,7 +139,7 @@ cp -r pigeonbox/skills/pigeonbox-mcp ~/.agents/skills/   # 或 <project>/.agents
 
 | 现象 | 原因与处置 |
 |---|---|
-| 404 | `mcp.enabled=false` 已关闭，或请求打在 `FCB_DEPLOY_MODE=public` 副本上（改指 admin 面） |
+| 404 | `mcp.enabled=false` 已关闭，或请求打在 `PB_DEPLOY_MODE=public` 副本上（改指 admin 面） |
 | 401 | token 缺失/过期（7 天）/后台登出被互踢——重新 `POST /admin/login` |
 | `-32601` | 方法名拼错；服务端只认 `initialize` / `ping` / `tools/list` / `tools/call` |
 | `isError: true` | 工具业务失败（如取件码不存在、custom_code 冲突），读 content 文本即可 |

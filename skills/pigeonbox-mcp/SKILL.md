@@ -16,7 +16,7 @@ JSON-RPC 2.0，管理员 JWT 认证。通过它可以替用户管理文件快递
   （body `{"username","password"}`，取 `data.token`）获取，**有效期 7 天**；
   管理后台登出会全端互踢使 token 失效
 - 服务端无会话状态：无需 `initialize` 握手，可直接 `tools/call`，逐请求独立认证
-- 部署门控：仅 standalone / admin 模式注册此端点；`FCB_DEPLOY_MODE=public` 副本返回
+- 部署门控：仅 standalone / admin 模式注册此端点；`PB_DEPLOY_MODE=public` 副本返回
   404 —— 此时换 admin 面地址（多副本拓扑的 `<release>-admin` Service / admin ingress）
 
 ## 首选路径：助手脚本
@@ -26,8 +26,8 @@ JSON-RPC 2.0，管理员 JWT 认证。通过它可以替用户管理文件快递
 
 ```bash
 SCRIPT_DIR="<本 skill 目录>"   # 即本 SKILL.md 所在目录
-export FCB_BASE_URL=http://your-server:12345
-export FCB_ADMIN_USER=admin FCB_ADMIN_PASSWORD='<密码>'
+export PB_BASE_URL=http://your-server:12345
+export PB_ADMIN_USER=admin PB_ADMIN_PASSWORD='<密码>'
 
 "$SCRIPT_DIR/scripts/mcp.sh" login                        # 取 token 并缓存
 "$SCRIPT_DIR/scripts/mcp.sh" tools                        # 列出工具
@@ -42,7 +42,7 @@ export FCB_ADMIN_USER=admin FCB_ADMIN_PASSWORD='<密码>'
 `call` 输出工具结果文本；业务失败（`isError: true`）时退出码为 1、结果文本照常输出——
 把它当作工具报错读给用户，不要当作脚本崩溃。
 
-已有 token 时可 `export FCB_TOKEN=<jwt>` 跳过登录；`FCB_TOKEN_FILE=/dev/null` 禁用缓存。
+已有 token 时可 `export PB_TOKEN=<jwt>` 跳过登录；`PB_TOKEN_FILE=/dev/null` 禁用缓存。
 
 ## 裸 curl 备用（脚本不可用时）
 
@@ -59,7 +59,7 @@ curl -s -X POST "$BASE/api/v1/mcp" \
 | 工具 | 参数（JSON arguments） | 说明 |
 |---|---|---|
 | `share_text` | `text`（必填，≤222KB）、`expire_value`（默认 1）+`expire_style`（minute/hour/day/week/month/year/forever，默认 day）、`password`（可选，给即开启取件密码）、`custom_code`（可选，3-32 位字母数字-_-，冲突报错） | 创建文本分享；返回取件码 + 完整链接。经 MCP 创建的分享来源记为 `mcp`，管理端可辨 |
-| `share_file` | `file_name`+`content_base64`（必填）、`expire_*`、`password`、`custom_code` | 上传文件建分享（base64，走配额/审核/扩展名白名单），单文件上限 `mcp.max_file_size`（默认 6MB，`FCB_MCP_MAX_FILE_SIZE` 可调）；exe 等白名单外类型被拒 |
+| `share_file` | `file_name`+`content_base64`（必填）、`expire_*`、`password`、`custom_code` | 上传文件建分享（base64，走配额/审核/扩展名白名单），单文件上限 `mcp.max_file_size`（默认 6MB，`PB_MCP_MAX_FILE_SIZE` 可调）；exe 等白名单外类型被拒 |
 | `get_share` | `code`（8 位取件码） | 查详情（类型/大小/剩余次数/过期时间），不消耗取件次数；文件分享附子文件清单 |
 | `get_share_content` | `code` | 读内容：文本分享返回正文；文件分享返回元数据与文件清单（不消耗取件次数） |
 | `download_share_file` | `code` | 下载文件内容（base64 回传）；仅单文件分享（多文件拒绝并提示），已过期拒绝，超上限拒绝；不消耗取件次数 |
@@ -85,7 +85,7 @@ curl -s -X POST "$BASE/api/v1/mcp" \
 - JSON-RPC `error`＝协议错误：`-32601` 方法名错（只认 initialize/ping/tools/list/tools/call）、
   `-32602` 参数错
 - HTTP 401＝token 过期（7 天）或后台登出互踢 → 重新登录
-- HTTP 404＝端点未开启（`FCB_MCP_ENABLED=false`）或打在 public 副本上 → 换 admin 面地址
+- HTTP 404＝端点未开启（`PB_MCP_ENABLED=false`）或打在 public 副本上 → 换 admin 面地址
 
 ## 安全红线
 

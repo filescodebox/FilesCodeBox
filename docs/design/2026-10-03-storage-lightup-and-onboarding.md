@@ -25,7 +25,7 @@
 **非目标（二期及以后，见 ROADMAP）**
 - 客户端 → S3 真·预签名直传直下（需改造 presign Init/Complete 协议与前端）。
 - 存储迁移工具（local→s3 存量搬运）。
-- NFS 后端、OneDrive、S3 环境变量注入（`FCB_STORAGE_S3_*`）。
+- NFS 后端、OneDrive、S3 环境变量注入（`PB_STORAGE_S3_*`）。
 - 文档站 / demo 站 / MCP / 反向分享（ROADMAP 中期项）。
 
 ## 3. 总体方案
@@ -128,7 +128,7 @@ type StorageService struct {
   结构体，不合并则每次保存站点配置都会冲掉该段）；`LoadRuntimeStorage/SaveRuntimeStorage`
   实现持久化接口（ensureConfigLoaded 之后读改写单行）。
 - 启动恢复（bootstrap）：InitConfig 后，若 DB 有 `runtime_storage` 则覆盖 conf.Storage
-  （DB 是管理端更晚的意图，优先于 yaml），随后重放 `FCB_STORAGE_TYPE/FCB_STORAGE_PATH`
+  （DB 是管理端更晚的意图，优先于 yaml），随后重放 `PB_STORAGE_TYPE/PB_STORAGE_PATH`
   两个 env 覆盖（env > DB > yaml）。
 - `getBootstrapStorageService()` 改为**单例**（当前 3 次调用创建 3 个实例，热切换无从谈起），
   BaseURL 与 presign 同规则（`server.base_url` 优先）。
@@ -155,7 +155,7 @@ type StorageService struct {
 
 | 来源 | 键 | 优先级 |
 |---|---|---|
-| env | `FCB_STORAGE_TYPE` / `FCB_STORAGE_PATH` | 1（最高，重启后仍生效） |
+| env | `PB_STORAGE_TYPE` / `PB_STORAGE_PATH` | 1（最高，重启后仍生效） |
 | DB | `system_configs.runtime_storage`（管理端在线切换/改配置写入） | 2 |
 | yaml | `storage.type/storage_path/s3.*/webdav.*` | 3（兜底） |
 
@@ -167,7 +167,7 @@ webdav：`storage.webdav.{endpoint,username,password}`。管理端在线修改�
 
 1. opendal：s3 Options 解析/缺参报错/Presign 离线签名断言（URL 含 X-Amz-Signature、
    过期参数正确）；webdav 用 `golang.org/x/net/webdav` 在 httptest 起真实服务做全操作
-   roundtrip（零外部依赖）；S3 集成测试挂 `FCB_TEST_S3_ENDPOINT` env 门，默认 skip。
+   roundtrip（零外部依赖）；S3 集成测试挂 `PB_TEST_S3_ENDPOINT` env 门，默认 skip。
 2. storage：本地路径既有用例不改动全绿（回归底线）；`NewCustom` 注入 fake Driver 验证
    remote 分派映射（SaveFile 哈希/SaveChunk/MergeChunks 顺序与总大小/CleanChunks/
    GetFileReader）；Reload 失败保留旧值、EffectiveType 降级如实。
@@ -210,7 +210,7 @@ webdav：`storage.webdav.{endpoint,username,password}`。管理端在线修改�
 
 ### 9.2 直下（下载 302，可选开关）
 
-- 配置 `download.s3_direct_download`（env `FCB_DOWNLOAD_S3_DIRECT`，默认关）。
+- 配置 `download.s3_direct_download`（env `PB_DOWNLOAD_S3_DIRECT`，默认关）。
 - `/share/download` 在访问校验/密码/次数扣减全部完成后、流式返回前：开关开且后端支持
   时 302 到 10 分钟时效的预签名 GET（`Cache-Control: no-store`）；不支持/签发失败
   回退服务端中转。处理器内对窄接口做 `*storage.StorageService` 断言取直下能力。

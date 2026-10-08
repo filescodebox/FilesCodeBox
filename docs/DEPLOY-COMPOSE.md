@@ -4,26 +4,26 @@
 
 | 形态 | 命令 | 适用 |
 |---|---|---|
-| 直连体验 | `docker compose up -d` | 本机快速试用,`http://localhost:12345`(入口=frontend 容器);**默认仅本机可访问**,局域网访问在 .env 设 `FCB_API_BIND=0.0.0.0` |
+| 直连体验 | `docker compose up -d` | 本机快速试用,`http://localhost:12345`(入口=frontend 容器);**默认仅本机可访问**,局域网访问在 .env 设 `PB_API_BIND=0.0.0.0` |
 | nginx 反代 | `docker compose --profile nginx up -d` | 正式对外:统一 80/443 入口、TLS、缓存与超时治理 |
 | Kubernetes | `charts/` 仓库 `pigeonbox` chart | 多副本、Ingress、监控接入(见 charts 仓库 README) |
 
 ## 快速开始
 
 ```bash
-cp .env.example .env      # 全部项有安全默认,可留空;生产至少设 FCB_ADMIN_PASSWORD
+cp .env.example .env      # 全部项有安全默认,可留空;生产至少设 PB_ADMIN_PASSWORD
 docker compose up -d
 curl http://localhost:12345/live    # 健康检查
 ```
 
 > **局域网访问**:入口默认绑定 `127.0.0.1`(仅部署机本机可用,安全默认——防绕过反代直连)。
-> 局域网其他设备访问时,在 `.env` 里设 `FCB_API_BIND=0.0.0.0` 后 `docker compose up -d` 重建即可。
+> 局域网其他设备访问时,在 `.env` 里设 `PB_API_BIND=0.0.0.0` 后 `docker compose up -d` 重建即可。
 
-默认管理员 `admin / admin123`（仅开发模式；生产模式未注入 `FCB_ADMIN_PASSWORD` 会**拒绝启动**——安全默认，或设 `FCB_DISABLE_DEFAULT_ADMIN=true` 走 /setup 首启向导），登录后请立即改密。
+默认管理员 `admin / admin123`（仅开发模式；生产模式未注入 `PB_ADMIN_PASSWORD` 会**拒绝启动**——安全默认，或设 `PB_DISABLE_DEFAULT_ADMIN=true` 走 /setup 首启向导），登录后请立即改密。
 
-内置 redis 密码:.env 设 `FCB_REDIS_PASSWORD=<随机串>` 即 server 与 redis 两端同时生效(未设时编排内网无密码,端口不对宿主发布;生产建议设置)。
+内置 redis 密码:.env 设 `PB_REDIS_PASSWORD=<随机串>` 即 server 与 redis 两端同时生效(未设时编排内网无密码,端口不对宿主发布;生产建议设置)。
 
-server 与 frontend 两镜像同版本列车(`FCB_IMAGE_TAG` 一变量同钉),均已 public 可匿名拉取;若仍 403 再 `docker login ghcr.io`。
+server 与 frontend 两镜像同版本列车(`PB_IMAGE_TAG` 一变量同钉),均已 public 可匿名拉取;若仍 403 再 `docker login ghcr.io`。
 
 本地构建(需先 `make setup` 拉齐模块仓):
 
@@ -35,8 +35,8 @@ BUILD=1 make compose-up       # = docker compose up -d --build
 
 core 自 v0.3 起对密钥做 fail-fast 校验(空值或已知默认值拒绝启动),**必须提供一个强随机密钥**,两种方式:
 
-1. **自动生成(默认)**:`FCB_JWT_SECRET` 留空时,容器首启生成 48 位随机值并持久化到 `./data/.jwt_secret`(权限 600),重启/升级沿用,所有已登录会话不失效。
-2. **显式注入(生产建议)**:在 `.env` 设 `FCB_JWT_SECRET=$(openssl rand -hex 32)`。注入后容器直接使用该值,不读写密钥文件。
+1. **自动生成(默认)**:`PB_JWT_SECRET` 留空时,容器首启生成 48 位随机值并持久化到 `./data/.jwt_secret`(权限 600),重启/升级沿用,所有已登录会话不失效。
+2. **显式注入(生产建议)**:在 `.env` 设 `PB_JWT_SECRET=$(openssl rand -hex 32)`。注入后容器直接使用该值,不读写密钥文件。
 
 轮换:改 `.env` 后 `docker compose up -d` 重建容器即可;旧 JWT 全部失效(用户需重新登录,已发出的取件令牌不受影响)。注意自动生成模式下 `./data/.jwt_secret` 属于敏感文件,备份/传输数据目录时同样要保密。
 
@@ -45,14 +45,14 @@ core 自 v0.3 起对密钥做 fail-fast 校验(空值或已知默认值拒绝启
 ```bash
 cp .env.example .env
 # .env 中两项必设:
-#   FCB_TRUSTED_PROXIES=<compose 容器网段 CIDR>
-#   FCB_SERVER_BASE_URL=https://<对外完整地址>
-docker compose --profile nginx up -d     # 占用宿主 80(FCB_HTTP_PORT 可改)
+#   PB_TRUSTED_PROXIES=<compose 容器网段 CIDR>
+#   PB_SERVER_BASE_URL=https://<对外完整地址>
+docker compose --profile nginx up -d     # 占用宿主 80(PB_HTTP_PORT 可改)
 ```
 
 **为什么 trusted_proxies 必填**:后端对 `X-Forwarded-For` 做 CIDR 可信校验,只有直连对端落在可信网段内才采信 XFF。不配置则限流/登录失败锁定全部按 nginx 的 IP 计数——所有用户共享一个限流桶,一人触发全员受限,且失败锁定会误伤。compose 默认网络落在 `172.16.0.0/12` 池内,`.env.example` 给了这个宽值;要收窄就用 `docker network inspect <项目目录名>_default | grep Subnet` 查精确网段。
 
-启用反代后建议再设 `FCB_API_BIND=127.0.0.1` 把对外入口(frontend 容器)收进回环:部分宿主防火墙/NAT 会把外部直连流量 SNAT 成 docker 网关地址(恰好在可信网段内),此时直连客户端可伪造 XFF 绕过按 IP 的限流与锁定;收进回环后所有流量必须走反代,来源 IP 全部可信解析。
+启用反代后建议再设 `PB_API_BIND=127.0.0.1` 把对外入口(frontend 容器)收进回环:部分宿主防火墙/NAT 会把外部直连流量 SNAT 成 docker 网关地址(恰好在可信网段内),此时直连客户端可伪造 XFF 绕过按 IP 的限流与锁定;收进回环后所有流量必须走反代,来源 IP 全部可信解析。
 
 HTTPS / 子路径部署:模板 `deploy/nginx/nginx.conf` 内置了 443 server 块与 `/fcb/` 子路径前缀改写的完整注释示例,取消注释、挂载证书即可,此处不重复。该文件头部还有 `client_max_body_size` 与后端 `upload.upload_size / max_file_size / chunk_size` 的三处配平说明,调上传上限前先读。
 
@@ -63,7 +63,7 @@ HTTPS / 子路径部署:模板 `deploy/nginx/nginx.conf` 内置了 443 server �
 - 应用状态在 `./data`:SQLite 库、上传文件、`.jwt_secret`。容器本身无状态,可随时销毁重建。
 - **Redis 数据在命名卷 `redisdata`(不在 `./data`)**:匿名取件码映射仅存于 Redis。同机重建卷会保留;**跨机迁移/彻底清理后需一并导出**(`docker run --rm -v <项目名>_redisdata:/d alpine tar czf - -C /d . > redisdata.tgz`),否则匿名取件码全部失效。
 - 备份:停机窗口内直接拷贝 `./data`(跨机迁移另按上行导出 redisdata);不停机则用 `sqlite3 data/fileCodeBox.db ".backup '...'"` 做一致性快照(上传文件目录另行拷贝)。注意库文件名是镜像内置 config.yaml 写死的 `fileCodeBox.db`(驼峰);管理后台在线改过的站点配置也在这份库里(`system_configs` 表),备库即备份全部配置。
-- 升级:`.env` 钉住 `FCB_IMAGE_TAG`(建议具体版本而非 latest)→ 改 tag → `docker compose pull && docker compose up -d`(server/frontend 两镜像同 tag 一起更新,数据卷不动)。回滚即把 tag 改回旧版本。
+- 升级:`.env` 钉住 `PB_IMAGE_TAG`(建议具体版本而非 latest)→ 改 tag → `docker compose pull && docker compose up -d`(server/frontend 两镜像同 tag 一起更新,数据卷不动)。回滚即把 tag 改回旧版本。
 - 容器日志已配 json-file 轮转(单容器 10MB×3),无担心无限增长。
 
 ## 常见问题
@@ -71,9 +71,9 @@ HTTPS / 子路径部署:模板 `deploy/nginx/nginx.conf` 内置了 443 server �
 | 现象 | 原因与处理 |
 |---|---|
 | 容器反复重启,日志 `a secure user.jwt_secret is required` | 数据目录不可写导致密钥文件写不进(Linux 裸 Docker 常见):`mkdir -p data && sudo chown 1000:1000 data` 后重启 |
-| 限流"误伤"(一人超限全员受限)/ 登录错误锁定所有人 | 反代部署未配 `FCB_TRUSTED_PROXIES`,见上节 |
-| ghcr 镜像拉取 `unauthorized` | `docker login ghcr.io`,或换可用 `FCB_IMAGE_TAG` |
-| 80/12345 端口被占 | `.env` 改 `FCB_HTTP_PORT` / `FCB_API_PORT` |
+| 限流"误伤"(一人超限全员受限)/ 登录错误锁定所有人 | 反代部署未配 `PB_TRUSTED_PROXIES`,见上节 |
+| ghcr 镜像拉取 `unauthorized` | `docker login ghcr.io`,或换可用 `PB_IMAGE_TAG` |
+| 80/12345 端口被占 | `.env` 改 `PB_HTTP_PORT` / `PB_API_PORT` |
 | 想临时关掉反代 | `docker compose --profile nginx up -d` 只重排 pigeonbox;彻底停 nginx:`docker compose stop nginx` |
 
 完整环境变量(存储后端/Redis/限流/审核/MCP 等)见 [ENVIRONMENT_VARIABLES.md](ENVIRONMENT_VARIABLES.md)。

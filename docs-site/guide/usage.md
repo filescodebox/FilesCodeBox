@@ -189,10 +189,10 @@ title: 使用说明
 由站点开关「匿名上传」（`upload.open_upload`）决定，管理员可随时在后台关闭。
 
 **Q：忘记管理员密码？**
-`FCB_ADMIN_PASSWORD` 仅在**首次初始化**（数据库中尚无管理员）时生效，之后修改该变量不会改动已有密码。已有实例忘记密码：由运维在数据库中将 `admin` 用户删除后重启实例，系统会按 `FCB_ADMIN_PASSWORD`（未设则 `admin123`，请立即改密）重建管理员。
+`PB_ADMIN_PASSWORD` 仅在**首次初始化**（数据库中尚无管理员）时生效，之后修改该变量不会改动已有密码。已有实例忘记密码：由运维在数据库中将 `admin` 用户删除后重启实例，系统会按 `PB_ADMIN_PASSWORD`（未设则 `admin123`，请立即改密）重建管理员。
 
 **Q：局域网/内网无法访问？**
-Docker Compose 默认仅本机可访问（安全默认），如需局域网开放请在 `.env` 设 `FCB_API_BIND=0.0.0.0` 后重建，详见[快速开始](./getting-started)。
+Docker Compose 默认仅本机可访问（安全默认），如需局域网开放请在 `.env` 设 `PB_API_BIND=0.0.0.0` 后重建，详见[快速开始](./getting-started)。
 
 ---
 

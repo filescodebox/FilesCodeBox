@@ -28,5 +28,5 @@
 
 ## 已知边界
 
-- 默认管理员 `admin/admin123`：生产部署**必须**用 `FCB_ADMIN_PASSWORD` 覆盖，或以 `app.production: true` 强制校验。
+- 默认管理员 `admin/admin123`：生产部署**必须**用 `PB_ADMIN_PASSWORD` 覆盖，或以 `app.production: true` 强制校验。
 - S3/WebDAV 凭据经管理端在线修改后持久化在站点数据库（`system_configs`），请保证数据库访问面的安全；也可仅用 yaml/env 注入。

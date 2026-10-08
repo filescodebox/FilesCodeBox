@@ -75,7 +75,7 @@ EOF
   # 编译 + 起服务
   cd "$(dirname "$0")/../server" || exit 1
   go build -o "$SMOKE/server-bin" ./cmd/server || { echo "BUILD FAILED"; exit 1; }
-  FCB_JWT_SECRET=smoke-secret-$(date +%s) "$SMOKE/server-bin" --config "$SMOKE/config.yaml" > "$SMOKE/server.log" 2>&1 &
+  PB_JWT_SECRET=smoke-secret-$(date +%s) "$SMOKE/server-bin" --config "$SMOKE/config.yaml" > "$SMOKE/server.log" 2>&1 &
   SRV=$!
   redis-server --port 16379 --daemonize no --save '' --appendonly no > "$SMOKE/redis.log" 2>&1 &
   RPID=$!

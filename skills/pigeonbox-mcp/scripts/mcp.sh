@@ -3,23 +3,23 @@
 # 依赖: curl + python3（无 jq 依赖）
 #
 # 用法:
-#   mcp.sh login                        获取并缓存管理员 token（已设 FCB_TOKEN 时直接用之）
+#   mcp.sh login                        获取并缓存管理员 token（已设 PB_TOKEN 时直接用之）
 #   mcp.sh tools                        列出全部 MCP 工具及说明
 #   mcp.sh call <tool> ['{json 参数}']  调用工具，输出结果文本（业务失败退出码 1）
 #   mcp.sh rpc <method> ['{params}']    通用 JSON-RPC（initialize / ping / 其他）
 #
 # 环境变量:
-#   FCB_BASE_URL       服务器基址（默认 http://localhost:12345）
-#   FCB_ADMIN_USER     管理员用户名（默认 admin）
-#   FCB_ADMIN_PASSWORD 管理员密码（未设 FCB_TOKEN 时必填）
-#   FCB_TOKEN          直接注入 token（跳过登录）
-#   FCB_TOKEN_FILE     token 缓存文件（默认 ${TMPDIR:-/tmp}/fcb-mcp-token.<user>，权限 600；
+#   PB_BASE_URL       服务器基址（默认 http://localhost:12345）
+#   PB_ADMIN_USER     管理员用户名（默认 admin）
+#   PB_ADMIN_PASSWORD 管理员密码（未设 PB_TOKEN 时必填）
+#   PB_TOKEN          直接注入 token（跳过登录）
+#   PB_TOKEN_FILE     token 缓存文件（默认 ${TMPDIR:-/tmp}/fcb-mcp-token.<user>，权限 600；
 #                      设为 /dev/null 可禁用缓存）
 set -euo pipefail
 
-BASE="${FCB_BASE_URL:-http://localhost:12345}"
-AUSER="${FCB_ADMIN_USER:-admin}"
-TOKEN_FILE="${FCB_TOKEN_FILE:-${TMPDIR:-/tmp}/fcb-mcp-token.$AUSER}"
+BASE="${PB_BASE_URL:-http://localhost:12345}"
+AUSER="${PB_ADMIN_USER:-admin}"
+TOKEN_FILE="${PB_TOKEN_FILE:-${TMPDIR:-/tmp}/fcb-mcp-token.$AUSER}"
 
 usage() { sed -n '3,15p' "$0" | sed 's/^# \{0,1\}//'; }
 
@@ -33,13 +33,13 @@ print(d)
 ' "$@"; }
 
 token() {
-  if [ -n "${FCB_TOKEN:-}" ]; then printf '%s' "$FCB_TOKEN"; return; fi
+  if [ -n "${PB_TOKEN:-}" ]; then printf '%s' "$PB_TOKEN"; return; fi
   if [ -s "$TOKEN_FILE" ]; then cat "$TOKEN_FILE"; return; fi
-  [ -n "${FCB_ADMIN_PASSWORD:-}" ] || { echo "错误: 未设置 FCB_ADMIN_PASSWORD（或直接给 FCB_TOKEN）" >&2; exit 2; }
+  [ -n "${PB_ADMIN_PASSWORD:-}" ] || { echo "错误: 未设置 PB_ADMIN_PASSWORD（或直接给 PB_TOKEN）" >&2; exit 2; }
   local body t
-  body=$(python3 -c 'import json,sys;print(json.dumps({"username":sys.argv[1],"password":sys.argv[2]}))' "$AUSER" "$FCB_ADMIN_PASSWORD")
+  body=$(python3 -c 'import json,sys;print(json.dumps({"username":sys.argv[1],"password":sys.argv[2]}))' "$AUSER" "$PB_ADMIN_PASSWORD")
   t=$(curl -sf -X POST "$BASE/admin/login" -H 'Content-Type: application/json' -d "$body" | jget data token) || {
-    echo "错误: 登录失败（检查 FCB_BASE_URL / 账号密码）" >&2; exit 2; }
+    echo "错误: 登录失败（检查 PB_BASE_URL / 账号密码）" >&2; exit 2; }
   { umask 077; printf '%s' "$t" > "$TOKEN_FILE"; }
   printf '%s' "$t"
 }
