@@ -333,6 +333,34 @@ cmd_bump() {
     local FE_REF="v$N_SERVER"   # D2: frontend 与 server 同号
 
     echo "══ 列车 bump → $TRAIN (hotfix=$HOTFIX, dry-run=$DRY_RUN)"
+
+    # ── 预检:每仓默认分支+与远端 ff 对齐(2026-10-09 两起事故同根因:本地
+    # 陈旧/残留 train 分支——NAS 三仓冲突、hub go.work 提交落错分支、
+    # fnos/manifest 漏出 PR)。不对齐就失败,绝不基于陈旧基线切分支。──
+    if [ "$DRY_RUN" = 0 ]; then
+        echo "── [0/8] 预检:仓库对齐"
+        preflight() { # <dir> <default-branch>
+            local d=$1 def=$2 cur up
+            cur=$(git -C "$d" rev-parse --abbrev-ref HEAD)
+            git -C "$d" fetch -q origin "$def" 2>/dev/null || fail "$d fetch 失败"
+            up="origin/$def"
+            [ "$cur" = "$def" ] || { git -C "$d" checkout -q "$def" || fail "$d 切回 $def 失败(有未提交改动请先清理)"; }
+            [ -z "$(git -C "$d" status --porcelain)" ] || fail "$d 工作树不干净,先清理"
+            if git -C "$d" rev-parse -q --verify "$up" >/dev/null; then
+                git -C "$d" pull -q --ff-only "$up" 2>/dev/null || fail "$d 本地与 $up 分歧,先人工 pull --ff-only(勿强推)"
+            fi
+            echo "  ✓ $d@$def 已对齐远端"
+        }
+        preflight . main
+        [ -d frontend/.git ] && preflight frontend main
+        preflight fnos master
+        preflight openwrt main
+        preflight qnap main
+        [ -d ../desktop/.git ] && preflight ../desktop main
+        preflight synology main
+        preflight ugreen main
+        preflight terramaster main
+    fi
     echo "   库线: contracts=$N_CONTRACTS core=$N_CORE kit=$N_KIT p2p=$N_P2P | 镜像: server=$N_SERVER(前端同号) | 终端: core 钉=$N_CORE_PIN p2pc=$N_P2PC"
 
     # 前置: 仓存在 + fetch(清洁度不在此拦——由 commit_if_changed 按"列车文件有无 diff"判定)
@@ -443,17 +471,19 @@ cmd_bump() {
     fi
 
     echo "── [3/7] fnos"
-    local FNOS_OLD; FNOS_OLD=$(awk -F= '$1=="version"{print $2}' fnos/fnos/manifest)
     echo "$TRAIN" > fnos/VERSION
     printf '# 发布列车依赖钉版(真相源=hub release/train.yaml,由 release-train.sh bump 写入;勿手改)\nCORE_PIN=%s\nFRONTEND_REF=%s\n' "$N_CORE_PIN" "$FE_REF" > fnos/DEPS.env
-    local FNOS_FILES="VERSION DEPS.env"
-    if [ "$FNOS_OLD" != "$TRAIN" ]; then
-        ( cd fnos && GOWORK=off go mod edit -require="github.com/pigeonbox/core@$N_CORE_PIN" && GOWORK=off go mod tidy >/dev/null 2>&1 ) \
-            || echo "  ⚠ fnos go mod 整理失败,人工检查 go.mod/go.sum"
-        sed -i.bak "s/^version=.*/version=$TRAIN/" fnos/fnos/manifest && rm -f fnos/fnos/manifest.bak
+    local FNOS_FILES="VERSION DEPS.env fnos/manifest"
+    # manifest version 无条件写(幂等)——1.14.4 实测:本地值陈旧时条件跳过
+    # 会把 manifest 漏出 PR,fpk 版本断言在 Release 才拦(晚了一天)
+    sed -i.bak "s/^version=.*/version=$TRAIN/" fnos/fnos/manifest && rm -f fnos/fnos/manifest.bak
+    grep -q "^changelog=$TRAIN:" fnos/fnos/manifest || \
         sed -i.bak "/^desc=/a\\
 changelog=$TRAIN: 发布列车 $TRAIN(底层 core $N_CORE_PIN;前端 $FE_REF;详见 Release notes)。" fnos/fnos/manifest && rm -f fnos/fnos/manifest.bak
-        FNOS_FILES="$FNOS_FILES fnos/manifest go.mod go.sum"
+    if ! grep -q "github.com/pigeonbox/core@$N_CORE_PIN" fnos/go.mod; then
+        ( cd fnos && GOWORK=off go mod edit -require="github.com/pigeonbox/core@$N_CORE_PIN" && GOWORK=off go mod tidy >/dev/null 2>&1 ) \
+            || echo "  ⚠ fnos go mod 整理失败,人工检查 go.mod/go.sum"
+        FNOS_FILES="$FNOS_FILES go.mod go.sum"
     fi
     # shellcheck disable=SC2086
     commit_if_changed fnos fnos "train: bump to $TRAIN" $FNOS_FILES
