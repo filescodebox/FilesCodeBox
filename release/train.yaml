@@ -31,7 +31,7 @@ terminal.openwrt.frontend_ref: v0.15.8
 terminal.qnap.tag: v1.14.6
 terminal.qnap.version: 1.14.6
 terminal.qnap.core_pin: v0.14.9
-terminal.qnap.frontend_ref: v0.15.8
+terminal.qnap.frontend_core_pin: v0.1.4
 terminal.synology.tag: v1.14.6
 terminal.synology.version: 1.14.6
 terminal.ugreen.tag: v1.14.6

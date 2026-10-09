@@ -20,7 +20,7 @@ services:
       - PB_PRODUCTION=1
       # JWT 密钥留空 → 容器首启自动生成强随机值并持久化到数据目录(重启/升级不丢)
       - PB_JWT_SECRET=${PB_JWT_SECRET:-}
-      # 管理员密码留空 → 默认 admin/admin123(装完请立即修改), .env 覆盖
+      # 管理员密码必填(PB_PRODUCTION=1,留空=容器拒绝启动——防 admin/admin123 弱口令上线), .env 注入
       - PB_ADMIN_PASSWORD=${PB_ADMIN_PASSWORD:-}
       # 对外完整地址(生成分享链接用; 有域名/HTTPS 反代时在 .env 填)
       - PB_SERVER_BASE_URL=${PB_SERVER_BASE_URL:-}

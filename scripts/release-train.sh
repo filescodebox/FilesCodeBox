@@ -245,16 +245,16 @@ cmd_verify() {
             [ "$(grep -E '^CORE_PIN=' <<<"$DE" | cut -d= -f2)" = "$(tget "terminal.$t.core_pin")" ] \
                 && ok "$t DEPS CORE_PIN" || soft_fail "$t DEPS CORE_PIN ≠ train.yaml"
         done
-        # fnos 2026-10-09 起 web 自包含(适配器归仓),钉版=frontend-core tgz;
-        # openwrt/qnap 仍自 frontend 壳仓构建,沿用 FRONTEND_REF
-        local DE; DE=$(raw "fnos/$(def_branch fnos)/DEPS.env" 2>/dev/null) || DE=""
-        [ "$(grep -E '^FRONTEND_CORE_PIN=' <<<"$DE" | cut -d= -f2)" = "$C_FCORE" ] \
-            && ok "fnos DEPS FRONTEND_CORE_PIN = $C_FCORE" || soft_fail "fnos DEPS FRONTEND_CORE_PIN ≠ $C_FCORE"
-        for t in openwrt qnap; do
-            DE=$(raw "$t/$(def_branch "$t")/DEPS.env" 2>/dev/null) || DE=""
-            [ "$(grep -E '^FRONTEND_REF=' <<<"$DE" | cut -d= -f2)" = "$(tget "terminal.$t.frontend_ref")" ] \
-                && ok "$t DEPS FRONTEND_REF" || soft_fail "$t DEPS FRONTEND_REF ≠ train.yaml"
+        # fnos/qnap 2026-10-09 起 web 自包含(适配器归平台仓),钉版=frontend-core tgz;
+        # openwrt 仍自 frontend 壳仓构建 neutral 产物(无平台适配器),沿用 FRONTEND_REF
+        for t in fnos qnap; do
+            local DE; DE=$(raw "$t/$(def_branch "$t")/DEPS.env" 2>/dev/null) || DE=""
+            [ "$(grep -E '^FRONTEND_CORE_PIN=' <<<"$DE" | cut -d= -f2)" = "$C_FCORE" ] \
+                && ok "$t DEPS FRONTEND_CORE_PIN = $C_FCORE" || soft_fail "$t DEPS FRONTEND_CORE_PIN ≠ $C_FCORE"
         done
+        local DE; DE=$(raw "openwrt/$(def_branch openwrt)/DEPS.env" 2>/dev/null) || DE=""
+        [ "$(grep -E '^FRONTEND_REF=' <<<"$DE" | cut -d= -f2)" = "$(tget "terminal.openwrt.frontend_ref")" ] \
+            && ok "openwrt DEPS FRONTEND_REF" || soft_fail "openwrt DEPS FRONTEND_REF ≠ train.yaml"
         local DD; DD=$(raw desktop/main/DEPS.env 2>/dev/null) || DD=""
         [ "$(grep -E '^P2PC_REF=' <<<"$DD" | cut -d= -f2)" = "$C_P2PC" ] \
             && ok "desktop DEPS P2PC_REF = $C_P2PC" || soft_fail "desktop DEPS P2PC_REF ≠ $C_P2PC"
@@ -272,6 +272,9 @@ cmd_verify() {
     FPJ=$(raw "fnos/$(def_branch fnos)/web/package.json" 2>/dev/null) || FPJ=""
     [ -n "$FPJ" ] && { grep -q "pigeonbox-frontend-core-${C_FCORE#v}.tgz" <<<"$FPJ" \
         && ok "fnos/web frontend-core tgz = $C_FCORE" || fail "fnos/web frontend-core tgz ≠ $C_FCORE"; } || warn "fnos/web package.json 拉取失败"
+    FPJ=$(raw "qnap/$(def_branch qnap)/web/package.json" 2>/dev/null) || FPJ=""
+    [ -n "$FPJ" ] && { grep -q "pigeonbox-frontend-core-${C_FCORE#v}.tgz" <<<"$FPJ" \
+        && ok "qnap/web frontend-core tgz = $C_FCORE" || fail "qnap/web frontend-core tgz ≠ $C_FCORE"; } || warn "qnap/web package.json 拉取失败"
 
     echo "── 9. 文档版本矩阵(hub docs/architecture.md)"
     local row want
@@ -463,7 +466,7 @@ cmd_bump() {
         echo "terminal.qnap.tag: v$TRAIN"
         echo "terminal.qnap.version: $TRAIN"
         echo "terminal.qnap.core_pin: $N_CORE_PIN"
-        echo "terminal.qnap.frontend_ref: $FE_REF"
+        echo "terminal.qnap.frontend_core_pin: $N_FCORE"
         local p
         for p in $PLATFORMS; do
             echo "terminal.$p.tag: v$TRAIN"
@@ -564,8 +567,13 @@ changelog=$TRAIN: 发布列车 $TRAIN(底层 core $N_CORE_PIN;前端 $FE_REF;详
     echo "── [5/8] qnap"
     local QN_OLD; QN_OLD=$(cat qnap/VERSION)
     echo "$TRAIN" > qnap/VERSION
-    printf '# 发布列车依赖钉版(真相源=hub release/train.yaml,由 release-train.sh bump 写入;勿手改)\nCORE_PIN=%s\nFRONTEND_REF=%s\n' "$N_CORE_PIN" "$FE_REF" > qnap/DEPS.env
+    printf '# 发布列车依赖钉版(真相源=hub release/train.yaml,由 release-train.sh bump 写入;勿手改)\nCORE_PIN=%s\nFRONTEND_CORE_PIN=%s\n' "$N_CORE_PIN" "$N_FCORE" > qnap/DEPS.env
     local QN_FILES="VERSION DEPS.env"
+    # web/package.json 的 frontend-core tgz URL 跟随 lib.frontend-core(2026-10-09 拆仓)
+    if [ "$N_FCORE" != "$OLD_FCORE" ]; then
+        perl -pi -e 's|pigeonbox-frontend-core/releases/download/v[^/]+/pigeonbox-frontend-core-[0-9.]+\.tgz|pigeonbox-frontend-core/releases/download/'"$N_FCORE"'/pigeonbox-frontend-core-'"${N_FCORE#v}"'.tgz|g' qnap/web/package.json
+        QN_FILES="$QN_FILES web/package.json"
+    fi
     if [ "$QN_OLD" != "$TRAIN" ]; then
         ( cd qnap && GOWORK=off go mod edit -require="github.com/pigeonbox/core@$N_CORE_PIN" && GOWORK=off go mod tidy >/dev/null 2>&1 ) \
             || echo "  ⚠ qnap go mod 整理失败,人工检查"
