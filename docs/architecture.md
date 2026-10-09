@@ -10,33 +10,36 @@
 ```mermaid
 graph TB
     subgraph ORG["pigeonbox 组织"]
-        UMB["📁 pigeonbox<br/>(装配仓·本仓库)<br/>make setup 拉齐工作区"]
-        CT["📦 contracts<br/>契约层 v0.8.0<br/>errcode + Thrift 类型"]
-        CORE["🧩 core<br/>业务核心库 v0.14.4<br/>16 域服务 + bootstrap"]
-        SRV["🚀 server<br/>部署应用 v0.15.3<br/>main 薄壳 + Dockerfile"]
-        FE["🖥️ frontend<br/>Vue3 + TS"]
-        FNOS["🐂 fnos<br/>飞牛 fnOS 应用 v1.2.7<br/>SSO/共享目录/通知/穿透"]
-        OWRT["📡 openwrt<br/>OpenWrt/iStoreOS ipk+apk v1.14.0<br/>procd 托管/UCI 配置"]
-        P2P["🕸️ p2p<br/>联邦注册中心 v0.4.3<br/>租约注册/联邦路由/WS 信令/设备直传"]
+        UMB["📁 pigeonbox<br/>(装配仓·本仓库)<br/>make setup 拉齐工作区<br/>release/train.yaml 版本真相源"]
+        CT["📦 contracts<br/>契约层 v0.9.0<br/>errcode + Thrift 类型 + IDL 真相源"]
+        CORE["🧩 core<br/>业务核心库 v0.15.0<br/>16 域服务 + bootstrap"]
+        SRV["🚀 server<br/>部署应用 v0.15.8<br/>main 薄壳 + pb CLI + Dockerfile"]
+        FE["🖥️ frontend<br/>前端壳 v0.15.8<br/>neutral 产物 + nginx 分离镜像"]
+        FEC["🎨 frontend-core<br/>公共前端 core v0.1.4<br/>平台无关应用 + 宿主适配器 SPI"]
+        FNOS["🐂 fnos<br/>飞牛 fnOS 原生应用 v1.14.6<br/>fpk 单进程 + 开放平台 SSO 深度融合"]
+        OWRT["📡 openwrt<br/>OpenWrt/iStoreOS ipk+apk v1.14.6<br/>procd 托管/UCI 配置/LuCI"]
+        QNAP["🗄️ qnap<br/>威联通 QTS 原生 QPKG v1.14.6<br/>SSO 免登录 + 看门狗自愈"]
+        NAS3["📦 NAS 打包三仓 v1.14.6<br/>synology SPK(compose 壳)<br/>ugreen · terramaster 部署包"]
+        P2P["🕸️ p2p<br/>联邦注册中心 v0.6.0<br/>租约注册/联邦路由/WS 信令/设备直传"]
         KIT["🧰 kit<br/>共享 Go 工具库 v0.3.1<br/>retry/syncx/shutdown/workflow 等 28 包"]
-        DESK["💻 desktop<br/>Tauri 桌面客户端 desktop-v1.4.0<br/>p2pc sidecar 设备直传"]
-        CHT["☸️ charts<br/>Helm Chart 1.3.23<br/>Pages + OCI 双发布"]
-        NAS4["📦 NAS 打包四仓 v0.1.1<br/>synology SPK / qnap QPKG<br/>ugreen · terramaster 部署包"]
+        DESK["💻 desktop<br/>Tauri 桌面客户端 desktop-v1.14.6<br/>p2pc sidecar 设备直传"]
+        CHT["☸️ charts<br/>Helm Chart 2.0.6<br/>Pages + OCI 双发布"]
     end
 
     USER["👤 自托管用户"] -->|"compose / Helm"| SRV
-    NAS["🏠 飞牛 NAS 用户"] -->|".fpk 单容器"| FNOS
-    RT["📡 路由器 / iStoreOS 用户"] -->|".ipk 一键安装"| OWRT
-    NASU["🏠 群晖/威联通/绿联/铁威马用户"] -->|"SPK / QPKG / compose 导入"| NAS4
+    NAS["🏠 飞牛 NAS 用户"] -->|".fpk 原生应用"| FNOS
+    RT["📡 路由器 / iStoreOS 用户"] -->|".ipk / .apk 一键安装"| OWRT
+    QNU["🏠 威联通用户"] -->|".qpkg 原生应用(免 Docker)"| QNAP
+    NASU["🏠 群晖/绿联/铁威马用户"] -->|"SPK / compose 导入"| NAS3
     DEV["👨‍💻 开发者"] -->|"git clone + make setup"| UMB
 
-    UMB -.->|"setup.sh 拉取"| CT & CORE & SRV & FE & FNOS & OWRT & P2P & KIT & NAS4
+    UMB -.->|"setup.sh 拉取"| CT & CORE & SRV & FE & FEC & FNOS & OWRT & QNAP & P2P & KIT & NAS3
     DESK -.->|"HTTP API 连接任意服务器"| SRV
     CHT -.->|"Helm 编排前后端分离栈"| SRV
-    NAS4 -.->|"打包官方镜像(零 Go 代码)"| SRV
+    NAS3 -.->|"打包官方镜像(零 Go 代码)"| SRV
 ```
 
-**职责边界**:装配仓不含业务代码,只提供工作区装配(`setup.sh`/`go.work`/`Makefile`/`docker-compose.yml`);十二个模块仓库(经 setup.sh 拉取, 含 NAS 打包四仓 synology/qnap/ugreen/terramaster)与 desktop(桌面客户端,Rust 项目不入 go.work)、charts(Helm Chart)两个产物仓独立开发、独立 CI、独立发版。
+**职责边界**:装配仓不含业务代码,只提供工作区装配(`setup.sh`/`go.work`/`Makefile`/`docker-compose.yml`)、发布列车(`release/train.yaml` + `make train-*`)与文档站;十三个模块仓库(经 setup.sh 拉取,含 NAS 打包四仓 synology/qnap/ugreen/terramaster——其中 qnap 已切原生 QPKG 含 Go 代码,其余三仓为纯 shell compose 壳)与 desktop(桌面客户端,Rust 项目不入 go.work)、charts(Helm Chart)两个产物仓独立开发、独立 CI、独立发版。
 
 ---
 
@@ -46,22 +49,33 @@ graph TB
 
 ```mermaid
 graph LR
-    FE["frontend<br/>(Vue3)"] -->|"/openapi.json 运行时规范<br/>(swagger 页直连后端)"| SRV["server"]
-    SRV -->|"require v0.14.4"| CORE["core"]
-    FNOS["fnos"] -->|"require v0.14.4<br/>库式调用 bootstrap"| CORE
-    OWRT["openwrt"] -->|"require v0.14.4<br/>库式调用 bootstrap"| CORE
-    CORE -->|"require v0.8.0"| CTX["contracts"]
+    subgraph FEW["前端(2026-10-09 拆分双仓)"]
+        FES["frontend(壳)<br/>neutral 产物"]
+        FEC["frontend-core<br/>平台无关应用 + 宿主适配器 SPI"]
+        FES -->|"Release 源码 tgz 钉版"| FEC
+    end
+    PW["fnos/web · qnap/web<br/>(平台宿主适配器,归平台仓)"] -->|"Release 源码 tgz 钉版"| FEC
+    OWW["openwrt/web<br/>(无适配器,纯 neutral)"] -->|"Release 源码 tgz 钉版"| FEC
+    FEC -->|"@pigeonbox/contracts tgz<br/>(IDL 生成 TS d.ts,wire 契约类型)"| CTX["contracts"]
+    FEC -.->|"/openapi.json 运行时规范<br/>(swagger 页直连后端)"| SRV["server"]
+    SRV -->|"require v0.14.9"| CORE["core"]
+    FNOS["fnos"] -->|"require v0.14.9<br/>库式调用 bootstrap"| CORE
+    OWRT["openwrt"] -->|"require v0.14.9<br/>库式调用 bootstrap"| CORE
+    QNAPG["qnap"] -->|"require v0.14.9<br/>库式调用 bootstrap"| CORE
+    CORE -->|"require v0.9.0"| CTX
     P2P["p2p<br/>(联邦注册中心)"]
     CORE -.->|"core v0.8.0 起 federation 域<br/>为 p2p 客户端"| P2P
     KIT["kit<br/>(共享 Go 工具库)"]
     CORE -->|"17 处接入(httpjson/retry/<br/>uidgen/async/singleflight 等)"| KIT
-    P2P -->|"ratelimit 已接入"| KIT
+    P2P -->|"ratelimit/version 已接入"| KIT
 
     classDef plain fill:#eef,stroke:#88a
-    class CTX,CORE,SRV,FE,FNOS,OWRT,P2P,KIT plain
+    class CTX,CORE,SRV,FES,FEC,FNOS,OWRT,QNAPG,P2P,KIT plain
 ```
 
-desktop 不进 go.work(Rust 项目),经 HTTP API 连接任意 PigeonBox 服务器,无构建期依赖。
+desktop 不进 go.work(Rust 项目),经 HTTP API 连接任意 PigeonBox 服务器,无构建期依赖;p2pc sidecar 二进制由 p2p 仓 Release 按 Tauri target triple 提供。
+
+> 图中 `require v0.14.9` 为各下游 go.mod 当前钉版;core 最新 tag v0.15.0 将由下一班发布列车(1.15.0)统一升钉——禁止绕过列车手改钉版(见 §7)。
 
 ### 2.2 依赖规则(CI 强制守护)
 
@@ -77,18 +91,18 @@ desktop 不进 go.work(Rust 项目),经 HTTP API 连接任意 PigeonBox 服务�
 
 | 仓库 | 当前版本 | 说明 |
 |------|---------|------|
-| contracts | v0.8.0 | thrift v0.13 生成代码,版本约束以 require 传递(下游零 replace);IDL 真相源 `idl/`,前端 TS 类型经 `cmd/gen-ts` → Release tgz |
-| core | v0.14.9 | 16 域服务;**v0.14.0=单机内存模式(redis.host 空=进程内 KV,回源 DB+负缓存防穿透;public/admin 缺 Redis fail-fast)**;v0.13.0=PB_DEPLOY_MODE 三模式部署拆分(standalone/public×N/admin×1,Redis 配置广播)+回收站;v0.14.9=env 前缀 FCB_→PB_ 全量更名+存储洞察/孤儿清理幽灵端点补实现(/admin/storage/insights·clean-presign-orphans)+两波攻击面加固(HSTS 三态/presign Complete 后重放覆盖/分片数硬上限/OIDC 封禁拒发/IdentityFresh 身份复核);v0.14.8=取件历史双修复(分页 total 失真+6位码通道补记取件人与到件通知——此前仅 8位码链路记录)+取件码大小写折叠(download.code_case_insensitive 默认开);v0.11.x=HttpOnly Cookie 会话(CSRF 头门禁)+审计清欠+攻击面收缩;v0.10.0=全面安全审计加固(管理面/chunk 链路/JWT 纪元·封禁改密即时失效/纵深防御);v0.9.0=federation M4(registry 多主备 failover+心跳短退避);v0.8.x=federation 接入+kit 化;v0.7.x=API Token/多文件+zip/OIDC/寄件码/运行时 OpenAPI |
-| frontend-core | v0.1.4 | 公共前端 core(2026-10-09 拆分):平台无关应用全量(视图/stores/API/i18n/组件/单测)+宿主适配器 SPI(`src/host`,installHost 运行时注入);消费=Release 源码 tgz(与 contracts 同模式);CI 平台零容忍守卫(依赖清单/源码禁宿主 SDK,neutral 产物扫描) |
-| server | v0.15.8 | **v0.15.x=单机内存模式列车(core v0.14.0)**;v0.14.x=多副本拆分列车(core v0.13.0,PB_DEPLOY_MODE);纯后端镜像(默认 release 模式,alpine 钉 3.22);frontend 分离镜像由同一 `v*` tag 同步发布(`ghcr.io/pigeonbox/server` / `frontend`) |
-| fnos | v1.14.6(内置 core v0.14.9) | 原生 fpk(包内自带双架构二进制+前端,hub Release `fnos-v*`);镜像 `ghcr.io/pigeonbox/fnos` 已停发(2026-10-09 Docker 链路移除,冻结在 v1.14.6;旧镜像 `pigeonbox-fnos` 冻结在 v0.2.6,更早 `pigeonbox-fnos` 冻结在 v0.2.1) |
-| openwrt | v1.14.6(内置 core v0.14.9) | OpenWrt/iStoreOS 原生 ipk:procd 托管,UCI 配置(`/etc/config/pigeonbox`)+drop-in config.yaml,双架构 x86_64/aarch64_generic;ipk 回挂 hub Release(`openwrt-v*`) |
-| qnap | v1.14.6(原生,内置 core v0.14.9) | 威联通 QTS 原生 QPKG(v1.14.4 起切原生进程模式,对齐 fnos):包内自带双架构静态二进制+前端,单进程单端口,免 Container Station(QTS 4.5+);QPKG 服务脚本托管(setsid 后台引导+PID+看门狗自愈),.env 在卷根 pigeonbox/;QDK qbuild 组包,包回挂 hub Release(`qnap-v*`) |
-| NAS 打包三仓 | v1.14.6(钉 server/frontend 镜像 v0.15.8) | synology SPK(noarch,DSM 7.2+ Container Manager)/ ugreen·terramaster compose 部署包(UPK/TOS7 应用包送审二期);纯 shell 零 Go,编排=双容器免 Redis;共享模板在 hub `deploy/nas/`(qnap 原生切出后不消费);包回挂 hub Release(各 `*-v*` tag) |
+| contracts | v0.9.0 | thrift v0.13 生成代码,版本约束以 require 传递(下游零 replace);IDL 真相源 `idl/`,前端 TS 类型经 `cmd/gen-ts` → Release tgz |
+| core | v0.15.0 | 16 域服务;**v0.14.0=单机内存模式(redis.host 空=进程内 KV,回源 DB+负缓存防穿透;public/admin 缺 Redis fail-fast)**;v0.13.0=PB_DEPLOY_MODE 三模式部署拆分(standalone/public×N/admin×1,Redis 配置广播)+回收站;v0.14.9=env 前缀 FCB_→PB_ 全量更名+存储洞察/孤儿清理幽灵端点补实现(/admin/storage/insights·clean-presign-orphans)+两波攻击面加固(HSTS 三态/presign Complete 后重放覆盖/分片数硬上限/OIDC 封禁拒发/IdentityFresh 身份复核);v0.14.8=取件历史双修复(分页 total 失真+6位码通道补记取件人与到件通知——此前仅 8位码链路记录)+取件码大小写折叠(download.code_case_insensitive 默认开);v0.11.x=HttpOnly Cookie 会话(CSRF 头门禁)+审计清欠+攻击面收缩;v0.10.0=全面安全审计加固(管理面/chunk 链路/JWT 纪元·封禁改密即时失效/纵深防御);v0.9.0=federation M4(registry 多主备 failover+心跳短退避);v0.8.x=federation 接入+kit 化;v0.7.x=API Token/多文件+zip/OIDC/寄件码/运行时 OpenAPI |
+| frontend-core | v0.1.5 | 公共前端 core(2026-10-09 拆分):平台无关应用全量(视图/stores/API/i18n/组件/单测)+宿主适配器 SPI(`src/host`,installHost 运行时注入);消费=Release 源码 tgz(与 contracts 同模式);CI 平台零容忍守卫(依赖清单/源码禁宿主 SDK,neutral 产物扫描) |
+| server | v0.15.9 | **v0.15.x=单机内存模式列车(core v0.14.0)**;v0.14.x=多副本拆分列车(core v0.13.0,PB_DEPLOY_MODE);纯后端镜像(默认 release 模式,alpine 钉 3.22);frontend 分离镜像由同一 `v*` tag 同步发布(`ghcr.io/pigeonbox/server` / `frontend`) |
+| fnos | v1.15.0(内置 core v0.15.0) | 原生 fpk(包内自带双架构二进制+前端,hub Release `fnos-v*`);镜像 `ghcr.io/pigeonbox/fnos` 已停发(2026-10-09 Docker 链路移除,冻结在 v1.14.6;旧镜像 `pigeonbox-fnos` 冻结在 v0.2.6,更早 `pigeonbox-fnos` 冻结在 v0.2.1) |
+| openwrt | v1.15.0(内置 core v0.15.0) | OpenWrt/iStoreOS 原生 ipk:procd 托管,UCI 配置(`/etc/config/pigeonbox`)+drop-in config.yaml,双架构 x86_64/aarch64_generic;ipk 回挂 hub Release(`openwrt-v*`) |
+| qnap | v1.15.0(原生,内置 core v0.15.0) | 威联通 QTS 原生 QPKG(v1.14.4 起切原生进程模式,对齐 fnos):包内自带双架构静态二进制+前端,单进程单端口,免 Container Station(QTS 4.5+);QPKG 服务脚本托管(setsid 后台引导+PID+看门狗自愈),.env 在卷根 pigeonbox/;QDK qbuild 组包,包回挂 hub Release(`qnap-v*`) |
+| NAS 打包三仓 | v1.15.0(钉 server/frontend 镜像 v0.15.9) | synology SPK(noarch,DSM 7.2+ Container Manager)/ ugreen·terramaster compose 部署包(UPK/TOS7 应用包送审二期);纯 shell 零 Go,编排=双容器免 Redis;共享模板在 hub `deploy/nas/`(qnap 原生切出后不消费);包回挂 hub Release(各 `*-v*` tag) |
 | p2p | v0.6.0 | v0.3.x=M3 设备直传全量(p2pc)+六平台二进制;v0.4.0=wire AEAD/注册 token/中继限流安全加固;v0.4.1=p2pc 修复;v0.4.10=env 前缀 PB_ 更名(对齐 core);镜像 `ghcr.io/pigeonbox/p2p`(含 p2pc) |
 | kit | v0.3.1 | 共享 Go 工具库(28 包);已被 core(17 处)、p2p(ratelimit)、fnos/server(version) 消费;纯库仓无镜像,`go get github.com/pigeonbox/kit/<包名>` |
-| desktop | desktop-v1.14.6 | Tauri 2 桌面客户端+**p2pc sidecar 设备直传**(p2pc 0.4 传输协议 v2,与旧版服务端/客户端互不兼容需双端同版);三平台安装包回挂本仓 Release(`desktop-v*` tag) |
-| charts | chart 2.0.6(app v0.15.8) | `pigeonbox` chart:1.2.x 起内置数据面,1.3.x 增内置 S3(SeaweedFS),1.3.4 增 p2p 可选组件,1.3.7 增直传中继开关,**1.3.22 增多副本双拓扑(PB_DEPLOY_MODE)**;Pages + OCI 双发布 |
+| desktop | desktop-v1.15.0 | Tauri 2 桌面客户端+**p2pc sidecar 设备直传**(p2pc 0.4 传输协议 v2,与旧版服务端/客户端互不兼容需双端同版);三平台安装包回挂本仓 Release(`desktop-v*` tag) |
+| charts | chart 2.0.7(app v0.15.9) | `pigeonbox` chart:1.2.x 起内置数据面,1.3.x 增内置 S3(SeaweedFS),1.3.4 增 p2p 可选组件,1.3.7 增直传中继开关,**1.3.22 增多副本双拓扑(PB_DEPLOY_MODE)**;Pages + OCI 双发布 |
 
 ---
 
