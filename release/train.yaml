@@ -27,7 +27,7 @@ terminal.fnos.frontend_core_pin: v0.1.4
 terminal.openwrt.tag: v1.14.6
 terminal.openwrt.version: 1.14.6
 terminal.openwrt.core_pin: v0.14.9
-terminal.openwrt.frontend_ref: v0.15.8
+terminal.openwrt.frontend_core_pin: v0.1.4
 terminal.qnap.tag: v1.14.6
 terminal.qnap.version: 1.14.6
 terminal.qnap.core_pin: v0.14.9

@@ -245,16 +245,13 @@ cmd_verify() {
             [ "$(grep -E '^CORE_PIN=' <<<"$DE" | cut -d= -f2)" = "$(tget "terminal.$t.core_pin")" ] \
                 && ok "$t DEPS CORE_PIN" || soft_fail "$t DEPS CORE_PIN ≠ train.yaml"
         done
-        # fnos/qnap 2026-10-09 起 web 自包含(适配器归平台仓),钉版=frontend-core tgz;
-        # openwrt 仍自 frontend 壳仓构建 neutral 产物(无平台适配器),沿用 FRONTEND_REF
-        for t in fnos qnap; do
+        # fnos/qnap/openwrt 2026-10-09 起 web 自包含(适配器归平台仓;openwrt 无
+        # 适配器=纯 neutral),钉版=frontend-core tgz
+        for t in fnos qnap openwrt; do
             local DE; DE=$(raw "$t/$(def_branch "$t")/DEPS.env" 2>/dev/null) || DE=""
             [ "$(grep -E '^FRONTEND_CORE_PIN=' <<<"$DE" | cut -d= -f2)" = "$C_FCORE" ] \
                 && ok "$t DEPS FRONTEND_CORE_PIN = $C_FCORE" || soft_fail "$t DEPS FRONTEND_CORE_PIN ≠ $C_FCORE"
         done
-        local DE; DE=$(raw "openwrt/$(def_branch openwrt)/DEPS.env" 2>/dev/null) || DE=""
-        [ "$(grep -E '^FRONTEND_REF=' <<<"$DE" | cut -d= -f2)" = "$(tget "terminal.openwrt.frontend_ref")" ] \
-            && ok "openwrt DEPS FRONTEND_REF" || soft_fail "openwrt DEPS FRONTEND_REF ≠ train.yaml"
         local DD; DD=$(raw desktop/main/DEPS.env 2>/dev/null) || DD=""
         [ "$(grep -E '^P2PC_REF=' <<<"$DD" | cut -d= -f2)" = "$C_P2PC" ] \
             && ok "desktop DEPS P2PC_REF = $C_P2PC" || soft_fail "desktop DEPS P2PC_REF ≠ $C_P2PC"
@@ -279,6 +276,13 @@ cmd_verify() {
     FPJ=$(raw "qnap/$(def_branch qnap)/web/package.json" 2>/dev/null) || FPJ=""
     [ -n "$FPJ" ] && { grep -q "pigeonbox-frontend-core-${C_FCORE#v}.tgz" <<<"$FPJ" \
         && ok "qnap/web frontend-core tgz = $C_FCORE" || fail "qnap/web frontend-core tgz ≠ $C_FCORE"; } || warn "qnap/web package.json 拉取失败"
+    FPJ=$(raw "openwrt/$(def_branch openwrt)/web/package.json" 2>/dev/null) || FPJ=""
+    [ -n "$FPJ" ] && {
+        grep -q "pigeonbox-frontend-core-${C_FCORE#v}.tgz" <<<"$FPJ" \
+            && ok "openwrt/web frontend-core tgz = $C_FCORE" || fail "openwrt/web frontend-core tgz ≠ $C_FCORE"
+        grep -q "\"version\": \"$SERVER_V\"" <<<"$FPJ" \
+            && ok "openwrt/web 版本 = $SERVER_V(前端列车号)" || soft_fail "openwrt/web 版本 ≠ $SERVER_V(页脚「前端版本」应随列车)"
+    } || warn "openwrt/web package.json 拉取失败"
 
     echo "── 9. 文档版本矩阵(hub docs/architecture.md)"
     local row want
@@ -466,7 +470,7 @@ cmd_bump() {
         echo "terminal.openwrt.tag: v$TRAIN"
         echo "terminal.openwrt.version: $TRAIN"
         echo "terminal.openwrt.core_pin: $N_CORE_PIN"
-        echo "terminal.openwrt.frontend_ref: $FE_REF"
+        echo "terminal.openwrt.frontend_core_pin: $N_FCORE"
         echo "terminal.qnap.tag: v$TRAIN"
         echo "terminal.qnap.version: $TRAIN"
         echo "terminal.qnap.core_pin: $N_CORE_PIN"
@@ -560,8 +564,13 @@ changelog=$TRAIN: 发布列车 $TRAIN(底层 core $N_CORE_PIN;前端 $FE_REF;详
     echo "── [4/8] openwrt"
     local OW_OLD; OW_OLD=$(cat openwrt/VERSION)
     echo "$TRAIN" > openwrt/VERSION
-    printf '# 发布列车依赖钉版(真相源=hub release/train.yaml,由 release-train.sh bump 写入;勿手改)\nCORE_PIN=%s\nFRONTEND_REF=%s\n' "$N_CORE_PIN" "$FE_REF" > openwrt/DEPS.env
-    local OW_FILES="VERSION DEPS.env"
+    printf '# 发布列车依赖钉版(真相源=hub release/train.yaml,由 release-train.sh bump 写入;勿手改)\nCORE_PIN=%s\nFRONTEND_CORE_PIN=%s\n' "$N_CORE_PIN" "$N_FCORE" > openwrt/DEPS.env
+    local OW_FILES="VERSION DEPS.env web/package.json"
+    # web/package.json:版本=前端列车号;frontend-core tgz URL 跟随 lib.frontend-core
+    perl -pi -e 's/"version": "[^"]*"/"version": "'"${FE_REF#v}"'"/ if !$done; $done=1 if /"version"/' openwrt/web/package.json
+    if [ "$N_FCORE" != "$OLD_FCORE" ]; then
+        perl -pi -e 's|pigeonbox-frontend-core/releases/download/v[^/]+/pigeonbox-frontend-core-[0-9.]+\.tgz|pigeonbox-frontend-core/releases/download/'"$N_FCORE"'/pigeonbox-frontend-core-'"${N_FCORE#v}"'.tgz|g' openwrt/web/package.json
+    fi
     if [ "$OW_OLD" != "$TRAIN" ]; then
         ( cd openwrt && GOWORK=off go mod edit -require="github.com/pigeonbox/core@$N_CORE_PIN" && GOWORK=off go mod tidy >/dev/null 2>&1 ) \
             || echo "  ⚠ openwrt go mod 整理失败,人工检查"
