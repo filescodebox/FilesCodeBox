@@ -274,8 +274,12 @@ cmd_verify() {
             && ok "fnos/web 版本 = $SERVER_V(前端列车号)" || soft_fail "fnos/web 版本 ≠ $SERVER_V(页脚「前端版本」应随列车)"
     } || warn "fnos/web package.json 拉取失败"
     FPJ=$(raw "qnap/$(def_branch qnap)/web/package.json" 2>/dev/null) || FPJ=""
-    [ -n "$FPJ" ] && { grep -q "pigeonbox-frontend-core-${C_FCORE#v}.tgz" <<<"$FPJ" \
-        && ok "qnap/web frontend-core tgz = $C_FCORE" || fail "qnap/web frontend-core tgz ≠ $C_FCORE"; } || warn "qnap/web package.json 拉取失败"
+    [ -n "$FPJ" ] && {
+        grep -q "pigeonbox-frontend-core-${C_FCORE#v}.tgz" <<<"$FPJ" \
+            && ok "qnap/web frontend-core tgz = $C_FCORE" || fail "qnap/web frontend-core tgz ≠ $C_FCORE"
+        grep -q "\"version\": \"$SERVER_V\"" <<<"$FPJ" \
+            && ok "qnap/web 版本 = $SERVER_V(前端列车号)" || soft_fail "qnap/web 版本 ≠ $SERVER_V(页脚「前端版本」应随列车)"
+    } || warn "qnap/web package.json 拉取失败"
     FPJ=$(raw "openwrt/$(def_branch openwrt)/web/package.json" 2>/dev/null) || FPJ=""
     [ -n "$FPJ" ] && {
         grep -q "pigeonbox-frontend-core-${C_FCORE#v}.tgz" <<<"$FPJ" \
@@ -584,11 +588,13 @@ changelog=$TRAIN: 发布列车 $TRAIN(底层 core $N_CORE_PIN;前端 $FE_REF;详
     echo "$TRAIN" > qnap/VERSION
     printf '# 发布列车依赖钉版(真相源=hub release/train.yaml,由 release-train.sh bump 写入;勿手改)\nCORE_PIN=%s\nFRONTEND_CORE_PIN=%s\n' "$N_CORE_PIN" "$N_FCORE" > qnap/DEPS.env
     local QN_FILES="VERSION DEPS.env"
-    # web/package.json 的 frontend-core tgz URL 跟随 lib.frontend-core(2026-10-09 拆仓)
+    # web/package.json:版本=前端列车号(页脚「前端版本」语义,与壳仓同规则);
+    # frontend-core tgz URL 跟随 lib.frontend-core(依赖钉版,与版本号是两回事)
+    perl -pi -e 's/"version": "[^"]*"/"version": "'"${FE_REF#v}"'"/ if !$done; $done=1 if /"version"/' qnap/web/package.json
     if [ "$N_FCORE" != "$OLD_FCORE" ]; then
         perl -pi -e 's|pigeonbox-frontend-core/releases/download/v[^/]+/pigeonbox-frontend-core-[0-9.]+\.tgz|pigeonbox-frontend-core/releases/download/'"$N_FCORE"'/pigeonbox-frontend-core-'"${N_FCORE#v}"'.tgz|g' qnap/web/package.json
-        QN_FILES="$QN_FILES web/package.json"
     fi
+    QN_FILES="$QN_FILES web/package.json"
     if [ "$QN_OLD" != "$TRAIN" ]; then
         ( cd qnap && GOWORK=off go mod edit -require="github.com/pigeonbox/core@$N_CORE_PIN" && GOWORK=off go mod tidy >/dev/null 2>&1 ) \
             || echo "  ⚠ qnap go mod 整理失败,人工检查"
