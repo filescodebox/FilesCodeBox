@@ -22,7 +22,7 @@ features:
     details: 文本/文件一键分享，凭取件口令提取；支持密码保护与过期自动清理。
   - icon: 👥
     title: 多用户与 API Token
-    details: 用户注册/登录/封禁管理；个人访问令牌（fcb_sk_ 前缀）让脚本与 CI 直接调用接口，无需浏览器会话。
+    details: 用户注册/登录/封禁管理；个人访问令牌（pb_sk_ 前缀）让脚本与 CI 直接调用接口，无需浏览器会话。
   - icon: 💾
     title: 多存储后端
     details: 共 14 种热切换后端：local / S3(MinIO) / 阿里 OSS / 腾讯 COS / 百度 BOS / 金山 KS3 / 华为 OBS / WebDAV / FTP / SFTP / GCS / Azure Blob / HDFS / OneDrive，云厂商按 region 自动推导 endpoint。

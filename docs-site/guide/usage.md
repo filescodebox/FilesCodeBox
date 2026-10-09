@@ -106,7 +106,7 @@ title: 使用说明
 - **取件历史**：谁取走了你的文件（取件人 IP / 时间 / 累计次数）一目了然；
 - **寄件码（反向收件）**：生成一个投递链接（可限定最大文件数、总体积、有效期），访客凭链接向你投递文件——文件自动落成**你名义下**的分享，并有到件通知；
 - **通知中心**：接收系统公告与到件提醒，未读数角标提示；
-- **API Token**（`fcb_sk_` 开头）：在「API 令牌」页创建，用于程序化调用 `/api/v1` 数据面接口（见 [API Token 指南](../reference/api-tokens)）。
+- **API Token**（`pb_sk_` 开头）：在「API 令牌」页创建，用于程序化调用 `/api/v1` 数据面接口（见 [API Token 指南](../reference/api-tokens)）。
 
 登录态为 HttpOnly Cookie（浏览器自动携带，写请求自动附 CSRF 头）；同一账号修改密码或被管理员封禁后，所有已登录会话即时失效。
 
@@ -126,7 +126,7 @@ title: 使用说明
 *通知中心：公告与到件提醒*
 
 ![API 令牌](/screenshots/user-tokens.png)
-*API 令牌：签发 fcb_sk_ 密钥供程序化调用（图中密钥已脱敏/吊销）*
+*API 令牌：签发 pb_sk_ 密钥供程序化调用（图中密钥已脱敏/吊销）*
 
 ## 管理后台
 
@@ -171,7 +171,7 @@ title: 使用说明
 ## API 与自动化
 
 - **OpenAPI 规范**：后端运行时生成 `GET /openapi.json`，可直接导入 Apifox/Postman；
-- **API Token**：`Authorization: Bearer fcb_sk_xxx` 调用 `/api/v1` 数据面接口（分享创建/取件/列表等），详见 [API Token 指南](../reference/api-tokens)；
+- **API Token**：`Authorization: Bearer pb_sk_xxx` 调用 `/api/v1` 数据面接口（分享创建/取件/列表等），详见 [API Token 指南](../reference/api-tokens)；
 - **MCP（AI 集成）**：`POST /api/v1/mcp` 单端点 JSON-RPC 2.0，管理员认证后可让 AI 助手直接创建/管理分享，详见 [MCP 集成](../reference/mcp)。
 
 ## 常见问题
