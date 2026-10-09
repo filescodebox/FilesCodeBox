@@ -534,8 +534,10 @@ cmd_bump() {
     else
         echo "  ✓ server 未变($AV),frontend 版本跳过"
     fi
-    # core tgz 钉版跟随(lib.frontend-core 变才写;版本号语义=frontend-core 仓 tag)
-    if [ "$N_FCORE" != "$OLD_FCORE" ] && [ -d frontend/.git ]; then
+    # core tgz 钉版跟随(无条件幂等写——「FCORE 变才写」的条件块在 bump 重跑/基线
+    # 已抬场景会静默跳过:1.15.0 实测四处 tgz 全漏写。perl 同值重写无 diff,
+    # commit_if_changed 无变更自会跳过,幂等安全)
+    if [ -d frontend/.git ]; then
         perl -pi -e 's|pigeonbox-frontend-core/releases/download/v[^/]+/pigeonbox-frontend-core-[0-9.]+\.tgz|pigeonbox-frontend-core/releases/download/'"$N_FCORE"'/pigeonbox-frontend-core-'"${N_FCORE#v}"'.tgz|g' frontend/package.json
         commit_if_changed frontend frontend "train: bump to $TRAIN(frontend-core $N_FCORE)" package.json
     fi
@@ -547,9 +549,7 @@ cmd_bump() {
     # web/package.json:版本=前端列车号(页脚「前端版本」语义,与壳仓同规则);
     # frontend-core tgz URL 跟随 lib.frontend-core(依赖钉版,与版本号是两回事)
     perl -pi -e 's/"version": "[^"]*"/"version": "'"${FE_REF#v}"'"/ if !$done; $done=1 if /"version"/' fnos/web/package.json
-    if [ "$N_FCORE" != "$OLD_FCORE" ]; then
-        perl -pi -e 's|pigeonbox-frontend-core/releases/download/v[^/]+/pigeonbox-frontend-core-[0-9.]+\.tgz|pigeonbox-frontend-core/releases/download/'"$N_FCORE"'/pigeonbox-frontend-core-'"${N_FCORE#v}"'.tgz|g' fnos/web/package.json
-    fi
+    perl -pi -e 's|pigeonbox-frontend-core/releases/download/v[^/]+/pigeonbox-frontend-core-[0-9.]+\.tgz|pigeonbox-frontend-core/releases/download/'"$N_FCORE"'/pigeonbox-frontend-core-'"${N_FCORE#v}"'.tgz|g' fnos/web/package.json
     FNOS_FILES="$FNOS_FILES web/package.json"
     # manifest version 无条件写(幂等)——1.14.4 实测:本地值陈旧时条件跳过
     # 会把 manifest 漏出 PR,fpk 版本断言在 Release 才拦(晚了一天)
@@ -572,9 +572,7 @@ changelog=$TRAIN: 发布列车 $TRAIN(底层 core $N_CORE_PIN;前端 $FE_REF;详
     local OW_FILES="VERSION DEPS.env web/package.json"
     # web/package.json:版本=前端列车号;frontend-core tgz URL 跟随 lib.frontend-core
     perl -pi -e 's/"version": "[^"]*"/"version": "'"${FE_REF#v}"'"/ if !$done; $done=1 if /"version"/' openwrt/web/package.json
-    if [ "$N_FCORE" != "$OLD_FCORE" ]; then
-        perl -pi -e 's|pigeonbox-frontend-core/releases/download/v[^/]+/pigeonbox-frontend-core-[0-9.]+\.tgz|pigeonbox-frontend-core/releases/download/'"$N_FCORE"'/pigeonbox-frontend-core-'"${N_FCORE#v}"'.tgz|g' openwrt/web/package.json
-    fi
+    perl -pi -e 's|pigeonbox-frontend-core/releases/download/v[^/]+/pigeonbox-frontend-core-[0-9.]+\.tgz|pigeonbox-frontend-core/releases/download/'"$N_FCORE"'/pigeonbox-frontend-core-'"${N_FCORE#v}"'.tgz|g' openwrt/web/package.json
     if [ "$OW_OLD" != "$TRAIN" ]; then
         ( cd openwrt && GOWORK=off go mod edit -require="github.com/pigeonbox/core@$N_CORE_PIN" && GOWORK=off go mod tidy >/dev/null 2>&1 ) \
             || echo "  ⚠ openwrt go mod 整理失败,人工检查"
@@ -591,9 +589,7 @@ changelog=$TRAIN: 发布列车 $TRAIN(底层 core $N_CORE_PIN;前端 $FE_REF;详
     # web/package.json:版本=前端列车号(页脚「前端版本」语义,与壳仓同规则);
     # frontend-core tgz URL 跟随 lib.frontend-core(依赖钉版,与版本号是两回事)
     perl -pi -e 's/"version": "[^"]*"/"version": "'"${FE_REF#v}"'"/ if !$done; $done=1 if /"version"/' qnap/web/package.json
-    if [ "$N_FCORE" != "$OLD_FCORE" ]; then
-        perl -pi -e 's|pigeonbox-frontend-core/releases/download/v[^/]+/pigeonbox-frontend-core-[0-9.]+\.tgz|pigeonbox-frontend-core/releases/download/'"$N_FCORE"'/pigeonbox-frontend-core-'"${N_FCORE#v}"'.tgz|g' qnap/web/package.json
-    fi
+    perl -pi -e 's|pigeonbox-frontend-core/releases/download/v[^/]+/pigeonbox-frontend-core-[0-9.]+\.tgz|pigeonbox-frontend-core/releases/download/'"$N_FCORE"'/pigeonbox-frontend-core-'"${N_FCORE#v}"'.tgz|g' qnap/web/package.json
     QN_FILES="$QN_FILES web/package.json"
     if [ "$QN_OLD" != "$TRAIN" ]; then
         ( cd qnap && GOWORK=off go mod edit -require="github.com/pigeonbox/core@$N_CORE_PIN" && GOWORK=off go mod tidy >/dev/null 2>&1 ) \
