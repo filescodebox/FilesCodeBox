@@ -339,24 +339,26 @@ cmd_bump() {
     # fnos/manifest 漏出 PR)。不对齐就失败,绝不基于陈旧基线切分支。──
     if [ "$DRY_RUN" = 0 ]; then
         echo "── [0/8] 预检:仓库对齐"
+        die() { echo "  ✗ $*" >&2; exit 1; }
         preflight() { # <dir> <default-branch>
-            local d=$1 def=$2 cur up
+            local d=$1 def=$2 cur
             cur=$(git -C "$d" rev-parse --abbrev-ref HEAD)
-            git -C "$d" fetch -q origin "$def" 2>/dev/null || fail "$d fetch 失败"
-            up="origin/$def"
-            [ "$cur" = "$def" ] || { git -C "$d" checkout -q "$def" || fail "$d 切回 $def 失败(有未提交改动请先清理)"; }
-            [ -z "$(git -C "$d" status --porcelain)" ] || fail "$d 工作树不干净,先清理"
-            if git -C "$d" rev-parse -q --verify "$up" >/dev/null; then
-                git -C "$d" pull -q --ff-only "$up" 2>/dev/null || fail "$d 本地与 $up 分歧,先人工 pull --ff-only(勿强推)"
+            git -C "$d" fetch -q origin "$def" || die "$d fetch $def 失败"
+            if [ "$cur" != "$def" ]; then
+                git -C "$d" checkout -q "$def" || die "$d 切回 $def 失败(有未提交改动请先清理)"
+            fi
+            [ -z "$(git -C "$d" status --porcelain)" ] || die "$d 工作树不干净,先清理"
+            if git -C "$d" rev-parse -q --verify "origin/$def" >/dev/null; then
+                git -C "$d" pull -q --ff-only origin "$def" || die "$d 本地与 origin/$def 分歧,先人工 pull --ff-only(勿强推)"
             fi
             echo "  ✓ $d@$def 已对齐远端"
         }
         preflight . main
-        [ -d frontend/.git ] && preflight frontend main
+        if [ -d frontend/.git ]; then preflight frontend main; fi
         preflight fnos master
         preflight openwrt main
         preflight qnap main
-        [ -d ../desktop/.git ] && preflight ../desktop main
+        if [ -d ../desktop/.git ]; then preflight ../desktop main; fi
         preflight synology main
         preflight ugreen main
         preflight terramaster main
