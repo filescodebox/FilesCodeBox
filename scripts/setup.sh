@@ -1,5 +1,5 @@
 #!/bin/bash
-# 拉齐/更新 PigeonBox 工作区的十二个模块仓库(contracts/core/server/frontend/fnos/openwrt/p2p/kit
+# 拉齐/更新 PigeonBox 工作区的模块仓库(contracts/core/server/frontend/frontend-core/fnos/openwrt/p2p/kit
 # + NAS 打包四仓 synology/qnap/ugreen/terramaster)。
 # 幂等:已存在则 git pull --ff-only。
 set -e
@@ -20,6 +20,7 @@ clone_or_update contracts contracts main
 clone_or_update core        core        main
 clone_or_update server      server      main
 clone_or_update frontend    frontend    main
+clone_or_update frontend-core frontend-core main
 
 # 飞牛 fnOS 应用适配层(go.work 已引用,默认拉取;SETUP_FNOS=0 可跳过,
 # 但跳过后工作区内 go build 会因 go.work 缺目录而报错)

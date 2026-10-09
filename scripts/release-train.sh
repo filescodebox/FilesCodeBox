@@ -95,6 +95,7 @@ cmd_verify() {
     local C_CONTRACTS C_CORE C_KIT C_P2P C_P2PC CHART CHART_APP
     C_CONTRACTS=$(tget lib.contracts); C_CORE=$(tget lib.core); C_KIT=$(tget lib.kit)
     C_P2P=$(tget lib.p2p); C_P2PC=$(tget terminal.desktop.p2pc)
+    local C_FCORE; C_FCORE=$(tget lib.frontend-core)
     CHART=$(tget charts.chart); CHART_APP=$(tget charts.app)
 
     # 列车进行中探测: 任一仓存在未合并的 train/<TRAIN> bump PR → 主分支版本面必然
@@ -134,6 +135,7 @@ cmd_verify() {
     tagchk core      "$C_CORE"      "core"
     tagchk kit       "$C_KIT"       "kit"
     tagchk p2p       "$C_P2P"       "p2p"
+    tagchk frontend-core "$C_FCORE" "frontend-core"
     tagchk server    "v$SERVER_V"   "server"
     if [ -n "$FE_TAG" ]; then tagchk frontend "$FE_TAG" "frontend"
     else warn "frontend 未打 tag(四处构建拉 main,不可复现;下一列车与 server 同号)"; fi
@@ -232,14 +234,17 @@ cmd_verify() {
         warn "features.version_files=false:各仓 VERSION/DEPS.env 尚未启用(首次列车 bump 自动开启)"
     fi
 
-    echo "── 8. frontend 契约消费"
-    local FPJ; FPJ=$(raw frontend/main/package.json 2>/dev/null) || FPJ=""
+    echo "── 8. 前端双仓契约消费(core 拆分后: contracts→core→壳)"
+    local FPJ; FPJ=$(raw frontend-core/main/package.json 2>/dev/null) || FPJ=""
     [ -n "$FPJ" ] && { grep -q "pigeonbox-contracts-${C_CONTRACTS#v}.tgz" <<<"$FPJ" \
-        && ok "frontend contracts tgz = $C_CONTRACTS" || fail "frontend contracts tgz ≠ $C_CONTRACTS"; } || warn "frontend package.json 拉取失败"
+        && ok "frontend-core contracts tgz = $C_CONTRACTS" || fail "frontend-core contracts tgz ≠ $C_CONTRACTS"; } || warn "frontend-core package.json 拉取失败"
+    FPJ=$(raw frontend/main/package.json 2>/dev/null) || FPJ=""
+    [ -n "$FPJ" ] && { grep -q "pigeonbox-frontend-core-${C_FCORE#v}.tgz" <<<"$FPJ" \
+        && ok "frontend(壳) frontend-core tgz = $C_FCORE" || fail "frontend(壳) frontend-core tgz ≠ $C_FCORE"; } || warn "frontend package.json 拉取失败"
 
     echo "── 9. 文档版本矩阵(hub docs/architecture.md)"
     local row want
-    for row in "contracts:$C_CONTRACTS" "core:$C_CORE" "server:v$SERVER_V" \
+    for row in "contracts:$C_CONTRACTS" "core:$C_CORE" "frontend-core:$C_FCORE" "server:v$SERVER_V" \
         "fnos:$(tget terminal.fnos.version)" "openwrt:$(tget terminal.openwrt.version)" "qnap:$(tget terminal.qnap.version)" \
         "p2p:$C_P2P" "kit:$C_KIT" "desktop:$(tget terminal.desktop.tag)"; do
         want=${row#*:}
@@ -315,11 +320,11 @@ cmd_bump() {
 
     # 解析 --set(core/contracts/kit/p2p 只改库线消费记录;终端 go.mod 钉版由 core_pin
     # 独立控制且默认保持现状——库线发新版≠终端必须跟随,升钉是显式列车动作)
-    local N_CONTRACTS N_CORE N_KIT N_P2P N_P2PC N_SERVER N_CORE_PIN
-    local OLD_SERVER
-    OLD_SERVER=$(tget images.server)
+    local N_CONTRACTS N_CORE N_KIT N_P2P N_P2PC N_SERVER N_CORE_PIN N_FCORE
+    local OLD_SERVER OLD_FCORE
+    OLD_SERVER=$(tget images.server); OLD_FCORE=$(tget lib.frontend-core)
     N_CONTRACTS=$(tget lib.contracts); N_CORE=$(tget lib.core); N_KIT=$(tget lib.kit)
-    N_P2P=$(tget lib.p2p); N_P2PC=$(tget terminal.desktop.p2pc)
+    N_P2P=$(tget lib.p2p); N_P2PC=$(tget terminal.desktop.p2pc); N_FCORE=$OLD_FCORE
     N_SERVER=$(tget images.server); N_CORE_PIN=$(tget terminal.fnos.core_pin)
     local s k val
     for s in "${SETS[@]:-}"; do
@@ -328,6 +333,7 @@ cmd_bump() {
         case "$k" in
             contracts) N_CONTRACTS=$val ;; core) N_CORE=$val ;; kit) N_KIT=$val ;;
             p2p) N_P2P=$val ;; p2pc) N_P2PC=$val ;; core_pin) N_CORE_PIN=$val ;;
+            frontend-core) N_FCORE=$val ;;
             server) N_SERVER=${val#v} ;;
             *) echo "✗ 未知 --set 键: $k" >&2; exit 1 ;;
         esac
@@ -361,7 +367,7 @@ cmd_bump() {
         }
         preflight . main
         # frontend 仅在镜像版本变化时参与(hotfix 子集跳过,免碰并行 WIP)
-        if [ -d frontend/.git ] && [ "$N_SERVER" != "$OLD_SERVER" ]; then preflight frontend main; fi
+        if [ -d frontend/.git ] && { [ "$N_SERVER" != "$OLD_SERVER" ] || [ "$N_FCORE" != "$OLD_FCORE" ]; }; then preflight frontend main; fi
         preflight fnos master
         preflight openwrt main
         preflight qnap main
@@ -403,6 +409,7 @@ cmd_bump() {
         echo "lib.core: $N_CORE"
         echo "lib.kit: $N_KIT"
         echo "lib.p2p: $N_P2P"
+        echo "lib.frontend-core: $N_FCORE"
         echo "images.server: $N_SERVER"
         echo "images.frontend: $N_SERVER"
         echo "frontend.tag: $FE_REF"
@@ -438,6 +445,7 @@ cmd_bump() {
     local AV="v$N_SERVER"
     set_table_cell3 docs/architecture.md 'contracts' "$N_CONTRACTS" || true
     set_table_cell3 docs/architecture.md 'core' "$N_CORE" || true
+    set_table_cell3 docs/architecture.md 'frontend-core' "$N_FCORE" || true
     set_table_cell3 docs/architecture.md 'server' "$AV" || true
     set_table_cell3 docs/architecture.md 'fnos' "v$TRAIN(内置 core $N_CORE_PIN)" || true
     set_table_cell3 docs/architecture.md 'openwrt' "v$TRAIN(内置 core $N_CORE_PIN)" || true
@@ -452,6 +460,7 @@ cmd_bump() {
         set_table_last_cell "$AGENTS" '`PigeonBox/` |' "v$TRAIN" || true
         set_table_last_cell "$AGENTS" '`PigeonBox/contracts/`' "$N_CONTRACTS" || true
         set_table_last_cell "$AGENTS" '`PigeonBox/core/`' "$N_CORE" || true
+        set_table_last_cell "$AGENTS" '`PigeonBox/frontend-core/`' "$N_FCORE" || true
         set_table_last_cell "$AGENTS" '`PigeonBox/server/`' "$AV / core $N_CORE" || true
         set_table_last_cell "$AGENTS" '`PigeonBox/frontend/`' "$FE_REF(VERSION 真相源,tag 随列车)" || true
         set_table_last_cell "$AGENTS" '`PigeonBox/fnos/`' "v$TRAIN / core $N_CORE_PIN" || true
@@ -470,13 +479,18 @@ cmd_bump() {
         release/train.yaml deploy/nas/compose.yml deploy/nas/env.example \
         deploy/k8s/overlays/prod/kustomization.yaml docs/architecture.md
 
-    echo "── [2/7] frontend"
+    echo "── [2/7] frontend(壳)"
     if [ "$N_SERVER" != "$OLD_SERVER" ]; then
         perl -pi -e 's/"version": "[^"]*"/"version": "'"${FE_REF#v}"'"/ if !$done; $done=1 if /"version"/' frontend/package.json
         echo "${FE_REF#v}" > frontend/VERSION
         commit_if_changed frontend frontend "train: bump to $TRAIN" package.json VERSION
     else
-        echo "  ✓ server 未变($AV),frontend 跳过"
+        echo "  ✓ server 未变($AV),frontend 版本跳过"
+    fi
+    # core tgz 钉版跟随(lib.frontend-core 变才写;版本号语义=frontend-core 仓 tag)
+    if [ "$N_FCORE" != "$OLD_FCORE" ] && [ -d frontend/.git ]; then
+        perl -pi -e 's|pigeonbox-frontend-core/releases/download/v[^/]+/pigeonbox-frontend-core-[0-9.]+\.tgz|pigeonbox-frontend-core/releases/download/'"$N_FCORE"'/pigeonbox-frontend-core-'"${N_FCORE#v}"'.tgz|g' frontend/package.json
+        commit_if_changed frontend frontend "train: bump to $TRAIN(frontend-core $N_FCORE)" package.json
     fi
 
     echo "── [3/7] fnos"
@@ -606,7 +620,7 @@ EOF
         echo "| $p | $(tget terminal.$p.tag) | [${p}-v*](https://github.com/pigeonbox/pigeonbox/releases?q=${p}-v&expanded=false) 部署包 |"
     done
     echo ""
-    echo "底层: core $(tget lib.core) · contracts $(tget lib.contracts) · kit $(tget lib.kit) · chart $(tget charts.chart)。全部源码仓: https://github.com/orgs/pigeonbox/repositories"
+    echo "底层: core $(tget lib.core) · contracts $(tget lib.contracts) · kit $(tget lib.kit) · frontend-core $(tget lib.frontend-core) · chart $(tget charts.chart)。全部源码仓: https://github.com/orgs/pigeonbox/repositories"
 }
 
 cmd_get() { tget "$1"; }

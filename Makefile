@@ -19,8 +19,9 @@ build:            ## workspace 联编 Go 模块(产物 bin/)
 	go build -o bin/ ./contracts/... ./core/... ./server/... ./p2p/... ./kit/...
 	@echo "✓ build OK → bin/"
 
-test:             ## 全仓 Go 测试 + 前端 typecheck
+test:             ## 全仓 Go 测试 + 前端双仓(typecheck+core 单测)
 	go test ./contracts/... ./core/... ./server/... ./fnos/... ./openwrt/... ./qnap/... ./p2p/... ./kit/...
+	cd frontend-core && ([ -d node_modules ] || npm ci) && npm run typecheck && npm test
 	cd frontend && ([ -d node_modules ] || npm ci) && npm run typecheck
 
 vet:
