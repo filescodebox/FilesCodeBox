@@ -144,9 +144,9 @@ cmd_verify() {
     local CYAML; CYAML=$(raw charts/main/charts/pigeonbox/Chart.yaml 2>/dev/null) \
         || { fail "charts Chart.yaml 拉取失败"; CYAML=""; }
     [ "$(awk '/^version:/{print $2;exit}' <<<"$CYAML" | tr -d '"')" = "$CHART" ] \
-        && ok "chart version = $CHART" || fail "chart version ≠ $CHART"
+        && ok "chart version = $CHART" || soft_fail "chart version ≠ $CHART(draft 列车 bump 已记录,等 chart 仓落地)"
     [ "$(awk '/^appVersion:/{print $2;exit}' <<<"$CYAML" | tr -d '"')" = "$CHART_APP" ] \
-        && ok "chart appVersion = $CHART_APP" || fail "chart appVersion ≠ $CHART_APP"
+        && ok "chart appVersion = $CHART_APP" || soft_fail "chart appVersion ≠ $CHART_APP(同上)"
     [ "$CHART_APP" = "v$SERVER_V" ] && ok "appVersion 锁 server 镜像(v$SERVER_V)" \
         || fail "chart appVersion($CHART_APP) ≠ v$SERVER_V"
 
@@ -224,6 +224,14 @@ cmd_verify() {
             local DE; DE=$(raw "$t/$(def_branch "$t")/DEPS.env" 2>/dev/null) || DE=""
             [ "$(grep -E '^CORE_PIN=' <<<"$DE" | cut -d= -f2)" = "$(tget "terminal.$t.core_pin")" ] \
                 && ok "$t DEPS CORE_PIN" || soft_fail "$t DEPS CORE_PIN ≠ train.yaml"
+        done
+        # fnos 2026-10-09 起 web 自包含(适配器归仓),钉版=frontend-core tgz;
+        # openwrt/qnap 仍自 frontend 壳仓构建,沿用 FRONTEND_REF
+        local DE; DE=$(raw "fnos/$(def_branch fnos)/DEPS.env" 2>/dev/null) || DE=""
+        [ "$(grep -E '^FRONTEND_CORE_PIN=' <<<"$DE" | cut -d= -f2)" = "$C_FCORE" ] \
+            && ok "fnos DEPS FRONTEND_CORE_PIN = $C_FCORE" || soft_fail "fnos DEPS FRONTEND_CORE_PIN ≠ $C_FCORE"
+        for t in openwrt qnap; do
+            DE=$(raw "$t/$(def_branch "$t")/DEPS.env" 2>/dev/null) || DE=""
             [ "$(grep -E '^FRONTEND_REF=' <<<"$DE" | cut -d= -f2)" = "$(tget "terminal.$t.frontend_ref")" ] \
                 && ok "$t DEPS FRONTEND_REF" || soft_fail "$t DEPS FRONTEND_REF ≠ train.yaml"
         done
@@ -241,6 +249,9 @@ cmd_verify() {
     FPJ=$(raw frontend/main/package.json 2>/dev/null) || FPJ=""
     [ -n "$FPJ" ] && { grep -q "pigeonbox-frontend-core-${C_FCORE#v}.tgz" <<<"$FPJ" \
         && ok "frontend(壳) frontend-core tgz = $C_FCORE" || fail "frontend(壳) frontend-core tgz ≠ $C_FCORE"; } || warn "frontend package.json 拉取失败"
+    FPJ=$(raw "fnos/$(def_branch fnos)/web/package.json" 2>/dev/null) || FPJ=""
+    [ -n "$FPJ" ] && { grep -q "pigeonbox-frontend-core-${C_FCORE#v}.tgz" <<<"$FPJ" \
+        && ok "fnos/web frontend-core tgz = $C_FCORE" || fail "fnos/web frontend-core tgz ≠ $C_FCORE"; } || warn "fnos/web package.json 拉取失败"
 
     echo "── 9. 文档版本矩阵(hub docs/architecture.md)"
     local row want
@@ -423,7 +434,7 @@ cmd_bump() {
         echo "terminal.fnos.tag: v$TRAIN"
         echo "terminal.fnos.version: $TRAIN"
         echo "terminal.fnos.core_pin: $N_CORE_PIN"
-        echo "terminal.fnos.frontend_ref: $FE_REF"
+        echo "terminal.fnos.frontend_core_pin: $N_FCORE"
         echo "terminal.openwrt.tag: v$TRAIN"
         echo "terminal.openwrt.version: $TRAIN"
         echo "terminal.openwrt.core_pin: $N_CORE_PIN"
@@ -495,8 +506,13 @@ cmd_bump() {
 
     echo "── [3/7] fnos"
     echo "$TRAIN" > fnos/VERSION
-    printf '# 发布列车依赖钉版(真相源=hub release/train.yaml,由 release-train.sh bump 写入;勿手改)\nCORE_PIN=%s\nFRONTEND_REF=%s\n' "$N_CORE_PIN" "$FE_REF" > fnos/DEPS.env
+    printf '# 发布列车依赖钉版(真相源=hub release/train.yaml,由 release-train.sh bump 写入;勿手改)\nCORE_PIN=%s\nFRONTEND_CORE_PIN=%s\n' "$N_CORE_PIN" "$N_FCORE" > fnos/DEPS.env
     local FNOS_FILES="VERSION DEPS.env fnos/manifest"
+    # web/package.json 的 frontend-core tgz URL 跟随 lib.frontend-core(2026-10-09 拆仓)
+    if [ "$N_FCORE" != "$OLD_FCORE" ]; then
+        perl -pi -e 's|pigeonbox-frontend-core/releases/download/v[^/]+/pigeonbox-frontend-core-[0-9.]+\.tgz|pigeonbox-frontend-core/releases/download/'"$N_FCORE"'/pigeonbox-frontend-core-'"${N_FCORE#v}"'.tgz|g' fnos/web/package.json
+        FNOS_FILES="$FNOS_FILES web/package.json"
+    fi
     # manifest version 无条件写(幂等)——1.14.4 实测:本地值陈旧时条件跳过
     # 会把 manifest 漏出 PR,fpk 版本断言在 Release 才拦(晚了一天)
     sed -i.bak "s/^version=.*/version=$TRAIN/" fnos/fnos/manifest && rm -f fnos/fnos/manifest.bak

@@ -23,7 +23,7 @@ terminal.desktop.p2pc: v0.6.0
 terminal.fnos.tag: v1.14.6
 terminal.fnos.version: 1.14.6
 terminal.fnos.core_pin: v0.14.9
-terminal.fnos.frontend_ref: v0.15.8
+terminal.fnos.frontend_core_pin: v0.1.4
 terminal.openwrt.tag: v1.14.6
 terminal.openwrt.version: 1.14.6
 terminal.openwrt.core_pin: v0.14.9
