@@ -37,7 +37,7 @@ jobs:
     outputs:
       train: ${{ steps.t.outputs.train }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - id: t
         run: echo "train=$(bash scripts/release-train.sh get train)" >> "$GITHUB_OUTPUT"
       - name: preflight 对账
@@ -50,7 +50,7 @@ jobs:
     needs: preflight
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: 等 ghcr 镜像在位(server/frontend/p2p,上限 45 分钟)
         # 探测必须走 docker pull——ghcr registry HTTP API 对 runner 网段匿名请求恒 401
         env:
@@ -73,7 +73,7 @@ jobs:
     needs: preflight
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: 等 8 个组件回挂 tag 在 hub Release 页齐(上限 90 分钟)
         env:
           GH_TOKEN: ${{ github.token }}
@@ -103,7 +103,7 @@ jobs:
     needs: [preflight, wait-images, wait-artifacts]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: 终验 + 出 hub 快照(需 TRAIN_PAT)
         env:
           GH_TOKEN: ${{ github.token }}

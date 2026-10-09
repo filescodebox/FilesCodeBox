@@ -14,7 +14,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       # 说明由列车真相源渲染(scripts/release-train.sh notes),与 verify/finalize 同一实现
       - name: 生成说明(列车组件矩阵)
         run: bash scripts/release-train.sh notes "${{ github.ref_name }}" > notes.md
