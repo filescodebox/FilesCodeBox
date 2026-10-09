@@ -30,8 +30,16 @@ PLATFORMS="synology ugreen terramaster"
 
 # ───────────────────────── 基础工具 ─────────────────────────
 
-tget() { # <key> → train.yaml 值
+tget() { # <key> → train.yaml 值(工作树)
     awk -F': *' -v k="$1" '$1==k {print $2; exit}' "$TRAIN_FILE" | tr -d '"'
+}
+
+# tget_head: 从 HEAD(而非工作树)读 train.yaml——bump 的基线/默认值必须用它。
+# 事故根因(2026-10-09 列车 1.14.6):dry-run 会把计划改动写进各仓工作树且不还原
+# (提示语即"未提交改动即计划内容"),--push 重跑时 tget 读到的是 dry-run 已写入的
+# 新值 → OLD_SERVER==N_SERVER → [2/7] frontend 段被"server 未变"跳过,PR 漏建。
+tget_head() { # <key> → train.yaml@HEAD 值
+    git show "HEAD:$TRAIN_FILE" 2>/dev/null | awk -F': *' -v k="$1" '$1==k {print $2; exit}' | tr -d '"'
 }
 
 def_branch() { # <repo> → 默认分支(fnos 历史原因用 master,其余 main)
@@ -345,10 +353,11 @@ cmd_bump() {
     # 独立控制且默认保持现状——库线发新版≠终端必须跟随,升钉是显式列车动作)
     local N_CONTRACTS N_CORE N_KIT N_P2P N_P2PC N_SERVER N_CORE_PIN N_FCORE
     local OLD_SERVER OLD_FCORE
-    OLD_SERVER=$(tget images.server); OLD_FCORE=$(tget lib.frontend-core)
-    N_CONTRACTS=$(tget lib.contracts); N_CORE=$(tget lib.core); N_KIT=$(tget lib.kit)
-    N_P2P=$(tget lib.p2p); N_P2PC=$(tget terminal.desktop.p2pc); N_FCORE=$OLD_FCORE
-    N_SERVER=$(tget images.server); N_CORE_PIN=$(tget terminal.fnos.core_pin)
+    # 基线/默认值一律 tget_head(HEAD 版):dry-run 残留的工作树改动不得污染判定
+    OLD_SERVER=$(tget_head images.server); OLD_FCORE=$(tget_head lib.frontend-core)
+    N_CONTRACTS=$(tget_head lib.contracts); N_CORE=$(tget_head lib.core); N_KIT=$(tget_head lib.kit)
+    N_P2P=$(tget_head lib.p2p); N_P2PC=$(tget_head terminal.desktop.p2pc); N_FCORE=$OLD_FCORE
+    N_SERVER=$(tget_head images.server); N_CORE_PIN=$(tget_head terminal.fnos.core_pin)
     local s k val
     for s in "${SETS[@]:-}"; do
         [ -n "$s" ] || continue
@@ -418,7 +427,7 @@ cmd_bump() {
     sed -i.bak "s/newTag: [0-9.]*/newTag: $N_SERVER/g" deploy/k8s/overlays/prod/kustomization.yaml && rm -f deploy/k8s/overlays/prod/kustomization.yaml.bak
     # charts: server 变了则 chart patch+1(dispatch 会自动对齐,这里同步记录)
     local CHART_NEW
-    CHART_NEW=$(tget charts.chart)
+    CHART_NEW=$(tget_head charts.chart)
     [ "$N_SERVER" != "$OLD_SERVER" ] && CHART_NEW="$(echo "$CHART_NEW" | awk -F. '{print $1"."$2"."$3+1}')"
     {
         echo "# PigeonBox 发布列车真相源 —— 一趟列车全部组件版本/钉版/回挂期望的唯一声明。"
