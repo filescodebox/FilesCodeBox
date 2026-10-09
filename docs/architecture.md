@@ -81,7 +81,7 @@ desktop 不进 go.work(Rust 项目),经 HTTP API 连接任意 PigeonBox 服务�
 | core | v0.14.9 | 16 域服务;**v0.14.0=单机内存模式(redis.host 空=进程内 KV,回源 DB+负缓存防穿透;public/admin 缺 Redis fail-fast)**;v0.13.0=PB_DEPLOY_MODE 三模式部署拆分(standalone/public×N/admin×1,Redis 配置广播)+回收站;v0.14.9=env 前缀 FCB_→PB_ 全量更名+存储洞察/孤儿清理幽灵端点补实现(/admin/storage/insights·clean-presign-orphans)+两波攻击面加固(HSTS 三态/presign Complete 后重放覆盖/分片数硬上限/OIDC 封禁拒发/IdentityFresh 身份复核);v0.14.8=取件历史双修复(分页 total 失真+6位码通道补记取件人与到件通知——此前仅 8位码链路记录)+取件码大小写折叠(download.code_case_insensitive 默认开);v0.11.x=HttpOnly Cookie 会话(CSRF 头门禁)+审计清欠+攻击面收缩;v0.10.0=全面安全审计加固(管理面/chunk 链路/JWT 纪元·封禁改密即时失效/纵深防御);v0.9.0=federation M4(registry 多主备 failover+心跳短退避);v0.8.x=federation 接入+kit 化;v0.7.x=API Token/多文件+zip/OIDC/寄件码/运行时 OpenAPI |
 | frontend-core | v0.1.4 | 公共前端 core(2026-10-09 拆分):平台无关应用全量(视图/stores/API/i18n/组件/单测)+宿主适配器 SPI(`src/host`,installHost 运行时注入);消费=Release 源码 tgz(与 contracts 同模式);CI 平台零容忍守卫(依赖清单/源码禁宿主 SDK,neutral 产物扫描) |
 | server | v0.15.8 | **v0.15.x=单机内存模式列车(core v0.14.0)**;v0.14.x=多副本拆分列车(core v0.13.0,PB_DEPLOY_MODE);纯后端镜像(默认 release 模式,alpine 钉 3.22);frontend 分离镜像由同一 `v*` tag 同步发布(`ghcr.io/pigeonbox/server` / `frontend`) |
-| fnos | v1.14.6(内置 core v0.14.9) | 镜像 `ghcr.io/pigeonbox/fnos`(旧镜像 `pigeonbox-fnos` 冻结在 v0.2.6,更早 `pigeonbox-fnos` 冻结在 v0.2.1) |
+| fnos | v1.14.6(内置 core v0.14.9) | 原生 fpk(包内自带双架构二进制+前端,hub Release `fnos-v*`);镜像 `ghcr.io/pigeonbox/fnos` 已停发(2026-10-09 Docker 链路移除,冻结在 v1.14.6;旧镜像 `pigeonbox-fnos` 冻结在 v0.2.6,更早 `pigeonbox-fnos` 冻结在 v0.2.1) |
 | openwrt | v1.14.6(内置 core v0.14.9) | OpenWrt/iStoreOS 原生 ipk:procd 托管,UCI 配置(`/etc/config/pigeonbox`)+drop-in config.yaml,双架构 x86_64/aarch64_generic;ipk 回挂 hub Release(`openwrt-v*`) |
 | qnap | v1.14.6(原生,内置 core v0.14.9) | 威联通 QTS 原生 QPKG(v1.14.4 起切原生进程模式,对齐 fnos):包内自带双架构静态二进制+前端,单进程单端口,免 Container Station(QTS 4.5+);QPKG 服务脚本托管(setsid 后台引导+PID+看门狗自愈),.env 在卷根 pigeonbox/;QDK qbuild 组包,包回挂 hub Release(`qnap-v*`) |
 | NAS 打包三仓 | v1.14.6(钉 server/frontend 镜像 v0.15.8) | synology SPK(noarch,DSM 7.2+ Container Manager)/ ugreen·terramaster compose 部署包(UPK/TOS7 应用包送审二期);纯 shell 零 Go,编排=双容器免 Redis;共享模板在 hub `deploy/nas/`(qnap 原生切出后不消费);包回挂 hub Release(各 `*-v*` tag) |
@@ -277,7 +277,7 @@ graph LR
 | 配置 | config.yaml + PB_* env | FNOS_* env + 飞牛向导变量 | UCI(`/etc/config/pigeonbox`)+drop-in config.yaml | 连接配置本地保存 |
 | JWT 密钥 | PB_JWT_SECRET 必填(强校验) | 自动生成并持久化(装机即用) | 自动生成并持久化(装机即用) | 不持有(服务端事务) |
 | 数据 | docker volume | NAS 共享目录(用户可见可备份) | `/etc/pigeonbox/`(卸载保留) | 服务端存储;直传端到端加密 |
-| 镜像/制品 | ghcr.io/pigeonbox/server | ghcr.io/pigeonbox/fnos | `openwrt-v*` ipk(x86_64/aarch64_generic,hub Release) | `desktop-v*` 安装包(hub Release) |
+| 镜像/制品 | ghcr.io/pigeonbox/server | `fnos-v*` pigeonbox.fpk(hub Release;镜像已停发) | `openwrt-v*` ipk(x86_64/aarch64_generic,hub Release) | `desktop-v*` 安装包(hub Release) |
 
 **NAS 打包四仓**（synology/qnap/ugreen/terramaster，2026-10-07 起）覆盖群晖 DSM 7.2+（noarch SPK，Container Manager 编排）、威联通 QTS 5+（QPKG 双架构，Container Station 编排）、绿联 UGOS Pro 与铁威马 TOS 5/6/7（compose 项目导入部署包，UPK/官方应用包送审为二期）：统一打包 ghcr 官方镜像的 docker-compose 编排（双容器免 Redis 单机内存模式），零 Go 代码，数据落卷/共享目录，制品以 `synology-v*`/`qnap-v*`/`ugreen-v*`/`terramaster-v*` tag 回挂本仓 Release。
 

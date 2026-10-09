@@ -76,7 +76,8 @@ pigeonbox/           ← 本仓(装配层:脚本/联编/编排)
 ## 发版
 
 打 `v*` tag 即自动构建多架构镜像推 ghcr(见各仓 `release.yml`):
-`ghcr.io/pigeonbox/server` · `ghcr.io/pigeonbox/frontend`(与 server 同版本) · `ghcr.io/pigeonbox/fnos` · `ghcr.io/pigeonbox/p2p`。
+`ghcr.io/pigeonbox/server` · `ghcr.io/pigeonbox/frontend`(与 server 同版本) · `ghcr.io/pigeonbox/p2p`。
+（fnos 2026-10-09 起只发原生 fpk，`ghcr.io/pigeonbox/fnos` 镜像已停发、冻结在 v1.14.6。）
 桌面安装包(desktop-v*)与 NAS 应用包(fnos-v*/openwrt-v*/synology-v*/qnap-v*/ugreen-v*/terramaster-v*)统一回挂[本仓 Releases](https://github.com/pigeonbox/pigeonbox/releases)。
 
 ## 原 README(产品功能/截图/API 说明)
