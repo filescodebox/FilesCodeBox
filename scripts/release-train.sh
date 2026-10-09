@@ -526,11 +526,21 @@ cmd_bump() {
         release/train.yaml deploy/nas/compose.yml deploy/nas/env.example \
         deploy/k8s/overlays/prod/kustomization.yaml docs/architecture.md
 
+    # package.json 的任何写点(version 字段/tgz URL)都同步记录在 package-lock.json
+    # (根条目 version + 依赖 resolved URL),只改 json 不刷 lock = 消费仓 npm ci
+    # 拒装(1.15.0 实测四仓 main CI 红)。--package-lock-only 不动 node_modules。
+    lock_refresh() { # <dir>
+        [ "$DRY_RUN" = 1 ] && return 0
+        ( cd "$1" && npm install --package-lock-only --no-audit --no-fund >/dev/null 2>&1 ) \
+            || echo "  ⚠ $1 package-lock 刷新失败,人工检查(否则 npm ci 拒装)"
+    }
+
     echo "── [2/7] frontend(壳)"
     if [ "$N_SERVER" != "$OLD_SERVER" ]; then
         perl -pi -e 's/"version": "[^"]*"/"version": "'"${FE_REF#v}"'"/ if !$done; $done=1 if /"version"/' frontend/package.json
         echo "${FE_REF#v}" > frontend/VERSION
-        commit_if_changed frontend frontend "train: bump to $TRAIN" package.json VERSION
+        lock_refresh frontend
+        commit_if_changed frontend frontend "train: bump to $TRAIN" package.json VERSION package-lock.json
     else
         echo "  ✓ server 未变($AV),frontend 版本跳过"
     fi
@@ -539,7 +549,8 @@ cmd_bump() {
     # commit_if_changed 无变更自会跳过,幂等安全)
     if [ -d frontend/.git ]; then
         perl -pi -e 's|pigeonbox-frontend-core/releases/download/v[^/]+/pigeonbox-frontend-core-[0-9.]+\.tgz|pigeonbox-frontend-core/releases/download/'"$N_FCORE"'/pigeonbox-frontend-core-'"${N_FCORE#v}"'.tgz|g' frontend/package.json
-        commit_if_changed frontend frontend "train: bump to $TRAIN(frontend-core $N_FCORE)" package.json
+        lock_refresh frontend
+        commit_if_changed frontend frontend "train: bump to $TRAIN(frontend-core $N_FCORE)" package.json package-lock.json
     fi
 
     echo "── [3/7] fnos"
@@ -550,7 +561,8 @@ cmd_bump() {
     # frontend-core tgz URL 跟随 lib.frontend-core(依赖钉版,与版本号是两回事)
     perl -pi -e 's/"version": "[^"]*"/"version": "'"${FE_REF#v}"'"/ if !$done; $done=1 if /"version"/' fnos/web/package.json
     perl -pi -e 's|pigeonbox-frontend-core/releases/download/v[^/]+/pigeonbox-frontend-core-[0-9.]+\.tgz|pigeonbox-frontend-core/releases/download/'"$N_FCORE"'/pigeonbox-frontend-core-'"${N_FCORE#v}"'.tgz|g' fnos/web/package.json
-    FNOS_FILES="$FNOS_FILES web/package.json"
+    lock_refresh fnos/web
+    FNOS_FILES="$FNOS_FILES web/package.json web/package-lock.json"
     # manifest version 无条件写(幂等)——1.14.4 实测:本地值陈旧时条件跳过
     # 会把 manifest 漏出 PR,fpk 版本断言在 Release 才拦(晚了一天)
     sed -i.bak "s/^version=.*/version=$TRAIN/" fnos/fnos/manifest && rm -f fnos/fnos/manifest.bak
@@ -569,10 +581,11 @@ changelog=$TRAIN: 发布列车 $TRAIN(底层 core $N_CORE_PIN;前端 $FE_REF;详
     local OW_OLD; OW_OLD=$(cat openwrt/VERSION)
     echo "$TRAIN" > openwrt/VERSION
     printf '# 发布列车依赖钉版(真相源=hub release/train.yaml,由 release-train.sh bump 写入;勿手改)\nCORE_PIN=%s\nFRONTEND_CORE_PIN=%s\n' "$N_CORE_PIN" "$N_FCORE" > openwrt/DEPS.env
-    local OW_FILES="VERSION DEPS.env web/package.json"
+    local OW_FILES="VERSION DEPS.env web/package.json web/package-lock.json"
     # web/package.json:版本=前端列车号;frontend-core tgz URL 跟随 lib.frontend-core
     perl -pi -e 's/"version": "[^"]*"/"version": "'"${FE_REF#v}"'"/ if !$done; $done=1 if /"version"/' openwrt/web/package.json
     perl -pi -e 's|pigeonbox-frontend-core/releases/download/v[^/]+/pigeonbox-frontend-core-[0-9.]+\.tgz|pigeonbox-frontend-core/releases/download/'"$N_FCORE"'/pigeonbox-frontend-core-'"${N_FCORE#v}"'.tgz|g' openwrt/web/package.json
+    lock_refresh openwrt/web
     if [ "$OW_OLD" != "$TRAIN" ]; then
         ( cd openwrt && GOWORK=off go mod edit -require="github.com/pigeonbox/core@$N_CORE_PIN" && GOWORK=off go mod tidy >/dev/null 2>&1 ) \
             || echo "  ⚠ openwrt go mod 整理失败,人工检查"
@@ -590,7 +603,8 @@ changelog=$TRAIN: 发布列车 $TRAIN(底层 core $N_CORE_PIN;前端 $FE_REF;详
     # frontend-core tgz URL 跟随 lib.frontend-core(依赖钉版,与版本号是两回事)
     perl -pi -e 's/"version": "[^"]*"/"version": "'"${FE_REF#v}"'"/ if !$done; $done=1 if /"version"/' qnap/web/package.json
     perl -pi -e 's|pigeonbox-frontend-core/releases/download/v[^/]+/pigeonbox-frontend-core-[0-9.]+\.tgz|pigeonbox-frontend-core/releases/download/'"$N_FCORE"'/pigeonbox-frontend-core-'"${N_FCORE#v}"'.tgz|g' qnap/web/package.json
-    QN_FILES="$QN_FILES web/package.json"
+    lock_refresh qnap/web
+    QN_FILES="$QN_FILES web/package.json web/package-lock.json"
     if [ "$QN_OLD" != "$TRAIN" ]; then
         ( cd qnap && GOWORK=off go mod edit -require="github.com/pigeonbox/core@$N_CORE_PIN" && GOWORK=off go mod tidy >/dev/null 2>&1 ) \
             || echo "  ⚠ qnap go mod 整理失败,人工检查"
