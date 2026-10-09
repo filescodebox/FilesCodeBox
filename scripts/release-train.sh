@@ -544,7 +544,9 @@ changelog=$TRAIN: 发布列车 $TRAIN(底层 core $N_CORE_PIN;前端 $FE_REF;详
         commit_if_changed "$p" "$p" "train: bump to $TRAIN(镜像 $AV)" $pre
     done
 
-    echo "── [8/8] 完成"
+    echo "    restore . main
+
+── [8/8] 完成"
     if [ "$DRY_RUN" = 1 ]; then
         echo "✓ dry-run 结束。工作区的未提交改动即计划内容;确认后加 --push 重跑(还原请按仓 checkout 列车文件,勿整树还原)。"
     else
