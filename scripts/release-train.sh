@@ -316,6 +316,8 @@ cmd_bump() {
     # 解析 --set(core/contracts/kit/p2p 只改库线消费记录;终端 go.mod 钉版由 core_pin
     # 独立控制且默认保持现状——库线发新版≠终端必须跟随,升钉是显式列车动作)
     local N_CONTRACTS N_CORE N_KIT N_P2P N_P2PC N_SERVER N_CORE_PIN
+    local OLD_SERVER
+    OLD_SERVER=$(tget images.server)
     N_CONTRACTS=$(tget lib.contracts); N_CORE=$(tget lib.core); N_KIT=$(tget lib.kit)
     N_P2P=$(tget lib.p2p); N_P2PC=$(tget terminal.desktop.p2pc)
     N_SERVER=$(tget images.server); N_CORE_PIN=$(tget terminal.fnos.core_pin)
@@ -386,8 +388,8 @@ cmd_bump() {
     sed -i.bak "s/^PB_IMAGE_TAG=v[0-9]*\.[0-9]*\.[0-9]*/PB_IMAGE_TAG=v$N_SERVER/" deploy/nas/env.example && rm -f deploy/nas/env.example.bak
     sed -i.bak "s/newTag: [0-9.]*/newTag: $N_SERVER/g" deploy/k8s/overlays/prod/kustomization.yaml && rm -f deploy/k8s/overlays/prod/kustomization.yaml.bak
     # charts: server 变了则 chart patch+1(dispatch 会自动对齐,这里同步记录)
-    local OLD_SERVER CHART_NEW
-    OLD_SERVER=$(tget images.server); CHART_NEW=$(tget charts.chart)
+    local CHART_NEW
+    CHART_NEW=$(tget charts.chart)
     [ "$N_SERVER" != "$OLD_SERVER" ] && CHART_NEW="$(echo "$CHART_NEW" | awk -F. '{print $1"."$2"."$3+1}')"
     {
         echo "# PigeonBox 发布列车真相源 —— 一趟列车全部组件版本/钉版/回挂期望的唯一声明。"
