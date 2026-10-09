@@ -133,6 +133,13 @@
 | `PB_METRICS_ENABLED` | false | Prometheus 指标（独立监听 127.0.0.1:9090，`PB_METRICS_ADDR` 可改） |
 | `PB_METRICS_PATH` | /metrics | 指标路径 |
 
+## 站点 UI（ui）
+
+| 变量 | 默认 | 说明 |
+|---|---|---|
+| `PB_UI_SHOW_ADMIN_ADDR` | true | 公开页脚是否展示管理后台入口（缺省展示；置 `false` 仅隐藏入口，`/admin` 地址始终可直达；管理后台「外观主题」页可在线改，DB 配置段优先于 env/yaml） |
+| `PB_UI_EXPOSE_OPENAPI` | true | 是否公开 `/openapi.json`（false 时端点 404，前端 /api-docs 页降级；生产建议置 false 收缩侦察面） |
+
 ## 其他
 
 `PB_DATA_PATH`（数据目录）、`PB_STORAGE_TYPE` / `PB_STORAGE_PATH`（存储后端）、`PB_STORAGE_QUOTA`（站点级全局存储配额，字节，0=不限）、`PB_USER_ALLOW_REGISTRATION`（开放注册）、`CONFIG_PATH`（配置文件路径）。
