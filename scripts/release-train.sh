@@ -347,14 +347,19 @@ cmd_bump() {
             if [ "$cur" != "$def" ]; then
                 git -C "$d" checkout -q "$def" || die "$d 切回 $def 失败(有未提交改动请先清理)"
             fi
-            [ -z "$(git -C "$d" status --porcelain)" ] || die "$d 工作树不干净,先清理"
+            # 工作树软检查:并行会话的无关 WIP 允许存在(commit_if_changed 只
+            # stage 列车文件,天然隔离);ff-only 拉不动(改动与远端重叠)才硬失败
+            if [ -n "$(git -C "$d" status --porcelain)" ]; then
+                echo "  ⚠ $d 有未提交改动(列车文件隔离,不受影响;若涉列车文件请先处理)"
+            fi
             if git -C "$d" rev-parse -q --verify "origin/$def" >/dev/null; then
-                git -C "$d" pull -q --ff-only origin "$def" || die "$d 本地与 origin/$def 分歧,先人工 pull --ff-only(勿强推)"
+                git -C "$d" pull -q --ff-only origin "$def" || die "$d 本地与 origin/$def 分歧(或有重叠改动),先人工 pull --ff-only"
             fi
             echo "  ✓ $d@$def 已对齐远端"
         }
         preflight . main
-        if [ -d frontend/.git ]; then preflight frontend main; fi
+        # frontend 仅在镜像版本变化时参与(hotfix 子集跳过,免碰并行 WIP)
+        if [ -d frontend/.git ] && [ "$N_SERVER" != "$OLD_SERVER" ]; then preflight frontend main; fi
         preflight fnos master
         preflight openwrt main
         preflight qnap main
