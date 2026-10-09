@@ -270,8 +270,12 @@ cmd_verify() {
     [ -n "$FPJ" ] && { grep -q "pigeonbox-frontend-core-${C_FCORE#v}.tgz" <<<"$FPJ" \
         && ok "frontend(壳) frontend-core tgz = $C_FCORE" || fail "frontend(壳) frontend-core tgz ≠ $C_FCORE"; } || warn "frontend package.json 拉取失败"
     FPJ=$(raw "fnos/$(def_branch fnos)/web/package.json" 2>/dev/null) || FPJ=""
-    [ -n "$FPJ" ] && { grep -q "pigeonbox-frontend-core-${C_FCORE#v}.tgz" <<<"$FPJ" \
-        && ok "fnos/web frontend-core tgz = $C_FCORE" || fail "fnos/web frontend-core tgz ≠ $C_FCORE"; } || warn "fnos/web package.json 拉取失败"
+    [ -n "$FPJ" ] && {
+        grep -q "pigeonbox-frontend-core-${C_FCORE#v}.tgz" <<<"$FPJ" \
+            && ok "fnos/web frontend-core tgz = $C_FCORE" || fail "fnos/web frontend-core tgz ≠ $C_FCORE"
+        grep -q "\"version\": \"$SERVER_V\"" <<<"$FPJ" \
+            && ok "fnos/web 版本 = $SERVER_V(前端列车号)" || soft_fail "fnos/web 版本 ≠ $SERVER_V(页脚「前端版本」应随列车)"
+    } || warn "fnos/web package.json 拉取失败"
     FPJ=$(raw "qnap/$(def_branch qnap)/web/package.json" 2>/dev/null) || FPJ=""
     [ -n "$FPJ" ] && { grep -q "pigeonbox-frontend-core-${C_FCORE#v}.tgz" <<<"$FPJ" \
         && ok "qnap/web frontend-core tgz = $C_FCORE" || fail "qnap/web frontend-core tgz ≠ $C_FCORE"; } || warn "qnap/web package.json 拉取失败"
@@ -532,11 +536,13 @@ cmd_bump() {
     echo "$TRAIN" > fnos/VERSION
     printf '# 发布列车依赖钉版(真相源=hub release/train.yaml,由 release-train.sh bump 写入;勿手改)\nCORE_PIN=%s\nFRONTEND_CORE_PIN=%s\n' "$N_CORE_PIN" "$N_FCORE" > fnos/DEPS.env
     local FNOS_FILES="VERSION DEPS.env fnos/manifest"
-    # web/package.json 的 frontend-core tgz URL 跟随 lib.frontend-core(2026-10-09 拆仓)
+    # web/package.json:版本=前端列车号(页脚「前端版本」语义,与壳仓同规则);
+    # frontend-core tgz URL 跟随 lib.frontend-core(依赖钉版,与版本号是两回事)
+    perl -pi -e 's/"version": "[^"]*"/"version": "'"${FE_REF#v}"'"/ if !$done; $done=1 if /"version"/' fnos/web/package.json
     if [ "$N_FCORE" != "$OLD_FCORE" ]; then
         perl -pi -e 's|pigeonbox-frontend-core/releases/download/v[^/]+/pigeonbox-frontend-core-[0-9.]+\.tgz|pigeonbox-frontend-core/releases/download/'"$N_FCORE"'/pigeonbox-frontend-core-'"${N_FCORE#v}"'.tgz|g' fnos/web/package.json
-        FNOS_FILES="$FNOS_FILES web/package.json"
     fi
+    FNOS_FILES="$FNOS_FILES web/package.json"
     # manifest version 无条件写(幂等)——1.14.4 实测:本地值陈旧时条件跳过
     # 会把 manifest 漏出 PR,fpk 版本断言在 Release 才拦(晚了一天)
     sed -i.bak "s/^version=.*/version=$TRAIN/" fnos/fnos/manifest && rm -f fnos/fnos/manifest.bak
