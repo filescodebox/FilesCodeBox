@@ -143,10 +143,22 @@ cmd_verify() {
     echo "── 2. charts 对齐"
     local CYAML; CYAML=$(raw charts/main/charts/pigeonbox/Chart.yaml 2>/dev/null) \
         || { fail "charts Chart.yaml 拉取失败"; CYAML=""; }
-    [ "$(awk '/^version:/{print $2;exit}' <<<"$CYAML" | tr -d '"')" = "$CHART" ] \
-        && ok "chart version = $CHART" || soft_fail "chart version ≠ $CHART(draft 列车 bump 已记录,等 chart 仓落地)"
-    [ "$(awk '/^appVersion:/{print $2;exit}' <<<"$CYAML" | tr -d '"')" = "$CHART_APP" ] \
-        && ok "chart appVersion = $CHART_APP" || soft_fail "chart appVersion ≠ $CHART_APP(同上)"
+    # draft 列车=bump 已记录/落地进行中(chart 仓经 dispatch 随 server tag 后到),
+    # 缺落只告警(与 tagchk 同语义);shipping/shipped 必须已对齐
+    if [ "$(awk '/^version:/{print $2;exit}' <<<"$CYAML" | tr -d '"')" = "$CHART" ]; then
+        ok "chart version = $CHART"
+    elif [ "$STATE" = draft ]; then
+        warn "chart version ≠ $CHART(draft 期,等 chart 仓落地)"
+    else
+        fail "chart version ≠ $CHART"
+    fi
+    if [ "$(awk '/^appVersion:/{print $2;exit}' <<<"$CYAML" | tr -d '"')" = "$CHART_APP" ]; then
+        ok "chart appVersion = $CHART_APP"
+    elif [ "$STATE" = draft ]; then
+        warn "chart appVersion ≠ $CHART_APP(draft 期,等 chart 仓落地)"
+    else
+        fail "chart appVersion ≠ $CHART_APP"
+    fi
     [ "$CHART_APP" = "v$SERVER_V" ] && ok "appVersion 锁 server 镜像(v$SERVER_V)" \
         || fail "chart appVersion($CHART_APP) ≠ v$SERVER_V"
 
