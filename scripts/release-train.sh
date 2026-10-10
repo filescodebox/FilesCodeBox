@@ -171,7 +171,7 @@ cmd_verify() {
         || fail "chart appVersion($CHART_APP) ≠ v$SERVER_V"
 
     echo "── 3. hub 分发面钉版"
-    local PIN_V="v$SERVER_V"
+    local PIN_V="$SERVER_V"   # ghcr 镜像 tag 无 v 前缀(v-tag 恒 404;2026-10-10 实测 NAS 包默认拉不到镜像的根因)
     grep -q "PB_IMAGE_TAG:-$PIN_V" deploy/nas/compose.yml \
         && grep -q "^PB_IMAGE_TAG=$PIN_V" deploy/nas/env.example \
         && ok "deploy/nas 模板钉版 = $PIN_V" || fail "deploy/nas 模板钉版 ≠ $PIN_V"
@@ -437,8 +437,8 @@ cmd_bump() {
     git -C "$DESKTOP_DIR" fetch -q origin
 
     echo "── [1/7] hub"
-    sed -i.bak "s/PB_IMAGE_TAG:-v[0-9]*\.[0-9]*\.[0-9]*/PB_IMAGE_TAG:-v$N_SERVER/" deploy/nas/compose.yml && rm -f deploy/nas/compose.yml.bak
-    sed -i.bak "s/^PB_IMAGE_TAG=v[0-9]*\.[0-9]*\.[0-9]*/PB_IMAGE_TAG=v$N_SERVER/" deploy/nas/env.example && rm -f deploy/nas/env.example.bak
+    sed -i.bak "s/PB_IMAGE_TAG:-v\{0,1\}[0-9]*\.[0-9]*\.[0-9]*/PB_IMAGE_TAG:-$N_SERVER/" deploy/nas/compose.yml && rm -f deploy/nas/compose.yml.bak
+    sed -i.bak "s/^PB_IMAGE_TAG=v\{0,1\}[0-9]*\.[0-9]*\.[0-9]*/PB_IMAGE_TAG=$N_SERVER/" deploy/nas/env.example && rm -f deploy/nas/env.example.bak
     sed -i.bak "s/newTag: [0-9.]*/newTag: $N_SERVER/g" deploy/k8s/overlays/prod/kustomization.yaml && rm -f deploy/k8s/overlays/prod/kustomization.yaml.bak
     # charts: server 变了则 chart patch+1(dispatch 会自动对齐,这里同步记录)
     local CHART_NEW
