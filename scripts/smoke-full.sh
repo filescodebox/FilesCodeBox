@@ -34,6 +34,12 @@ echo "multi-file-two" > "$SMOKE/src/m2.txt"
 
 if [ -z "${SMOKE_BASE:-}" ]; then
   # ===== 内置模式:起临时实例 =====
+  # 数据卫生:$SMOKE 是固定路径(/tmp/fcb-smoke),陈旧 DB 会跨轮累积同哈希
+  # 过期分享,把秒传断言(S11b)打成确定性失败(2026-10-10 实锤:10-08 轮次
+  # 遗留的过期记录永久遮蔽新分享——产品侧 GetByHashAndSize 同轮已修,
+  # 测试侧每轮干净起库双保险)。
+  rm -rf "$SMOKE/data" "$SMOKE/uploads"
+  mkdir -p "$SMOKE/data" "$SMOKE/uploads"
 cat > "$SMOKE/config.yaml" <<EOF
 server:
   host: "127.0.0.1"
