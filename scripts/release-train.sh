@@ -688,11 +688,10 @@ cmd_finalize() {
     [ "$(tget state)" != shipped ] || { echo "✗ 列车 $TRAIN 已 shipped,不可重复定版" >&2; exit 1; }
     [ -z "$(git status --porcelain)" ] || { echo "✗ hub 工作树不干净" >&2; exit 1; }
     git fetch -q origin
-    # 已知怪象(1.14.2/1.14.3 两轮实测):此检查间歇性误报(手动等价序列恒 0、
-    # 脚本内非零,make/直接 bash/竞态/GIT 环境均已排除,未破案)。遇到时直接
-    # 手动执行等价四步:sed state=shipped → commit "train: ship v<T>" →
-    # tag v<T> → push origin main v<T>,hub Release 工作流即出快照。
-    [ -z "$(git rev-list --count main...origin/main)" ] || { echo "✗ hub 本地与远端分歧,先 pull --ff-only" >&2; exit 1; }
+    # 分歧检查:对称差=0 才放行。(历史 bug 破案 2026-10-10:原写法 [ -z "$(count)" ]
+    # 把「0」当空串——git 正常输出时恒判分歧,所谓间歇性误报实为恒错,仅 git 偶发
+    # 失败输出空才侥幸通过;1.14.x 起 finalize 只能靠手动四步绕行即此因)
+    [ "$(git rev-list --count main...origin/main)" = "0" ] || { echo "✗ hub 本地与远端分歧,先 pull --ff-only" >&2; exit 1; }
 
     echo "══ 终验 $TRAIN"
     cmd_verify
