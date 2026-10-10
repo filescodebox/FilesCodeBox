@@ -200,14 +200,14 @@ DLL=$(curl -s "$BASE/share/select/?code=$CODE_L" | J "d['data']['download_url']"
 DLHTTP=$(curl -s -o /tmp/dl-s12.txt -w "%{http_code}" "$DLL")
 [ "$DLHTTP" = 200 ] && [ -s /tmp/dl-s12.txt ] && ok "S12c 导入分享可下载" || bad "S12c 下载" "$DLHTTP"
 DEL=$(curl -s -X DELETE "$BASE/admin/local-files?root=0&path=local-nas.txt" -H "$AH")
-echo "$DEL" | J "d['code']" | grep -qE "0|200" && ok "S12d 本地文件删除" || bad "S12d 删除" "$DEL"
+echo "$DEL" | J "d['code']" | grep -qxE "0|200" && ok "S12d 本地文件删除" || bad "S12d 删除" "$DEL"
 curl -s "$BASE/admin/local-files?root=0&dir=../../etc" -H "$AH" | grep -qi "非法\|越界\|不在" && ok "S12e 路径穿越被拒" || bad "S12e 穿越防护" "-"
 
 # S13 寄件码（管理端开注册→用户注册→建链接→访客投递）
 # 生产模板默认关注册(安全默认)，故先走管理端配置 API 开启——顺带真测该端点
 UCFG=$(curl -s -X PUT "$BASE/admin/config/user" -H "$AH" -H 'Content-Type: application/json' \
   -d '{"allowuserregistration":true,"useruploadsize":52428800,"userstoragequota":1073741824,"sessionexpiryhours":168}')
-echo "$UCFG" | J "d['code']" | grep -qE "0|200" && ok "S13-0 管理端开启注册(用户配置 API)" || bad "S13-0 用户配置 API" "$(echo $UCFG | head -c 100)"
+echo "$UCFG" | J "d['code']" | grep -qxE "0|200" && ok "S13-0 管理端开启注册(用户配置 API)" || bad "S13-0 用户配置 API" "$(echo $UCFG | head -c 100)"
 curl -s -X POST "$BASE/user/register" -H 'Content-Type: application/json' -d '{"username":"smoker","password":"smoke12345","nickname":"smoker","email":"smoker@example.com"}' >/dev/null
 UTOK=$(curl -s -X POST "$BASE/user/login" -H 'Content-Type: application/json' -d '{"username":"smoker","password":"smoke12345"}' | J "d['data']['token']")
 [ -n "$UTOK" ] && [ "${UTOK:0:4}" != "JERR" ] && ok "S13a 用户注册登录" || bad "S13a 用户登录" "$UTOK"
@@ -223,8 +223,9 @@ MCP=$(curl -s -X POST "$BASE/api/v1/mcp" -H "$AH" -H 'Content-Type: application/
 NT=$(echo "$MCP" | J "len(d['result']['tools'])")
 case "$NT" in [0-9]*) [ "$NT" -ge 8 ] && ok "S14 MCP tools=$NT" || bad "S14 MCP tools=$NT" "<8";; *) bad "S14 MCP" "$(echo $MCP | head -c 100)";; esac
 
-# S15 二维码
-curl -s -X POST "$BASE/qrcode/generate" -H 'Content-Type: application/json' -d "{\"data\":\"$BASE/share/$CODE_T\",\"size\":200}" | grep -qi "png\|base64\|id" && ok "S15 二维码生成" || bad "S15 二维码" "-"
+# S15 二维码(return_base64 为契约必填;断言=code 精确+PNG base64 魔数 iVBOR)
+QR=$(curl -s -X POST "$BASE/qrcode/generate" -H 'Content-Type: application/json' -d "{\"data\":\"$BASE/share/$CODE_T\",\"size\":200,\"return_base64\":true}")
+{ echo "$QR" | J "d['code']" | grep -qxE "0|200"; } && echo "$QR" | J "d['data']" | grep -qE "^(data:image/png;base64,)?iVBOR" && ok "S15 二维码生成" || bad "S15 二维码" "$(echo "$QR" | head -c 80)"
 
 # S16 匿名口令分享
 AG=$(curl -s -X POST "$BASE/anonymous/generate" -H 'Content-Type: application/json' -d '{"file_name":"anon.txt","file_size":12,"expire_value":"1","expire_style":"day"}')
