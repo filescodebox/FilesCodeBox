@@ -340,12 +340,21 @@ commit_if_changed() { # <dir> <repo> <msg> <files...>
     else
         git -C "$dir" checkout -q -b "train/$TRAIN"
     fi
-    git -C "$dir" commit -qm "$msg"
+    # 重跑/分支复用场景:checkout 到已含相同变更的列车分支后索引与 HEAD 一致,
+    # 无可提即跳过(否则 commit 空转 exit 1 被 set -e 误杀,1.15.2 实测)
+    git -C "$dir" diff --cached --quiet || git -C "$dir" commit -qm "$msg"
     git -C "$dir" push -q -u origin "train/$TRAIN"
-    gh pr create -R "${GH_ORG}/${repo}" --base "$(def_branch "$repo")" --head "train/$TRAIN" \
+    local pr_out
+    pr_out=$(gh pr create -R "${GH_ORG}/${repo}" --base "$(def_branch "$repo")" --head "train/$TRAIN" \
         --title "train: bump to $TRAIN" \
         --body "发布列车 $TRAIN 自动 bump(hub scripts/release-train.sh 生成,仅含列车文件)。合并后 version-tagger 自动打 tag 并触发 Release 流水线;全部回挂后跑 train-release verify。" \
-        2>/dev/null || echo "  (PR 已存在,跳过创建)"
+        2>&1) && echo "  ✓ PR: ${pr_out##*/}" \
+        || { if grep -qi "already exists" <<<"$pr_out"; then
+                 echo "  (PR 已存在,跳过创建)"
+             else
+                 # 吞错会把网络抖动误报成「已存在」(1.15.2 fnos 幻影 PR 根因)——响亮失败,重跑幂等
+                 echo "  ✗ gh pr create 失败: $pr_out" >&2; return 1
+             fi; }
     echo "  ✓ $dir → PR(pigeonbox/$repo train/$TRAIN)"
 }
 
