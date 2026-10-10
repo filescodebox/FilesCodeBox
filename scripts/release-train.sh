@@ -21,7 +21,16 @@
 #   - 判"最新"一律 semver 排序,禁用 tag creatordate(历史镜像导入同秒,时间不可靠)
 #   - 组件回挂 hub Release 恒 --latest=false;Latest 只属于 hub v<train> 快照
 set -euo pipefail
-cd "$(dirname "$0")/.."
+# 自拷贝稳定执行:bump 中途 checkout 列车分支会把本脚本的磁盘文件换成分支上的
+# 旧版本,bash 边读边执行会从旧字节偏移继续解析错乱(1.15.2 实测:verbose
+# commit 输出+phantom 提交)。exec /tmp 稳定副本后对任何 checkout 免疫。
+if [ -z "${_TRAIN_STABLE:-}" ]; then
+    _TRAIN_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+    _TRAIN_COPY=$(mktemp "${TMPDIR:-/tmp}/release-train.XXXXXX")
+    cp "$0" "$_TRAIN_COPY"
+    _TRAIN_STABLE=1 _TRAIN_ROOT="$_TRAIN_ROOT" exec bash "$_TRAIN_COPY" "$@"
+fi
+cd "$_TRAIN_ROOT"
 
 TRAIN_FILE=release/train.yaml
 GH_ORG=pigeonbox
@@ -643,9 +652,23 @@ changelog=$TRAIN: 发布列车 $TRAIN(底层 core $N_CORE_PIN;前端 $FE_REF;详
         commit_if_changed "$p" "$p" "train: bump to $TRAIN(镜像 $AV)" $pre
     done
 
-    echo "    restore . main
+    # 真还原各仓默认分支(旧版只 echo 提示不执行,bump 后 hub 停在列车分支,
+    # 后续手工提交极易落错分支——1.15.2 perl 修复提交错位实测)
+    if [ "$DRY_RUN" = 0 ]; then
+        local rd rb cur pair
+        for pair in ".:main" "frontend:main" "fnos:master" "openwrt:main" "qnap:main" \
+                    "synology:main" "ugreen:main" "terramaster:main" "$DESKTOP_DIR:main"; do
+            rd=${pair%:*}; rb=${pair##*:}
+            [ -d "$rd/.git" ] || continue
+            cur=$(git -C "$rd" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "?")
+            [ "$cur" = "$rb" ] && continue
+            git -C "$rd" checkout -q "$rb" 2>/dev/null \
+                && echo "    restore $rd → $rb" \
+                || echo "  ⚠ $rd 还原 $rb 失败(需人工 checkout)"
+        done
+    fi
 
-── [8/8] 完成"
+    echo "── [8/8] 完成(各仓已还原默认分支)"
     if [ "$DRY_RUN" = 1 ]; then
         echo "✓ dry-run 结束。工作区的未提交改动即计划内容;确认后加 --push 重跑(还原请按仓 checkout 列车文件,勿整树还原)。"
     else
